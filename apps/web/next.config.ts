@@ -7,8 +7,12 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  agentRules: false,
   images: {
     localPatterns: [
+      {
+        pathname: '/projects/**',
+      },
       {
         pathname: '/api/media/file/**',
       },
@@ -24,7 +28,7 @@ const nextConfig: NextConfig = {
     return webpackConfig
   },
   turbopack: {
-    root: path.resolve(dirname),
+    root: path.resolve(dirname, '../..'),
   },
 }
 
