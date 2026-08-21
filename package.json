@@ -1,0 +1,12 @@
+{
+  "name": "jaxson-ai-space",
+  "private": true,
+  "packageManager": "pnpm@11.5.0",
+  "scripts": {
+    "dev": "pnpm --filter @jaxson/web dev",
+    "build": "pnpm --filter @jaxson/web build",
+    "lint": "pnpm --filter @jaxson/web lint",
+    "test": "pnpm --filter @jaxson/web test",
+    "typecheck": "pnpm --filter @jaxson/web typecheck"
+  }
+}
