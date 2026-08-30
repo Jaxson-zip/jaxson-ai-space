@@ -2,20 +2,23 @@ name: ${COMPOSE_PROJECT_NAME:-jaxson-ai-space-dev}
 services:
   postgres:
     image: pgvector/pgvector:pg17
+    container_name: jaxson-postgres-dev
     environment:
-      POSTGRES_DB: jaxson_ai_space
-      POSTGRES_USER: jaxson
-      POSTGRES_PASSWORD: jaxson_local_dev
+      POSTGRES_USER: jaxson_admin
+      POSTGRES_PASSWORD: jaxson_secure_dev_password_2026
+      POSTGRES_DB: jaxson_space
+      OWNER_APP_PASSWORD: jaxson_secure_dev_password_2026
+      PUBLIC_AGENT_PASSWORD: public_agent_dev_password_2026
     ports:
-      - "127.0.0.1:54329:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./docker/init-schemas.sh:/docker-entrypoint-initdb.d/01-init-schemas.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jaxson -d jaxson_ai_space"]
+      test: ["CMD-SHELL", "pg_isready -U jaxson_admin -d jaxson_space"]
       interval: 5s
       timeout: 3s
       retries: 20
     restart: unless-stopped
 volumes:
-  postgres_data:
+  postgres_dev_data:

@@ -39,28 +39,54 @@ export async function middleware(request: NextRequest) {
   const inboxSecret = process.env.STUDIO_INBOX_SECRET
   const payloadSecret = process.env.PAYLOAD_SECRET
 
-  // 2.1 Validate Cloudflare Access (Strictly requires Cf-Access-Jwt-Assertion token)
+  // 2.1 Validate Cloudflare Access (Cryptographically verified via JWKS / Secret)
   let isCfAuthorized = false
   const cfJwt = request.headers.get('cf-access-jwt-assertion')
-  const cfEmail = request.headers.get('cf-access-authenticated-user-email')
   if (cfJwt) {
     try {
-      // Decode and verify Cloudflare Access JWT assertion payload
-      const { decodeJwt } = await import('jose')
-      const decoded = decodeJwt(cfJwt) as any
-      if (
-        decoded &&
-        typeof decoded.email === 'string' &&
-        decoded.email.trim().toLowerCase() === allowedEmail
-      ) {
-        isCfAuthorized = true
+      const teamName = process.env.CLOUDFLARE_ACCESS_TEAM_NAME
+      const expectedAud = process.env.CLOUDFLARE_ACCESS_AUD
+      const cfSecret = process.env.CLOUDFLARE_ACCESS_SECRET
+
+      if (teamName && expectedAud) {
+        const { createRemoteJWKSet } = await import('jose')
+        const JWKS = createRemoteJWKSet(
+          new URL(`https://${teamName}.cloudflareaccess.com/cdn-cgi/access/certs`)
+        )
+        const { payload } = await jwtVerify(cfJwt, JWKS, {
+          issuer: `https://${teamName}.cloudflareaccess.com`,
+          audience: expectedAud,
+        })
+        if (
+          payload &&
+          typeof payload.email === 'string' &&
+          payload.email.trim().toLowerCase() === allowedEmail
+        ) {
+          isCfAuthorized = true
+        }
+      } else if (cfSecret) {
+        // Supported for staging/mock or custom HS256 zero trust gateway verification
+        const secretKey = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(cfSecret),
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['verify']
+        )
+        const { payload } = await jwtVerify(cfJwt, secretKey, {
+          audience: expectedAud,
+        })
+        if (
+          payload &&
+          typeof payload.email === 'string' &&
+          payload.email.trim().toLowerCase() === allowedEmail
+        ) {
+          isCfAuthorized = true
+        }
       }
     } catch {
       isCfAuthorized = false
     }
-  } else if (cfEmail && isDev && !enforceAuth) {
-    // In local dev without enforced mode, allow plain header for testing
-    isCfAuthorized = cfEmail.trim().toLowerCase() === allowedEmail
   }
 
   // 2.2 Granular Route-Based Secret Permission

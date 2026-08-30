@@ -167,13 +167,22 @@ ${topContent}
       const initialMeta = `event: meta\ndata: ${JSON.stringify({ evidence: evidenceTags, isJdMatch })}\n\n`
       controller.enqueue(encoder.encode(initialMeta))
 
-      // 2. Chunk and stream text
+      // 2. Chunk and stream text with signal.aborted interruption check
       const chunkSize = 6
       for (let i = 0; i < generatedAnswer.length; i += chunkSize) {
+        if (signal?.aborted) {
+          controller.close()
+          return
+        }
         const textChunk = generatedAnswer.slice(i, i + chunkSize)
         const sseEvent = `event: text\ndata: ${JSON.stringify({ text: textChunk })}\n\n`
         controller.enqueue(encoder.encode(sseEvent))
         await new Promise((resolve) => setTimeout(resolve, 20))
+      }
+
+      if (signal?.aborted) {
+        controller.close()
+        return
       }
 
       // 3. Send Done Event

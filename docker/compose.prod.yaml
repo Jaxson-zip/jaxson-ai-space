@@ -10,8 +10,8 @@ services:
     container_name: jaxson-caddy-prod
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${CADDY_BIND_IP:-127.0.0.1}:80:80"
+      - "${CADDY_BIND_IP:-127.0.0.1}:443:443"
     environment:
       - SITE_DOMAIN=${SITE_DOMAIN:-localhost}
     volumes:
@@ -20,6 +20,16 @@ services:
       - caddy_config:/config
     depends_on:
       - web
+    networks:
+      - jaxson_prod_net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: jaxson-cloudflared-prod
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-}
     networks:
       - jaxson_prod_net
 

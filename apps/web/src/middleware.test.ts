@@ -61,11 +61,30 @@ describe('Studio Security & 404 Disguise Middleware', () => {
     expect(rewriteHeader).toContain('/not-found')
   })
 
+  it('strictly blocks unverified or alg:none Cloudflare JWT token without valid signature', async () => {
+    process.env.CLOUDFLARE_ACCESS_SECRET = 'cf-temp-secret-key-1234567890'
+    // Create spoofed base64 token with alg: none
+    const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url')
+    const payload = Buffer.from(JSON.stringify({ email: 'jaxson@example.com' })).toString('base64url')
+    const spoofedNoneJwt = `${header}.${payload}.`
+
+    const req = new NextRequest('http://localhost:3000/studio', {
+      headers: {
+        'cf-access-jwt-assertion': spoofedNoneJwt,
+      },
+    })
+    const res = await middleware(req)
+    expect(res.status).toBe(404)
+    const rewriteHeader = res.headers.get('x-middleware-rewrite')
+    expect(rewriteHeader).toContain('/not-found')
+  })
+
   it('allows authorized request with valid Cloudflare Access JWT Assertion token', async () => {
+    process.env.CLOUDFLARE_ACCESS_SECRET = 'cf-temp-secret-key-1234567890'
     const { SignJWT } = await import('jose')
     const secretKey = await crypto.subtle.importKey(
       'raw',
-      new TextEncoder().encode('cf-temp-secret-key-1234567890'),
+      new TextEncoder().encode(process.env.CLOUDFLARE_ACCESS_SECRET),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign']

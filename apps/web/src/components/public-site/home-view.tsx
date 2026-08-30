@@ -134,7 +134,7 @@ export function HomeView({
             </div>
             <div className="trust-item">
               <span>核心项目落地</span>
-              <strong>待办备忘 PWA · 锐历简历 · OPC Agent Company</strong>
+              <strong>待办备忘 PWA · 锐历简历开源工作台</strong>
             </div>
           </div>
         </div>

@@ -29,7 +29,7 @@ const INITIAL_AGENT_MESSAGES: ChatItem[] = [
     role: 'assistant',
     type: 'text',
     content:
-      '你好！我是张锦鹏的公开 AI 数字分身。\n\n我汇聚了他在**广东润喵云科技的实习产出 (Vue+Go)**、**3 项核心落地项目 (Todo Memo / OPC Agent / Ruili)** 以及深职大与技能竞赛的真实经历。\n\n你可以随时提问，或者**直接粘贴招聘 JD** 进行岗位契合度推演！',
+      '你好！我是张锦鹏的公开 AI 数字分身。\n\n我汇聚了他在**广东润喵云科技的实习产出 (Vue+Go)**、**核心落地项目 (Todo Memo PWA / 锐历简历开源工作台)** 以及深职大与技能竞赛的真实经历。\n\n你可以随时提问，或者**直接粘贴招聘 JD** 进行岗位契合度推演！',
   },
 ]
 
@@ -71,8 +71,8 @@ export function VariantAgentFirst() {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           type: 'projects',
-          content: '以下是张锦鹏目前公开的主要项目成果与探索边界：',
-          evidence: ['Todo Memo (已上线 PWA)', 'Ruili Resume (开源二开)', 'OPC Agent Company (私有探索)'],
+          content: '以下是张锦鹏目前公开的主要项目成果与交付：',
+          evidence: ['Todo Memo (已上线 PWA)', 'Ruili Resume (开源二开)'],
         }
       } else if (lower.includes('实习') || lower.includes('经历') || lower.includes('背景') || lower.includes('学校') || lower.includes('教育')) {
         reply = {
@@ -88,7 +88,7 @@ export function VariantAgentFirst() {
           role: 'assistant',
           type: 'resume',
           content: '你可以直接查看结构化简历或下载 Word 原件，欢迎随时沟通！',
-          evidence: ['张锦鹏_个人简历.docx (2026秋招版)'],
+          evidence: ['张锦鹏_个人简历.docx (2027届求职版)'],
         }
       } else if (text.length > 50 || lower.includes('jd') || lower.includes('匹配') || lower.includes('岗位') || lower.includes('要求')) {
         reply = {
@@ -99,9 +99,9 @@ export function VariantAgentFirst() {
 
 #### 🎯 优势分析：
 1. **全栈与接口工程能力**：在广东润喵云实习期间负责 Vue 3 + Go 算力租赁平台功能新增与接口联调，具备生产级协作能力；
-2. **AI 原型与 Agent 思维**：独立研发 Todo Memo PWA 与 OPC Agent 流程验证，习惯敏捷迭代交付；
+2. **AI 原型与独立交付**：独立研发 Todo Memo PWA 与锐历简历开源工作台，注重强类型与全流程交付；
 3. **扎实基础与高自驱力**：深职大大数据专业 GPA 3.67（前5%），获金砖技能大赛国赛二等奖、广东省技能大赛一等奖。`,
-          evidence: ['广东润喵云实习', 'Todo Memo PWA', 'OPC Agent 架构实验', '金砖国家技能大赛奖项'],
+          evidence: ['广东润喵云实习', 'Todo Memo PWA', '锐历简历开源工作台', '金砖国家技能大赛奖项'],
         }
       } else {
         reply = {

@@ -258,7 +258,7 @@ export function VariantBento() {
             </button>
             <button
               type="button"
-              onClick={() => handleSend('介绍 Todo Memo 和 OPC Agent 项目')}
+              onClick={() => handleSend('介绍 Todo Memo 和 锐历简历项目')}
               className="prompt-pill"
               style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', whiteSpace: 'nowrap' }}
             >

@@ -6,33 +6,67 @@ import type { ChunkCategory, KnowledgeChunk } from './types'
 export async function loadKnowledgeChunks(): Promise<KnowledgeChunk[]> {
   const chunks: KnowledgeChunk[] = []
 
-  // 1. Try to load public Q&A / knowledge entries from Payload CMS
-  try {
-    const payload = await getPayload({ config: configPromise })
-    const aiKnowledgeDocs = await payload.find({
-      collection: 'ai-knowledge',
-      limit: 100,
-      where: {
-        isPublic: {
-          equals: true,
-        },
-      },
-    })
-
-    if (aiKnowledgeDocs.totalDocs > 0) {
-      for (const doc of aiKnowledgeDocs.docs as any[]) {
-        chunks.push({
-          id: `cms-${doc.id}`,
-          title: doc.title,
-          category: doc.category || 'general',
-          content: doc.content,
-          evidenceTag: doc.evidenceTag || `知识库条目：${doc.title}`,
-          keywords: [doc.title, doc.category, doc.evidenceTag].filter(Boolean),
-        })
+  // 1. Try querying PostgreSQL public_read.knowledge_embeddings snapshot
+  if (process.env.USE_POSTGRES === 'true' && (process.env.DATABASE_URI || process.env.PUBLIC_AGENT_DATABASE_URI)) {
+    try {
+      const pgModule = await import('pg' as any).catch(() => null)
+      if (pgModule && (pgModule.Pool || pgModule.default?.Pool)) {
+        const PoolClass = pgModule.Pool || pgModule.default.Pool
+        const connStr = process.env.PUBLIC_AGENT_DATABASE_URI || process.env.DATABASE_URI
+        const pool = new PoolClass({ connectionString: connStr, max: 2, idleTimeoutMillis: 5000 })
+        const res = await pool.query(`
+          SELECT chunk_id, category, title, content, evidence_tag, metadata 
+          FROM public_read.knowledge_embeddings 
+          ORDER BY updated_at DESC LIMIT 100
+        `)
+        await pool.end().catch(() => {})
+        if (res && res.rows && res.rows.length > 0) {
+          for (const row of res.rows) {
+            chunks.push({
+              id: row.chunk_id,
+              title: row.title,
+              category: (row.category || 'general') as ChunkCategory,
+              content: row.content,
+              evidenceTag: row.evidence_tag,
+              keywords: [row.title, row.category, row.evidence_tag].filter(Boolean),
+            })
+          }
+        }
       }
+    } catch (pgErr) {
+      console.warn('[RAG] Unable to query public_read pgvector knowledge directly, trying CMS collections:', pgErr)
     }
-  } catch (err) {
-    console.warn('[RAG] Unable to query CMS public collections, using core static facts:', err)
+  }
+
+  // 2. Try to load public Q&A / knowledge entries from Payload CMS
+  if (chunks.length === 0) {
+    try {
+      const payload = await getPayload({ config: configPromise })
+      const aiKnowledgeDocs = await payload.find({
+        collection: 'ai-knowledge',
+        limit: 100,
+        where: {
+          isPublic: {
+            equals: true,
+          },
+        },
+      })
+
+      if (aiKnowledgeDocs.totalDocs > 0) {
+        for (const doc of aiKnowledgeDocs.docs as any[]) {
+          chunks.push({
+            id: `cms-${doc.id}`,
+            title: doc.title,
+            category: doc.category || 'general',
+            content: doc.content,
+            evidenceTag: doc.evidenceTag || `知识库条目：${doc.title}`,
+            keywords: [doc.title, doc.category, doc.evidenceTag].filter(Boolean),
+          })
+        }
+      }
+    } catch (err) {
+      console.warn('[RAG] Unable to query CMS public collections, using core static facts:', err)
+    }
   }
 
   // 2. Add Project Chunks (Strictly filter public projects only)

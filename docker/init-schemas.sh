@@ -24,24 +24,22 @@ psql -v ON_ERROR_STOP=1 \
     CREATE SCHEMA IF NOT EXISTS owner;
     CREATE SCHEMA IF NOT EXISTS public_read;
 
-    -- 3. Create/Update Security Roles with Secure Variable Values
-    DO \$\$
-    BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'owner_app') THEN
-            EXECUTE format('CREATE ROLE owner_app WITH LOGIN PASSWORD %L', :'owner_pass');
-        ELSE
-            EXECUTE format('ALTER ROLE owner_app WITH PASSWORD %L', :'owner_pass');
-        END IF;
-    END \$\$;
+    -- 3. Create/Update Security Roles with Native psql \\gexec Dynamic Execution
+    SELECT format(
+        CASE 
+            WHEN NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'owner_app') 
+            THEN 'CREATE ROLE owner_app WITH LOGIN PASSWORD %L'
+            ELSE 'ALTER ROLE owner_app WITH PASSWORD %L'
+        END, :'owner_pass')
+    \gexec
 
-    DO \$\$
-    BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'public_agent') THEN
-            EXECUTE format('CREATE ROLE public_agent WITH LOGIN PASSWORD %L', :'public_pass');
-        ELSE
-            EXECUTE format('ALTER ROLE public_agent WITH PASSWORD %L', :'public_pass');
-        END IF;
-    END \$\$;
+    SELECT format(
+        CASE 
+            WHEN NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'public_agent') 
+            THEN 'CREATE ROLE public_agent WITH LOGIN PASSWORD %L'
+            ELSE 'ALTER ROLE public_agent WITH PASSWORD %L'
+        END, :'public_pass')
+    \gexec
 
     -- 4. Set Search Paths and Schema Permissions
     ALTER ROLE owner_app SET search_path TO owner, public;
