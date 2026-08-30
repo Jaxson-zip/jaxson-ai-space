@@ -1,0 +1,41 @@
+# =========================================================================
+# Caddy Production Reverse Proxy Configuration
+# Automatic HTTPS, HTTP/3, Zstd/Gzip Compression & Security Headers
+# =========================================================================
+
+{$SITE_DOMAIN:localhost} {
+    # 1. Reverse Proxy to Next.js Web App
+    reverse_proxy web:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # 2. Performance Compression
+    encode zstd gzip
+
+    # 3. Static Asset Aggressive Caching (Static chunks, fonts, images ONLY)
+    @static {
+        path /_next/static/* /assets/* *.svg *.png *.jpg *.jpeg *.ico *.woff2 *.webp
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    # 4. Security & Hardening Headers
+    header {
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        # Referrer Policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # XSS Protection
+        X-XSS-Protection "1; mode=block"
+        # Remove Server Header
+        -Server
+    }
+
+    # 5. Logging
+    log {
+        output stdout
+        format json
+    }
+}

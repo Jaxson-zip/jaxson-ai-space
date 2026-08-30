@@ -17,7 +17,7 @@ export interface Experience {
   readonly summary: string
   readonly bullets: readonly string[]
   readonly technologies: readonly string[]
-  readonly kind: 'internship' | 'education' | 'other'
+  readonly kind: 'internship' | 'education' | 'campus' | 'other'
 }
 
 export interface ProjectLink {

@@ -67,8 +67,14 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    projects: Project;
+    experiences: Experience;
+    credentials: Credential;
+    'ai-knowledge': AiKnowledge;
+    reflections: Reflection;
+    memories: Memory;
     media: Media;
+    users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,8 +82,14 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    experiences: ExperiencesSelect<false> | ExperiencesSelect<true>;
+    credentials: CredentialsSelect<false> | CredentialsSelect<true>;
+    'ai-knowledge': AiKnowledgeSelect<false> | AiKnowledgeSelect<true>;
+    reflections: ReflectionsSelect<false> | ReflectionsSelect<true>;
+    memories: MemoriesSelect<false> | MemoriesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -119,6 +131,157 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects".
+ */
+export interface Project {
+  id: number;
+  title: string;
+  slug: string;
+  role: string;
+  category: '工具应用 · 原型落地' | '求职工具 · 开源二次开发' | 'AI 产品 · 私有概念探索' | '全栈工程 · 真实交付';
+  visibility: 'public' | 'private';
+  status: string;
+  summary: string;
+  coverImage?: (number | null) | Media;
+  tags?:
+    | {
+        tag?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  problem?: string | null;
+  approach?: string | null;
+  outcome?: string | null;
+  highlights?:
+    | {
+        item?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  demoUrl?: string | null;
+  repoUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiences".
+ */
+export interface Experience {
+  id: number;
+  organization: string;
+  role: string;
+  period: string;
+  type: 'internship' | 'education' | 'campus';
+  description?: string | null;
+  bullets?:
+    | {
+        bullet?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  tags?:
+    | {
+        tag?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credentials".
+ */
+export interface Credential {
+  id: number;
+  name: string;
+  category: 'award' | 'skill' | 'certificate';
+  year?: string | null;
+  level?: string | null;
+  items?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-knowledge".
+ */
+export interface AiKnowledge {
+  id: number;
+  title: string;
+  category: 'internship' | 'project' | 'skill' | 'education' | 'jd_match';
+  content: string;
+  isPublic?: boolean | null;
+  evidenceTag?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reflections".
+ */
+export interface Reflection {
+  id: number;
+  title: string;
+  type: 'daily' | 'weekly' | 'interview' | 'technical';
+  date: string;
+  content: string;
+  challenges?: string | null;
+  solution?: string | null;
+  takeaways?: string | null;
+  nextSteps?: string | null;
+  extractionStatus?: ('pending' | 'extracted' | 'skipped') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memories".
+ */
+export interface Memory {
+  id: number;
+  title: string;
+  category:
+    'project_experience' | 'internship_business' | 'architecture_thinking' | 'pitfall_solution' | 'skill_gap_goal';
+  status: 'candidate' | 'approved' | 'archived';
+  content: string;
+  evidenceTag: string;
+  confidence?: number | null;
+  sourceReflectionId?: string | null;
+  tags?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -141,25 +304,6 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -186,12 +330,36 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'projects';
+        value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'experiences';
+        value: number | Experience;
+      } | null)
+    | ({
+        relationTo: 'credentials';
+        value: number | Credential;
+      } | null)
+    | ({
+        relationTo: 'ai-knowledge';
+        value: number | AiKnowledge;
+      } | null)
+    | ({
+        relationTo: 'reflections';
+        value: number | Reflection;
+      } | null)
+    | ({
+        relationTo: 'memories';
+        value: number | Memory;
       } | null)
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -237,6 +405,141 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  role?: T;
+  category?: T;
+  visibility?: T;
+  status?: T;
+  summary?: T;
+  coverImage?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  problem?: T;
+  approach?: T;
+  outcome?: T;
+  highlights?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  demoUrl?: T;
+  repoUrl?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiences_select".
+ */
+export interface ExperiencesSelect<T extends boolean = true> {
+  organization?: T;
+  role?: T;
+  period?: T;
+  type?: T;
+  description?: T;
+  bullets?:
+    | T
+    | {
+        bullet?: T;
+        id?: T;
+      };
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credentials_select".
+ */
+export interface CredentialsSelect<T extends boolean = true> {
+  name?: T;
+  category?: T;
+  year?: T;
+  level?: T;
+  items?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-knowledge_select".
+ */
+export interface AiKnowledgeSelect<T extends boolean = true> {
+  title?: T;
+  category?: T;
+  content?: T;
+  isPublic?: T;
+  evidenceTag?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reflections_select".
+ */
+export interface ReflectionsSelect<T extends boolean = true> {
+  title?: T;
+  type?: T;
+  date?: T;
+  content?: T;
+  challenges?: T;
+  solution?: T;
+  takeaways?: T;
+  nextSteps?: T;
+  extractionStatus?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memories_select".
+ */
+export interface MemoriesSelect<T extends boolean = true> {
+  title?: T;
+  category?: T;
+  status?: T;
+  content?: T;
+  evidenceTag?: T;
+  confidence?: T;
+  sourceReflectionId?: T;
+  tags?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -256,24 +559,6 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

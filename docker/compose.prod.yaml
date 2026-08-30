@@ -1,0 +1,86 @@
+# =========================================================================
+# Jaxson AI Space Production Docker Compose Configuration
+# Services: Caddy (Gateway) + Web (Next.js + Payload) + PostgreSQL 17 (pgvector)
+# Optimized for 2-Core 4GB Cloud VPS (Tencent Cloud / Alibaba Cloud / AWS)
+# =========================================================================
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: jaxson-caddy-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    networks:
+      - jaxson_prod_net
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: jaxson-web-prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URI=postgresql://owner_app:${OWNER_APP_PASSWORD:?OWNER_APP_PASSWORD is required}@postgres:5432/jaxson_space
+      - USE_POSTGRES=true
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:?PAYLOAD_SECRET is required}
+      - STUDIO_SECRET_KEY=${STUDIO_SECRET_KEY:?STUDIO_SECRET_KEY is required}
+      - STUDIO_INBOX_SECRET=${STUDIO_INBOX_SECRET:-${STUDIO_SECRET_KEY}}
+      - OWNER_EMAIL=${OWNER_EMAIL:-jaxson@example.com}
+      - ENFORCE_STUDIO_AUTH=true
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - jaxson_prod_net
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: jaxson-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jaxson_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: jaxson_space
+      OWNER_APP_PASSWORD: ${OWNER_APP_PASSWORD:?OWNER_APP_PASSWORD is required}
+      PUBLIC_AGENT_PASSWORD: ${PUBLIC_AGENT_PASSWORD:?PUBLIC_AGENT_PASSWORD is required}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./init-schemas.sh:/docker-entrypoint-initdb.d/01-init-schemas.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jaxson_admin -d jaxson_space"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - jaxson_prod_net
+
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+  postgres_prod_data:
+    driver: local
+
+networks:
+  jaxson_prod_net:
+    driver: bridge

@@ -1,138 +1,95 @@
-import { ArrowUpRight, ExternalLink, GitFork, LockKeyhole } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-
+import { ArrowRight, ExternalLink, Code, Bot } from 'lucide-react'
+import { GithubIcon } from './icons'
 import type { Project } from '@/features/portfolio/types'
 
-type ProjectListProps = Readonly<{
+interface ProjectListProps {
   projects: readonly Project[]
-}>
-
-function ProjectVisual({ project }: Readonly<{ project: Project }>) {
-  if (project.image) {
-    return (
-      <div className="project-media project-media-image">
-        <Image
-          alt="Todo Memo 待办与备忘录真实界面"
-          className="project-image"
-          height={1000}
-          sizes="(max-width: 760px) 100vw, 52vw"
-          src={project.image}
-          width={900}
-        />
-        <span className="visual-label">真实产品界面</span>
-      </div>
-    )
-  }
-
-  if (project.slug === 'ruili-resume') {
-    return (
-      <div className="project-media project-placeholder" aria-label="Ruili Resume 界面示意">
-        <span className="visual-label">界面示意 · 非产品截图</span>
-        <div className="placeholder-canvas ruili-canvas" aria-hidden="true">
-          <div className="ruili-sidebar">
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-          <div className="ruili-editor">
-            <b>简历编辑</b>
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-          <div className="ruili-document">
-            <b>ZHANG JINPENG</b>
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className="project-media project-placeholder opc-placeholder"
-      aria-label="OPC Agent Company 流程示意"
-    >
-      <span className="visual-label">流程示意 · 非产品截图</span>
-      <div className="placeholder-canvas opc-canvas" aria-hidden="true">
-        <div className="opc-node opc-node-lead">任务入口</div>
-        <div className="opc-connector opc-connector-one" />
-        <div className="opc-connector opc-connector-two" />
-        <div className="opc-node opc-node-left">上下文</div>
-        <div className="opc-node opc-node-right">执行过程</div>
-        <div className="opc-output">阶段结果 / 可观察</div>
-      </div>
-    </div>
-  )
 }
 
 export function ProjectList({ projects }: ProjectListProps) {
   return (
-    <div className="project-list">
-      {projects.map((project, index) => {
-        const visibleLinks = project.links.filter(
-          (link) => link.kind !== 'source' || project.sourceVisibility === 'public',
-        )
+    <div className="projects-grid">
+      {projects.map((project) => {
+        const isDemo = project.status.includes('Demo')
+        const isOpenSource = project.status.includes('开源')
+
+        const statusClass = isDemo
+          ? 'status-demo'
+          : isOpenSource
+            ? 'status-opensource'
+            : 'status-private'
 
         return (
-          <article className="project-row" key={project.slug}>
-            <Link className="project-detail-link" href={`/projects/${project.slug}`}>
-              <ProjectVisual project={project} />
-              <div className="project-content">
-                <div className="project-number">0{index + 1}</div>
-                <div className="project-heading">
-                  <div>
-                    <p>{project.category}</p>
-                    <h3>{project.title}</h3>
-                  </div>
-                  <ArrowUpRight aria-hidden="true" size={25} />
+          <article className="project-card" key={project.slug}>
+            <div className="project-preview">
+              {project.image ? (
+                <Image
+                  src={project.image}
+                  alt={`${project.title} 界面截图`}
+                  width={600}
+                  height={340}
+                  className="project-image"
+                />
+              ) : (
+                <div className="project-placeholder">
+                  {project.slug.includes('agent') ? (
+                    <Bot size={36} color="var(--accent-cyan)" />
+                  ) : (
+                    <Code size={36} color="var(--accent-violet)" />
+                  )}
+                  <span>{project.category} · 架构概念</span>
                 </div>
-                <p className="project-summary">{project.summary}</p>
-                <dl className="project-facts">
-                  <div>
-                    <dt>状态</dt>
-                    <dd>{project.status}</dd>
-                  </div>
-                  <div>
-                    <dt>角色</dt>
-                    <dd>{project.role}</dd>
-                  </div>
-                </dl>
-                <p className="technology-line technology-line-light">
-                  {project.technologies.join(' · ')}
-                </p>
-                {project.sourceVisibility === 'private' && (
-                  <p className="private-notice">
-                    <LockKeyhole aria-hidden="true" size={16} />
-                    私有案例 / 不公开源码
-                  </p>
-                )}
-              </div>
-            </Link>
+              )}
+            </div>
 
-            {visibleLinks.length > 0 && (
-              <div className="project-external-links" aria-label={`${project.title} 外部链接`}>
-                {visibleLinks.map((link) => (
-                  <a href={link.href} key={link.href} rel="noreferrer" target="_blank">
-                    {link.kind === 'source' ? (
-                      <GitFork aria-hidden="true" size={17} />
-                    ) : (
-                      <ExternalLink aria-hidden="true" size={17} />
-                    )}
-                    {link.label}
-                    <ArrowUpRight aria-hidden="true" size={15} />
-                  </a>
+            <div className="project-content">
+              <div className="project-meta">
+                <span className="project-category">{project.category}</span>
+                <span className={`project-status ${statusClass}`}>{project.status}</span>
+              </div>
+
+              <h3 className="project-title">{project.title}</h3>
+              <p className="project-summary">{project.summary}</p>
+
+              <div className="project-tags">
+                {project.technologies.map((tech) => (
+                  <span className="tech-tag" key={tech}>
+                    {tech}
+                  </span>
                 ))}
               </div>
-            )}
+
+              <div className="project-footer">
+                <Link
+                  href={`/projects/${project.slug}`}
+                  className="project-link-primary"
+                >
+                  <span>查看案例详情</span>
+                  <ArrowRight size={16} />
+                </Link>
+
+                <div className="project-links-ext">
+                  {project.links.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link-icon"
+                      title={link.label}
+                    >
+                      {link.kind === 'source' ? (
+                        <GithubIcon size={18} />
+                      ) : (
+                        <ExternalLink size={18} />
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
           </article>
         )
       })}

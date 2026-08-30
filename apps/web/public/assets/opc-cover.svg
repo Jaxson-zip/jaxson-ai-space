@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#020408" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bgGrad2)" />
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#334155" stroke-width="1" rx="8" />
+
+  <!-- App Header -->
+  <rect x="0" y="0" width="800" height="44" fill="#04060a" />
+  <line x1="0" y1="44" x2="800" y2="44" stroke="#1e293b" stroke-width="1" />
+  
+  <circle cx="24" cy="22" r="5" fill="#ef4444" opacity="0.8" />
+  <circle cx="40" cy="22" r="5" fill="#f59e0b" opacity="0.8" />
+  <circle cx="56" cy="22" r="5" fill="#10b981" opacity="0.8" />
+
+  <text x="80" y="27" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">OPC Agent Company · 多智能体研发协同工作台</text>
+  <rect x="660" y="10" width="110" height="24" rx="4" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-width="1" />
+  <text x="674" y="26" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">私有探索 / 概念验证</text>
+
+  <!-- Sidebar -->
+  <rect x="0" y="44" width="180" height="406" fill="#070a12" />
+  <line x1="180" y1="44" x2="180" y2="450" stroke="#1e293b" stroke-width="1" />
+
+  <rect x="12" y="60" width="156" height="32" rx="6" fill="#1e293b" />
+  <text x="24" y="81" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">🏢 研发部门总览</text>
+  <text x="24" y="120" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">🤖 智能体岗位角色</text>
+  <text x="24" y="155" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">📋 任务派发与审批</text>
+  <text x="24" y="190" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">📦 交付包与代码归档</text>
+  <text x="24" y="225" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">⏱️ 协作审计日志</text>
+
+  <!-- Kanban Canvas -->
+  <g transform="translate(210, 65)">
+    <!-- Column 1: Planning Agent -->
+    <rect x="0" y="0" width="170" height="340" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+    <text x="14" y="24" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">🤖 产品规划智能体</text>
+    <rect x="10" y="40" width="150" height="60" rx="6" fill="#1e293b" stroke="#334155" stroke-width="0.8" />
+    <text x="20" y="60" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">需求拆解与 WBS 规划</text>
+    <text x="20" y="80" fill="#10b981" font-family="-apple-system, sans-serif" font-size="10">✓ 契约已生成</text>
+
+    <!-- Column 2: Coding Agent -->
+    <rect x="190" y="0" width="170" height="340" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+    <text x="204" y="24" fill="#818cf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">💻 全栈开发智能体</text>
+    <rect x="200" y="40" width="150" height="85" rx="6" fill="#1e293b" stroke="#818cf8" stroke-width="1" />
+    <text x="210" y="60" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">组件开发与 TDD 绿灯</text>
+    <text x="210" y="80" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10">Git Worktree 隔离开发</text>
+    <rect x="210" y="95" width="130" height="18" rx="3" fill="#38bdf8" fill-opacity="0.1" />
+    <text x="218" y="108" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="9">分支: feature/auth-v2</text>
+
+    <!-- Column 3: Quality Agent -->
+    <rect x="380" y="0" width="170" height="340" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+    <text x="394" y="24" fill="#10b981" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">🛡️ 验收与交付智能体</text>
+    <rect x="390" y="40" width="150" height="60" rx="6" fill="#1e293b" stroke="#334155" stroke-width="0.8" />
+    <text x="400" y="60" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">端到端测试与人工审批</text>
+    <text x="400" y="80" fill="#10b981" font-family="-apple-system, sans-serif" font-size="10">通过 11/11 单元测试</text>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: jaxson-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jaxson_admin
+      POSTGRES_PASSWORD: jaxson_secure_dev_password_2026
+      POSTGRES_DB: jaxson_space
+      OWNER_APP_PASSWORD: jaxson_secure_dev_password_2026
+      PUBLIC_AGENT_PASSWORD: public_agent_dev_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-schemas.sh:/docker-entrypoint-initdb.d/01-init-schemas.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jaxson_admin -d jaxson_space"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

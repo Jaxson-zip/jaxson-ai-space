@@ -10,5 +10,9 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
-.superpowers/
 .worktrees/
+*.db
+*.db-shm
+*.db-wal
+payload-local.db
+

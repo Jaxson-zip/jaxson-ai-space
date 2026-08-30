@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   images: {
     localPatterns: [
       {
+        pathname: '/assets/**',
+      },
+      {
         pathname: '/projects/**',
       },
       {

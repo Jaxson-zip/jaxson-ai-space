@@ -1,26 +1,17 @@
-import { ArrowUpRight, GitFork } from 'lucide-react'
+import React from 'react'
 import Link from 'next/link'
-
-import { profile } from '@/features/portfolio/content'
 
 export function Footer() {
   return (
     <footer className="site-footer">
-      <div className="shell footer-inner">
-        <div className="footer-identity">
-          <strong>{profile.name}</strong>
-          <span>深圳 Shenzhen · 2027 届 · 可接受线下机会</span>
-        </div>
+      <div className="container footer-inner">
+        <span className="footer-copyright">
+          © 2027 张锦鹏 (Jaxson) · 深圳 · 全栈与 AI 应用开发
+        </span>
         <div className="footer-links">
-          <a href={`mailto:${profile.email}`}>{profile.email}</a>
-          <a href={profile.github} rel="noreferrer" target="_blank">
-            <GitFork aria-hidden="true" size={16} />
-            GitHub
-          </a>
-          <Link href="/resume">
-            在线简历
-            <ArrowUpRight aria-hidden="true" size={16} />
-          </Link>
+          <Link href="/ai" className="footer-link-ai">AI 岗位匹配分身</Link>
+          <a href="https://github.com/Jaxson-zip" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="mailto:1822103245@qq.com">邮箱联系</a>
         </div>
       </div>
     </footer>

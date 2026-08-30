@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="paperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bgGrad)" />
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#334155" stroke-width="1" rx="8" />
+
+  <!-- App Header -->
+  <rect x="0" y="0" width="800" height="44" fill="#090d16" />
+  <line x1="0" y1="44" x2="800" y2="44" stroke="#1e293b" stroke-width="1" />
+  
+  <!-- Window dots -->
+  <circle cx="24" cy="22" r="5" fill="#ef4444" opacity="0.8" />
+  <circle cx="40" cy="22" r="5" fill="#f59e0b" opacity="0.8" />
+  <circle cx="56" cy="22" r="5" fill="#10b981" opacity="0.8" />
+
+  <!-- Logo -->
+  <text x="80" y="27" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">锐历工作台 · 中文简历编辑器</text>
+  <rect x="680" y="10" width="90" height="24" rx="4" fill="#38bdf8" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1" />
+  <text x="696" y="26" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">导出 PDF ↗</text>
+
+  <!-- Sidebar -->
+  <rect x="0" y="44" width="180" height="406" fill="#0b1120" />
+  <line x1="180" y1="44" x2="180" y2="450" stroke="#1e293b" stroke-width="1" />
+
+  <!-- Sidebar Items -->
+  <rect x="12" y="60" width="156" height="32" rx="6" fill="#1e293b" />
+  <text x="24" y="81" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">📄 基本资料与求职意向</text>
+  
+  <text x="24" y="120" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">💼 企业实习经历</text>
+  <text x="24" y="155" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">🚀 项目落地案例</text>
+  <text x="24" y="190" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">🎓 教育背景与排名</text>
+  <text x="24" y="225" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">🏆 竞赛成果与认证</text>
+  <text x="24" y="260" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">🎨 中文排版优化</text>
+
+  <!-- Resume Preview Canvas -->
+  <g transform="translate(240, 65)">
+    <!-- Paper Shadow & Background -->
+    <rect x="0" y="0" width="490" height="345" rx="8" fill="url(#paperGrad)" stroke="#334155" stroke-width="1" />
+
+    <!-- Resume Header -->
+    <text x="32" y="42" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">张锦鹏</text>
+    <text x="32" y="62" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">AI 应用开发 / 全栈开发工程师 · 2027 届</text>
+    <text x="32" y="78" fill="#64748b" font-family="-apple-system, sans-serif" font-size="10">深圳职业技术大学 · 大数据技术 (GPA 3.67 · 前 5%)</text>
+    <line x1="32" y1="90" x2="458" y2="90" stroke="#334155" stroke-width="1" />
+
+    <!-- Experience Block -->
+    <rect x="32" y="105" width="70" height="16" rx="3" fill="#38bdf8" fill-opacity="0.12" />
+    <text x="36" y="117" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="10" font-weight="700">实习经历</text>
+    <text x="32" y="136" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">广东润喵云科技有限公司 · 开发实习生</text>
+    <text x="360" y="136" fill="#64748b" font-family="-apple-system, sans-serif" font-size="10">2026.06 - 2026.08</text>
+    <rect x="32" y="146" width="410" height="5" rx="2.5" fill="#334155" />
+    <rect x="32" y="156" width="370" height="5" rx="2.5" fill="#334155" />
+
+    <!-- Projects Block -->
+    <rect x="32" y="180" width="70" height="16" rx="3" fill="#818cf8" fill-opacity="0.12" />
+    <text x="36" y="192" fill="#818cf8" font-family="-apple-system, sans-serif" font-size="10" font-weight="700">项目成果</text>
+    <text x="32" y="212" fill="#f1f5f9" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">待办备忘 (Todo Memo PWA)</text>
+    <rect x="32" y="222" width="390" height="5" rx="2.5" fill="#334155" />
+    <rect x="32" y="232" width="330" height="5" rx="2.5" fill="#334155" />
+
+    <!-- Tags Row -->
+    <rect x="32" y="260" width="80" height="18" rx="4" fill="#1e293b" />
+    <text x="40" y="273" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="9">中文排版二次开发</text>
+    <rect x="120" y="260" width="60" height="18" rx="4" fill="#1e293b" />
+    <text x="128" y="273" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="9">PDF 导出</text>
+    <rect x="190" y="260" width="60" height="18" rx="4" fill="#1e293b" />
+    <text x="198" y="273" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="9">开源仓库</text>
+  </g>
+</svg>

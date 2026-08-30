@@ -1,0 +1,15 @@
+# =========================================================================
+# Cloudflare Tunnel Configuration Template (cloudflared)
+# Enables 0-Port Public Ingress without exposing VPS Ports
+# =========================================================================
+
+tunnel: <YOUR-TUNNEL-UUID>
+credentials-file: /etc/cloudflared/<YOUR-TUNNEL-UUID>.json
+
+ingress:
+  # 1. Custom Domain routes to local Caddy reverse proxy
+  - hostname: jaxson.space
+    service: http://localhost:80
+
+  # 2. Catch-all rule (returns 404 for unmatched hostnames)
+  - service: http_status:404
