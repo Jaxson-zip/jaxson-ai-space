@@ -25,6 +25,8 @@ export interface KnowledgeEmbeddingRow {
   evidence_tag: string
   embedding: number[] // 1536-dimensional vector
   metadata: Record<string, any>
+  generation_id?: string
+  is_active?: boolean
 }
 
 /**
@@ -114,6 +116,8 @@ export function processOutboxTask(task: OutboxTask): KnowledgeEmbeddingRow[] {
       content: chunk,
       evidence_tag: task.evidenceTag,
       embedding,
+      generation_id: task.id,
+      is_active: true,
       metadata: {
         eventType: task.eventType,
         entityId: task.entityId,

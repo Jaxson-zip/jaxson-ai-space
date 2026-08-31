@@ -73,5 +73,11 @@ jobs:
             fi
             
             git pull origin main
+            # Bootstrap/migrate PostgreSQL before web and worker can consume the outbox.
+            docker compose -f docker/compose.prod.yaml up -d postgres
+            until docker compose -f docker/compose.prod.yaml exec -T postgres pg_isready -U jaxson_admin -d jaxson_space; do
+              sleep 2
+            done
+            docker compose -f docker/compose.prod.yaml exec -T postgres psql -v ON_ERROR_STOP=1 -U jaxson_admin -d jaxson_space < docker/migrations/002-public-index.sql
             docker compose -f docker/compose.prod.yaml up -d --build
             echo "✅ Deployment completed successfully!"

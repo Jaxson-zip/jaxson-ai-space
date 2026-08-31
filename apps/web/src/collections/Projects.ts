@@ -1,5 +1,10 @@
 import type { CollectionConfig } from 'payload'
-import { createRevalidateHook, createDeleteRevalidateHook } from '../features/cms/revalidate-hook'
+import {
+  createPublicIndexChangeHook,
+  createPublicIndexDeleteHook,
+  createRevalidateHook,
+  createDeleteRevalidateHook,
+} from '../features/cms/revalidate-hook'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
@@ -25,8 +30,8 @@ export const Projects: CollectionConfig = {
     delete: ({ req }) => Boolean(req.user),
   },
   hooks: {
-    afterChange: [createRevalidateHook(['/', '/projects/[slug]'])],
-    afterDelete: [createDeleteRevalidateHook(['/', '/projects/[slug]'])],
+    afterChange: [createRevalidateHook(['/', '/projects/[slug]']), createPublicIndexChangeHook('project')],
+    afterDelete: [createDeleteRevalidateHook(['/', '/projects/[slug]']), createPublicIndexDeleteHook('project')],
   },
   fields: [
     {

@@ -1,7 +1,7 @@
 /**
  * Script to seed knowledge chunks and 1536-dimensional embeddings into PostgreSQL public_read.knowledge_embeddings
  */
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 
 function generate1536Vector(text) {
   const DIMENSIONS = 1536
@@ -88,7 +88,14 @@ const RAW_CHUNKS = [
   },
 ]
 
-let sql = ''
+const containerName = process.env.POSTGRES_CONTAINER_NAME || 'jaxson-postgres-dev'
+const dbUser = process.env.POSTGRES_USER || 'jaxson_admin'
+const dbName = process.env.POSTGRES_DB || 'jaxson_space'
+const generationId = `seed-${Date.now().toString(36)}`
+
+let sql = `BEGIN;
+UPDATE public_read.knowledge_embeddings SET is_active = FALSE;
+`
 for (const chunk of RAW_CHUNKS) {
   const vector = generate1536Vector(`${chunk.title} ${chunk.content}`)
   const vectorStr = `[${vector.join(',')}]`
@@ -99,22 +106,30 @@ for (const chunk of RAW_CHUNKS) {
 
   sql += `
 INSERT INTO public_read.knowledge_embeddings 
-  (chunk_id, category, title, content, evidence_tag, embedding, metadata)
+  (chunk_id, category, title, content, evidence_tag, embedding, metadata, generation_id, is_active)
 VALUES 
-  ('${chunk.chunk_id}', '${chunk.category}', '${titleSafe}', '${contentSafe}', '${evidenceSafe}', '${vectorStr}', '${metaJson}'::jsonb)
+  ('${chunk.chunk_id}', '${chunk.category}', '${titleSafe}', '${contentSafe}', '${evidenceSafe}', '${vectorStr}', '${metaJson}'::jsonb, '${generationId}', TRUE)
 ON CONFLICT (chunk_id) DO UPDATE SET
   title = EXCLUDED.title,
   content = EXCLUDED.content,
   evidence_tag = EXCLUDED.evidence_tag,
   embedding = EXCLUDED.embedding,
   metadata = EXCLUDED.metadata,
+  generation_id = EXCLUDED.generation_id,
+  is_active = TRUE,
   updated_at = NOW();
 `
 }
+sql += '\nCOMMIT;\n'
 
-console.log('Inserting into PostgreSQL container jaxson-postgres-dev...')
+console.log(`Inserting into PostgreSQL container ${containerName}...`)
 try {
-  execSync(`docker exec -i jaxson-postgres-dev psql -U jaxson_admin -d jaxson_space`, {
+  execFileSync('docker', [
+    'exec', '-i', containerName, 'psql',
+    '-v', 'ON_ERROR_STOP=1',
+    '-U', dbUser,
+    '-d', dbName,
+  ], {
     input: sql,
     stdio: ['pipe', 'inherit', 'inherit'],
   })

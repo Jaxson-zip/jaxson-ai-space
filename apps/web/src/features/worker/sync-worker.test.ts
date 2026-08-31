@@ -36,6 +36,8 @@ describe('Async Outbox Worker & 1536-d Vector Indexer', () => {
     expect(rows[0].chunk_id).toBe('proj-todo-memo_chunk_0')
     expect(rows[0].embedding.length).toBe(1536)
     expect(rows[0].evidence_tag).toBe('Todo Memo GitHub 源码与线上 Demo')
+    expect(rows[0].generation_id).toBe('task-001')
+    expect(rows[0].is_active).toBe(true)
     expect(rows[0].metadata.eventType).toBe('PROJECT_PUBLISHED')
   })
 })

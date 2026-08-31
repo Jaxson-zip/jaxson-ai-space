@@ -8,6 +8,8 @@ export interface KnowledgeChunk {
   evidenceTag: string
   keywords: string[]
   embedding?: number[]
+  /** Similarity calculated by the pgvector query, when loaded from PostgreSQL. */
+  vectorScore?: number
 }
 
 export interface RetrievalResult {

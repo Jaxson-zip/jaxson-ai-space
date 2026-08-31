@@ -1,9 +1,11 @@
 import { getPayload } from 'payload'
+import pg from 'pg'
 import configPromise from '@/payload.config'
 import { awards, experiences, profile, projects, skillGroups } from '@/features/portfolio/content'
+import { generate1536Vector } from '@/features/worker/sync-worker'
 import type { ChunkCategory, KnowledgeChunk } from './types'
 
-export async function loadKnowledgeChunks(): Promise<KnowledgeChunk[]> {
+export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChunk[]> {
   const chunks: KnowledgeChunk[] = []
 
   // 1. Try querying PostgreSQL public_read.knowledge_embeddings snapshot (Strict Least Privilege)
@@ -11,32 +13,37 @@ export async function loadKnowledgeChunks(): Promise<KnowledgeChunk[]> {
   const pgConnStr = process.env.PUBLIC_AGENT_DATABASE_URI || (!isProd ? process.env.DATABASE_URI : undefined)
 
   if (process.env.USE_POSTGRES === 'true' && pgConnStr) {
+    let pool: pg.Pool | undefined
     try {
-      const pgModule = await import('pg' as any).catch(() => null)
-      if (pgModule && (pgModule.Pool || pgModule.default?.Pool)) {
-        const PoolClass = pgModule.Pool || pgModule.default.Pool
-        const pool = new PoolClass({ connectionString: pgConnStr, max: 2, idleTimeoutMillis: 5000 })
-        const res = await pool.query(`
-          SELECT chunk_id, category, title, content, evidence_tag, metadata 
+      pool = new pg.Pool({ connectionString: pgConnStr, max: 2, idleTimeoutMillis: 5000 })
+      const queryVector = query?.trim() ? `[${generate1536Vector(query).join(',')}]` : null
+      const res = await pool.query(`
+          SELECT chunk_id, category, title, content, evidence_tag, metadata,
+                 CASE WHEN embedding IS NULL THEN NULL
+                      ELSE 1 - (embedding <=> COALESCE($1::vector, embedding))
+                 END AS vector_score
           FROM public_read.knowledge_embeddings 
-          ORDER BY updated_at DESC LIMIT 100
-        `)
-        await pool.end().catch(() => {})
-        if (res && res.rows && res.rows.length > 0) {
-          for (const row of res.rows) {
-            chunks.push({
-              id: row.chunk_id,
-              title: row.title,
-              category: (row.category || 'general') as ChunkCategory,
-              content: row.content,
-              evidenceTag: row.evidence_tag,
-              keywords: [row.title, row.category, row.evidence_tag].filter(Boolean),
-            })
-          }
+          WHERE is_active = TRUE
+          ORDER BY embedding <=> COALESCE($1::vector, embedding) NULLS LAST, updated_at DESC
+          LIMIT 100
+        `, [queryVector])
+      if (res.rows.length > 0) {
+        for (const row of res.rows) {
+          chunks.push({
+            id: row.chunk_id,
+            title: row.title,
+            category: (row.category || 'general') as ChunkCategory,
+            content: row.content,
+            evidenceTag: row.evidence_tag,
+            keywords: [row.title, row.category, row.evidence_tag].filter(Boolean),
+            vectorScore: typeof row.vector_score === 'number' ? Math.max(0, Math.min(1, row.vector_score)) : undefined,
+          })
         }
       }
     } catch (pgErr) {
       console.warn('[RAG] Unable to query public_read pgvector knowledge directly, trying CMS collections:', pgErr)
+    } finally {
+      await pool?.end().catch(() => {})
     }
   }
 

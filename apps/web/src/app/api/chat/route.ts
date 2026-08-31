@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     const latestQuery = latestMsg.content.trim()
 
     // 1. Load dynamic knowledge chunks from Payload CMS & portfolio content
-    const allChunks = await loadKnowledgeChunks()
+    const allChunks = await loadKnowledgeChunks(latestQuery)
 
     // 2. Perform hybrid retrieval (Vector Cosine Similarity + BM25)
     const retrievalResults = hybridRetrieve(latestQuery, allChunks, 3)

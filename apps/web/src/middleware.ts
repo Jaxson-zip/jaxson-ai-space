@@ -9,7 +9,7 @@ import { jwtVerify } from 'jose'
  * 1. Hide `/studio` and `/api/studio` from external visitors and automated scanners.
  * 2. In production, unauthenticated requests are rewritten to standard 404 (Not Found)
  *    instead of 401/403 to completely disguise the presence of a private workbench.
- * 3. Supports Cloudflare Access header (`Cf-Access-Authenticated-User-Email`), verified JWT, and secret key.
+ * 3. Supports cryptographically verified Cloudflare Access JWTs and secret keys.
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
 
   // 2. Check Authentication Signals
   const isInboxRoute = pathname === '/api/studio/inbox'
-  const allowedEmail = (process.env.OWNER_EMAIL || 'jaxson@example.com').trim().toLowerCase()
+  const allowedEmail = (process.env.OWNER_EMAIL || '1822103245@qq.com').trim().toLowerCase()
   const studioToken = request.cookies.get('studio_token')?.value
   const authHeader = request.headers.get('authorization') || ''
   const bearerToken = authHeader.replace(/^Bearer\s+/i, '').trim()

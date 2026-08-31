@@ -67,6 +67,20 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(results[0].chunk.id).toBe('profile-szpu')
   })
 
+  it('preserves a pgvector score supplied by the database', () => {
+    const results = hybridRetrieve(
+      '完全不相关的问题',
+      [
+        { ...MOCK_CHUNKS[0], vectorScore: 0.99 },
+        { ...MOCK_CHUNKS[1], vectorScore: 0.01 },
+      ],
+      1
+    )
+
+    expect(results[0].chunk.id).toBe('exp-runmiaoyun')
+    expect(results[0].vectorScore).toBe(0.99)
+  })
+
   it('builds a strict system prompt containing evidence tags and anti-hallucination guardrails', () => {
     const results = hybridRetrieve('润喵云实习', MOCK_CHUNKS, 1)
     const prompt = buildSystemPrompt(results, false)

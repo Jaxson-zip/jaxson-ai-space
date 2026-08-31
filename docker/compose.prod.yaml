@@ -47,15 +47,31 @@ services:
       - PAYLOAD_SECRET=${PAYLOAD_SECRET:?PAYLOAD_SECRET is required}
       - STUDIO_SECRET_KEY=${STUDIO_SECRET_KEY:?STUDIO_SECRET_KEY is required}
       - STUDIO_INBOX_SECRET=${STUDIO_INBOX_SECRET:-${STUDIO_SECRET_KEY}}
-      - OWNER_EMAIL=${OWNER_EMAIL:-jaxson@example.com}
+      - OWNER_EMAIL=${OWNER_EMAIL:-1822103245@qq.com}
       - ENFORCE_STUDIO_AUTH=true
-      - CLOUDFLARE_ACCESS_TEAM_NAME=${CLOUDFLARE_ACCESS_TEAM_NAME:-}
-      - CLOUDFLARE_ACCESS_AUD=${CLOUDFLARE_ACCESS_AUD:-}
+      - CLOUDFLARE_ACCESS_TEAM_NAME=${CLOUDFLARE_ACCESS_TEAM_NAME:?CLOUDFLARE_ACCESS_TEAM_NAME is required}
+      - CLOUDFLARE_ACCESS_AUD=${CLOUDFLARE_ACCESS_AUD:?CLOUDFLARE_ACCESS_AUD is required}
       - CLOUDFLARE_ACCESS_SECRET=${CLOUDFLARE_ACCESS_SECRET:-}
     deploy:
       resources:
         limits:
           memory: 1536M
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - jaxson_prod_net
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: jaxson-index-worker-prod
+    restart: unless-stopped
+    command: ["node", "apps/web/scripts/run-index-worker.mjs"]
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URI=postgresql://owner_app:${OWNER_APP_PASSWORD:?OWNER_APP_PASSWORD is required}@postgres:5432/jaxson_space
     depends_on:
       postgres:
         condition: service_healthy

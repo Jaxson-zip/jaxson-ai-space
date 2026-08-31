@@ -1,5 +1,10 @@
 import type { CollectionConfig } from 'payload'
-import { createRevalidateHook, createDeleteRevalidateHook } from '../features/cms/revalidate-hook'
+import {
+  createPublicIndexChangeHook,
+  createPublicIndexDeleteHook,
+  createRevalidateHook,
+  createDeleteRevalidateHook,
+} from '../features/cms/revalidate-hook'
 
 export const AIKnowledge: CollectionConfig = {
   slug: 'ai-knowledge',
@@ -25,8 +30,8 @@ export const AIKnowledge: CollectionConfig = {
     delete: ({ req }) => Boolean(req.user),
   },
   hooks: {
-    afterChange: [createRevalidateHook(['/ai'])],
-    afterDelete: [createDeleteRevalidateHook(['/ai'])],
+    afterChange: [createRevalidateHook(['/ai']), createPublicIndexChangeHook('knowledge')],
+    afterDelete: [createDeleteRevalidateHook(['/ai']), createPublicIndexDeleteHook('knowledge')],
   },
   fields: [
     {

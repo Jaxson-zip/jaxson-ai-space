@@ -98,7 +98,9 @@ export function hybridRetrieve(
 
   // Compute scores for each chunk
   const results: RetrievalResult[] = tokenizedChunks.map(({ chunk, tokens, embedding }) => {
-    const vectorScore = cosineSimilarity(queryEmbedding, embedding)
+    const vectorScore = typeof chunk.vectorScore === 'number'
+      ? Math.max(0, Math.min(1, chunk.vectorScore))
+      : cosineSimilarity(queryEmbedding, embedding)
     const rawBM25 = calculateBM25Score(queryTokens, tokens, avgDocLength, totalDocs, docFrequencies)
     // Normalize BM25 score to [0, 1] range approximately
     const bm25Score = Math.min(1, rawBM25 / 10)
