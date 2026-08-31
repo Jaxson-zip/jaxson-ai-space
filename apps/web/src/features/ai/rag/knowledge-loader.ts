@@ -6,14 +6,16 @@ import type { ChunkCategory, KnowledgeChunk } from './types'
 export async function loadKnowledgeChunks(): Promise<KnowledgeChunk[]> {
   const chunks: KnowledgeChunk[] = []
 
-  // 1. Try querying PostgreSQL public_read.knowledge_embeddings snapshot
-  if (process.env.USE_POSTGRES === 'true' && (process.env.DATABASE_URI || process.env.PUBLIC_AGENT_DATABASE_URI)) {
+  // 1. Try querying PostgreSQL public_read.knowledge_embeddings snapshot (Strict Least Privilege)
+  const isProd = process.env.NODE_ENV === 'production'
+  const pgConnStr = process.env.PUBLIC_AGENT_DATABASE_URI || (!isProd ? process.env.DATABASE_URI : undefined)
+
+  if (process.env.USE_POSTGRES === 'true' && pgConnStr) {
     try {
       const pgModule = await import('pg' as any).catch(() => null)
       if (pgModule && (pgModule.Pool || pgModule.default?.Pool)) {
         const PoolClass = pgModule.Pool || pgModule.default.Pool
-        const connStr = process.env.PUBLIC_AGENT_DATABASE_URI || process.env.DATABASE_URI
-        const pool = new PoolClass({ connectionString: connStr, max: 2, idleTimeoutMillis: 5000 })
+        const pool = new PoolClass({ connectionString: pgConnStr, max: 2, idleTimeoutMillis: 5000 })
         const res = await pool.query(`
           SELECT chunk_id, category, title, content, evidence_tag, metadata 
           FROM public_read.knowledge_embeddings 

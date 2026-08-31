@@ -120,5 +120,6 @@ try {
   })
   console.log('✅ Successfully seeded knowledge chunks and 1536-d vectors into public_read.knowledge_embeddings!')
 } catch (err) {
-  console.error('Error inserting into Postgres:', err.message)
+  console.error('❌ Error inserting into Postgres:', err.message)
+  process.exit(1)
 }
