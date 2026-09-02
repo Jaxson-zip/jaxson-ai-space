@@ -37,6 +37,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
+    image: jaxson-web-prod:latest
     container_name: jaxson-web-prod
     restart: unless-stopped
     environment:
@@ -63,9 +64,7 @@ services:
       - jaxson_prod_net
 
   worker:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.web
+    image: jaxson-web-prod:latest
     container_name: jaxson-index-worker-prod
     restart: unless-stopped
     command: ["node", "apps/web/scripts/run-index-worker.mjs"]
