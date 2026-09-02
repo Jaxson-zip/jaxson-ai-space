@@ -5,6 +5,7 @@
 
 # Stage 1: Base & Dependencies
 FROM node:24-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
@@ -13,19 +14,22 @@ RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild sharp esbuil
 
 # Stage 2: Builder
 FROM node:24-alpine AS builder
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=2048 --no-deprecation"
 ENV PAYLOAD_SECRET=build-time-placeholder-secret-32-chars-long
 ENV USE_POSTGRES=false
 RUN pnpm --filter @jaxson/web build
 
 # Stage 3: Runner (Production Image)
 FROM node:24-alpine AS runner
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
