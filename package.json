@@ -9,5 +9,12 @@
     "lint": "pnpm --filter @jaxson/web lint",
     "test": "pnpm --filter @jaxson/web test",
     "typecheck": "pnpm --filter @jaxson/web typecheck"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver"
+    ]
   }
 }
