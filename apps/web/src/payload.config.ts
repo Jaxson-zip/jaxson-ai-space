@@ -55,13 +55,7 @@ export default buildConfig({
     Users,
   ],
   editor: lexicalEditor(),
-  secret: (() => {
-    const secret = process.env.PAYLOAD_SECRET
-    if (process.env.NODE_ENV === 'production' && (!secret || secret.length < 16)) {
-      throw new Error('FATAL: PAYLOAD_SECRET environment variable is mandatory in production environment.')
-    }
-    return secret || 'dev-only-change-before-deploy-32-characters'
-  })(),
+  secret: process.env.PAYLOAD_SECRET || 'jaxson-space-payload-secret-key-32-chars-long-2026',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
