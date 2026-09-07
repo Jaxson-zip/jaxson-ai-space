@@ -7,6 +7,19 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    'pino',
+    'pino-pretty',
+    'sharp',
+    'detect-libc',
+    'pg',
+    'pg-types',
+    '@payloadcms/db-postgres',
+    '@payloadcms/db-sqlite',
+    '@libsql/client',
+    'drizzle-orm',
+    '@payloadcms/drizzle',
+  ],
   typescript: {
     ignoreBuildErrors: true,
   },
