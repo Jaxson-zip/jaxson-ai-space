@@ -1,10 +1,12 @@
-﻿module.exports = {
+const path = require('path')
+
+module.exports = {
   apps: [
     {
       name: 'jaxson-web',
       script: 'node_modules/next/dist/bin/next',
-      args: 'start apps/web',
-      cwd: __dirname,
+      args: 'start',
+      cwd: path.join(__dirname, 'apps/web'),
       instances: 1,
       autorestart: true,
       max_memory_restart: '1200M',
@@ -16,8 +18,8 @@
     },
     {
       name: 'jaxson-worker',
-      script: 'apps/web/scripts/run-index-worker.mjs',
-      cwd: __dirname,
+      script: 'scripts/run-index-worker.mjs',
+      cwd: path.join(__dirname, 'apps/web'),
       instances: 1,
       autorestart: true,
       max_memory_restart: '512M',
