@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['pino', 'pino-pretty', 'pino-std-serializers', 'sharp'],
   typescript: {
     ignoreBuildErrors: true,
   },
