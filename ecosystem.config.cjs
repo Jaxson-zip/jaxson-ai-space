@@ -25,6 +25,13 @@ function loadEnvFile(envPath) {
 
 const loadedEnv = loadEnvFile(path.join(__dirname, '.env'))
 
+if (loadedEnv.DATABASE_URI && loadedEnv.DATABASE_URI.includes('@postgres:5432')) {
+  loadedEnv.DATABASE_URI = loadedEnv.DATABASE_URI.replace('@postgres:5432', '@127.0.0.1:5432')
+}
+if (loadedEnv.PUBLIC_AGENT_DATABASE_URI && loadedEnv.PUBLIC_AGENT_DATABASE_URI.includes('@postgres:5432')) {
+  loadedEnv.PUBLIC_AGENT_DATABASE_URI = loadedEnv.PUBLIC_AGENT_DATABASE_URI.replace('@postgres:5432', '@127.0.0.1:5432')
+}
+
 module.exports = {
   apps: [
     {
