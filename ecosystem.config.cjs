@@ -23,7 +23,10 @@ function loadEnvFile(envPath) {
   return env
 }
 
-const loadedEnv = loadEnvFile(path.join(__dirname, '.env'))
+const rootEnv = loadEnvFile(path.join(__dirname, '.env'))
+const webEnv = loadEnvFile(path.join(__dirname, 'apps/web/.env'))
+const webProdEnv = loadEnvFile(path.join(__dirname, 'apps/web/.env.production'))
+const loadedEnv = { ...rootEnv, ...webEnv, ...webProdEnv }
 
 if (loadedEnv.DATABASE_URI && loadedEnv.DATABASE_URI.includes('@postgres:5432')) {
   loadedEnv.DATABASE_URI = loadedEnv.DATABASE_URI.replace('@postgres:5432', '@127.0.0.1:5432')
