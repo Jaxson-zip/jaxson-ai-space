@@ -10,11 +10,17 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     'pino',
     '@pinojs/redact',
+    'atomic-sleep',
+    'on-exit-leak-free',
+    'pino-abstract-transport',
     'pino-pretty',
     'pino-std-serializers',
+    'process-warning',
+    'quick-format-unescaped',
+    'real-require',
+    'safe-stable-stringify',
     'sonic-boom',
     'thread-stream',
-    'real-require',
     'sharp',
   ],
   typescript: {
