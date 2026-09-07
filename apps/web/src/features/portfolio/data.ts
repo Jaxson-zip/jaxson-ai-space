@@ -1,5 +1,3 @@
-import { getPayload } from 'payload'
-import configPromise from '@/payload.config'
 import {
   profile as fallbackProfile,
   experiences as fallbackExperiences,
@@ -10,21 +8,24 @@ import {
 import type { Experience, Project } from './types'
 
 export async function getHydratedPortfolioData() {
-  try {
-    const payload = await getPayload({ config: configPromise })
+  if (process.env.USE_POSTGRES === 'true') {
+    try {
+      const { getPayload } = await import('payload')
+      const { default: configPromise } = await import('@/payload.config')
+      const payload = await getPayload({ config: configPromise })
 
-    // Query active database records (Strictly filter visibility = 'public' for public portfolio)
-    const projectsDocs = await payload.find({
-      collection: 'projects',
-      limit: 50,
-      sort: 'createdAt',
-      where: {
-        visibility: {
-          equals: 'public',
+      // Query active database records (Strictly filter visibility = 'public' for public portfolio)
+      const projectsDocs = await payload.find({
+        collection: 'projects',
+        limit: 50,
+        sort: 'createdAt',
+        where: {
+          visibility: {
+            equals: 'public',
+          },
         },
-      },
-    })
-    const experiencesDocs = await payload.find({ collection: 'experiences', limit: 50, sort: 'createdAt' })
+      })
+      const experiencesDocs = await payload.find({ collection: 'experiences', limit: 50, sort: 'createdAt' })
 
     const projects: Project[] =
       projectsDocs.totalDocs > 0
@@ -78,13 +79,15 @@ export async function getHydratedPortfolioData() {
     }
   } catch (error) {
     console.warn('[Payload CMS] Falling back to static data due to:', error)
-    return {
-      profile: fallbackProfile,
-      projects: fallbackProjects.filter((p) => p.sourceVisibility === 'public'),
-      experiences: fallbackExperiences,
-      skillGroups: fallbackSkillGroups,
-      awards: fallbackAwards,
-      isLiveDb: false,
-    }
+  }
+}
+
+  return {
+    profile: fallbackProfile,
+    projects: fallbackProjects.filter((p) => p.sourceVisibility === 'public'),
+    experiences: fallbackExperiences,
+    skillGroups: fallbackSkillGroups,
+    awards: fallbackAwards,
+    isLiveDb: false,
   }
 }
