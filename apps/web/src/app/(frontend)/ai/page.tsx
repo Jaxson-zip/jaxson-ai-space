@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import React, { useState, useRef, useLayoutEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Sparkles,
@@ -265,7 +265,7 @@ export default function AIPage() {
           }
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantMsgId

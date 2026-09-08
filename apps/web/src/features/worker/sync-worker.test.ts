@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { generate1536Vector, chunkText, processOutboxTask } from './sync-worker'
+import {
+  generate1536Vector,
+  generateSemanticOrLocal1536Vector,
+  chunkText,
+  processOutboxTask,
+  processOutboxTaskAsync,
+} from './sync-worker'
 
 describe('Async Outbox Worker & 1536-d Vector Indexer', () => {
   it('generates exact 1536-dimensional normalized vector', () => {
@@ -40,4 +46,32 @@ describe('Async Outbox Worker & 1536-d Vector Indexer', () => {
     expect(rows[0].is_active).toBe(true)
     expect(rows[0].metadata.eventType).toBe('PROJECT_PUBLISHED')
   })
+
+  it('generateSemanticOrLocal1536Vector falls back safely to 1536-d local vector without API key', async () => {
+    const vector = await generateSemanticOrLocal1536Vector('测试语义嵌入与降级')
+    expect(vector.length).toBe(1536)
+    const normSquared = vector.reduce((sum, v) => sum + v * v, 0)
+    expect(normSquared).toBeGreaterThan(0.99)
+  })
+
+  it('processOutboxTaskAsync processes tasks asynchronously and supports fallback', async () => {
+    const task = {
+      id: 'task-async-001',
+      eventType: 'KNOWLEDGE_ADDED' as const,
+      entityId: 'know-rag',
+      title: 'RAG 检索架构',
+      category: 'technical',
+      content: '利用混合检索与语义向量提升检索置信度。',
+      evidenceTag: 'RAG 设计规范',
+      status: 'pending' as const,
+      createdAt: '2026-08-30T12:00:00Z',
+    }
+
+    const rows = await processOutboxTaskAsync(task)
+    expect(rows.length).toBe(1)
+    expect(rows[0].chunk_id).toBe('know-rag_chunk_0')
+    expect(rows[0].embedding.length).toBe(1536)
+    expect(rows[0].generation_id).toBe('task-async-001')
+  })
 })
+

@@ -66,3 +66,83 @@ export function generateLocalEmbedding(text: string): number[] {
 
   return vector.map((val) => val / magnitude)
 }
+
+export interface SemanticEmbeddingConfig {
+  apiKey?: string
+  baseUrl?: string
+  model?: string
+  dimensions?: number
+  signal?: AbortSignal
+}
+
+/**
+ * Fetch real high-dimensional semantic embedding via OpenAI-compatible Embedding API
+ * (e.g. OpenAI text-embedding-3-small, DashScope text-embedding-v3, SiliconFlow bge-m3, etc.)
+ */
+export async function fetchSemanticEmbedding(
+  text: string,
+  config?: SemanticEmbeddingConfig
+): Promise<number[] | null> {
+  const apiKey =
+    config?.apiKey ||
+    process.env.EMBEDDING_API_KEY ||
+    process.env.OPENAI_API_KEY ||
+    process.env.DASHSCOPE_API_KEY
+
+  if (!apiKey) {
+    return null
+  }
+
+  const isDashScope = Boolean(
+    process.env.DASHSCOPE_API_KEY && !process.env.OPENAI_API_KEY && !process.env.EMBEDDING_API_KEY
+  )
+  const baseUrl =
+    config?.baseUrl ||
+    process.env.EMBEDDING_BASE_URL ||
+    (isDashScope ? 'https://dashscope.aliyuncs.com/compatible-mode/v1' : 'https://api.openai.com/v1')
+
+  const model =
+    config?.model ||
+    process.env.EMBEDDING_MODEL ||
+    (isDashScope ? 'text-embedding-v3' : 'text-embedding-3-small')
+
+  const dimensions = config?.dimensions ?? 1536
+
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/embeddings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        input: text,
+        dimensions,
+      }),
+      signal: config?.signal,
+    })
+
+    if (!res.ok) {
+      console.warn(
+        `[embedder] Embedding API responded with status ${res.status}: ${await res.text().catch(() => '')}`
+      )
+      return null
+    }
+
+    const json = (await res.json()) as { data?: Array<{ embedding?: number[] }> }
+    const rawVector = json.data?.[0]?.embedding
+    if (!Array.isArray(rawVector) || rawVector.length === 0) {
+      return null
+    }
+
+    // Ensure L2 normalization
+    const norm = Math.sqrt(rawVector.reduce((sum, v) => sum + v * v, 0))
+    if (norm === 0) return rawVector
+    return rawVector.map((v) => Number((v / norm).toFixed(6)))
+  } catch (err) {
+    console.warn('[embedder] Failed to fetch semantic embedding, falling back to local:', err)
+    return null
+  }
+}
+

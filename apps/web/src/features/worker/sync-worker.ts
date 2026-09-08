@@ -1,9 +1,4 @@
-/**
- * Jaxson AI Space Asynchronous Outbox Worker
- * 
- * Implements the architecture diagram flow:
- * Publish Event ➔ Outbox Task ➔ Worker Claim ➔ Chunking & 1536-d Vector Generation ➔ Insert into public_read.knowledge_embeddings
- */
+import { fetchSemanticEmbedding, type SemanticEmbeddingConfig } from '../ai/rag/embedder'
 
 export interface OutboxTask {
   id: string
@@ -24,7 +19,7 @@ export interface KnowledgeEmbeddingRow {
   content: string
   evidence_tag: string
   embedding: number[] // 1536-dimensional vector
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   generation_id?: string
   is_active?: boolean
 }
@@ -34,7 +29,7 @@ export interface KnowledgeEmbeddingRow {
  * Produces normalized unit vectors for Cosine Similarity.
  * Pluggable with OpenAI / DeepSeek / DashScope text-embedding models when API key is present.
  */
-export function generate1536Vector(text: string, apiKey?: string): number[] {
+export function generate1536Vector(text: string, _apiKey?: string): number[] {
   const DIMENSIONS = 1536
   const vector = new Array(DIMENSIONS).fill(0)
   const normalized = text.toLowerCase().trim()
@@ -130,3 +125,56 @@ export function processOutboxTask(task: OutboxTask): KnowledgeEmbeddingRow[] {
 
   return rows
 }
+
+/**
+ * Generates semantic 1536-dimensional embedding using real API if configured,
+ * or gracefully falls back to deterministic local projection.
+ */
+export async function generateSemanticOrLocal1536Vector(
+  text: string,
+  config?: SemanticEmbeddingConfig
+): Promise<number[]> {
+  const semantic = await fetchSemanticEmbedding(text, config)
+  if (semantic && semantic.length === 1536) {
+    return semantic
+  }
+  return generate1536Vector(text)
+}
+
+/**
+ * Asynchronous worker execution unit: Processes outbox task using real semantic embeddings when available.
+ */
+export async function processOutboxTaskAsync(
+  task: OutboxTask,
+  config?: SemanticEmbeddingConfig
+): Promise<KnowledgeEmbeddingRow[]> {
+  const chunks = chunkText(task.content)
+  const rows: KnowledgeEmbeddingRow[] = []
+
+  for (let index = 0; index < chunks.length; index++) {
+    const chunk = chunks[index]
+    const chunkId = `${task.entityId}_chunk_${index}`
+    const embedding = await generateSemanticOrLocal1536Vector(`${task.title} ${chunk}`, config)
+
+    rows.push({
+      chunk_id: chunkId,
+      category: task.category,
+      title: `${task.title} (段落 ${index + 1})`,
+      content: chunk,
+      evidence_tag: task.evidenceTag,
+      embedding,
+      generation_id: task.id,
+      is_active: true,
+      metadata: {
+        eventType: task.eventType,
+        entityId: task.entityId,
+        chunkIndex: index,
+        totalChunks: chunks.length,
+        processedAt: new Date().toISOString(),
+      },
+    })
+  }
+
+  return rows
+}
+

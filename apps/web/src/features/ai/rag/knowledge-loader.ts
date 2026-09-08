@@ -1,8 +1,8 @@
 import { getPayload } from 'payload'
-import pg from 'pg'
 import configPromise from '@/payload.config'
 import { awards, experiences, profile, projects, skillGroups } from '@/features/portfolio/content'
 import { generate1536Vector } from '@/features/worker/sync-worker'
+import { getPgPool } from './db-pool'
 import type { ChunkCategory, KnowledgeChunk } from './types'
 
 export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChunk[]> {
@@ -13,9 +13,8 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
   const pgConnStr = process.env.PUBLIC_AGENT_DATABASE_URI || (!isProd ? process.env.DATABASE_URI : undefined)
 
   if (process.env.USE_POSTGRES === 'true' && pgConnStr) {
-    let pool: pg.Pool | undefined
     try {
-      pool = new pg.Pool({ connectionString: pgConnStr, max: 2, idleTimeoutMillis: 5000 })
+      const pool = getPgPool(pgConnStr)
       const queryVector = query?.trim() ? `[${generate1536Vector(query).join(',')}]` : null
       const res = await pool.query(`
           SELECT chunk_id, category, title, content, evidence_tag, metadata,
@@ -42,8 +41,6 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
       }
     } catch (pgErr) {
       console.warn('[RAG] Unable to query public_read pgvector knowledge directly, trying CMS collections:', pgErr)
-    } finally {
-      await pool?.end().catch(() => {})
     }
   }
 

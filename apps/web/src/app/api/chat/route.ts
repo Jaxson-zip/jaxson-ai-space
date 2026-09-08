@@ -49,16 +49,29 @@ const chatRequestSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // 0. Extract Client IP and verify Rate Limit
+    const forwardedHeader = req.headers.get('forwarded')
+    let forwardedFor = ''
+    if (forwardedHeader) {
+      const match = forwardedHeader.match(/for="?([^";,]+)/i)
+      if (match) forwardedFor = match[1].trim()
+    }
+
     const clientIp =
       req.headers.get('cf-connecting-ip') ||
       req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('x-real-ip') ||
+      forwardedFor ||
       '127.0.0.1'
 
     if (!checkRateLimit(clientIp)) {
       return NextResponse.json(
         { error: 'Too Many Requests: Chat rate limit exceeded. Please wait a minute.' },
-        { status: 429 }
+        {
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+          },
+        }
       )
     }
 
@@ -112,7 +125,7 @@ export async function POST(req: NextRequest) {
         'x-rag-engine': 'hybrid-in-memory-v1',
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     const requestId = `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`
     console.error(`[API /api/chat][${requestId}] Error handling chat request:`, error)
     return NextResponse.json(

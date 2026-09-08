@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cosineSimilarity, hybridRetrieve } from './retriever'
-import { generateLocalEmbedding } from './embedder'
+import { generateLocalEmbedding, fetchSemanticEmbedding } from './embedder'
 import { buildSystemPrompt } from './prompt-builder'
 import type { KnowledgeChunk } from './types'
 
@@ -98,4 +98,19 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(prompt).toContain('第一人称“我”')
     expect(prompt).toContain('岗位契合度分析')
   })
+
+  it('fetchSemanticEmbedding returns null when no API keys are configured', async () => {
+    const originalEnv = { ...process.env }
+    delete process.env.EMBEDDING_API_KEY
+    delete process.env.OPENAI_API_KEY
+    delete process.env.DASHSCOPE_API_KEY
+
+    try {
+      const res = await fetchSemanticEmbedding('测试无外部Key时的行为')
+      expect(res).toBeNull()
+    } finally {
+      process.env = originalEnv
+    }
+  })
 })
+

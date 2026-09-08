@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
 
   // 2. Check Authentication Signals
   const isInboxRoute = pathname === '/api/studio/inbox'
-  const allowedEmail = (process.env.OWNER_EMAIL || '1822103245@qq.com').trim().toLowerCase()
+  const allowedEmail = (process.env.OWNER_EMAIL || 'admin@example.com').trim().toLowerCase()
   const studioToken = request.cookies.get('studio_token')?.value
   const authHeader = request.headers.get('authorization') || ''
   const bearerToken = authHeader.replace(/^Bearer\s+/i, '').trim()

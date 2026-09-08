@@ -12,29 +12,29 @@ import {
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
+  let data
   try {
-    const data = await getHydratedPortfolioData()
-    return (
-      <HomeView
-        profile={data.profile}
-        projects={data.projects}
-        experiences={data.experiences}
-        skillGroups={data.skillGroups}
-        awards={data.awards}
-        isLiveDb={data.isLiveDb}
-      />
-    )
+    data = await getHydratedPortfolioData()
   } catch (err) {
     console.error('[Page Render Error]:', err)
-    return (
-      <HomeView
-        profile={fallbackProfile}
-        projects={fallbackProjects.filter((p) => p.sourceVisibility === 'public')}
-        experiences={fallbackExperiences}
-        skillGroups={fallbackSkillGroups}
-        awards={fallbackAwards}
-        isLiveDb={false}
-      />
-    )
+    data = {
+      profile: fallbackProfile,
+      projects: fallbackProjects.filter((p) => p.sourceVisibility === 'public'),
+      experiences: fallbackExperiences,
+      skillGroups: fallbackSkillGroups,
+      awards: fallbackAwards,
+      isLiveDb: false,
+    }
   }
+
+  return (
+    <HomeView
+      profile={data.profile}
+      projects={data.projects}
+      experiences={data.experiences}
+      skillGroups={data.skillGroups}
+      awards={data.awards}
+      isLiveDb={data.isLiveDb}
+    />
+  )
 }
