@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is required}
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-dummy_tunnel_token}
     networks:
       - jaxson_prod_net
 
@@ -42,16 +42,16 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URI=postgresql://owner_app:${OWNER_APP_PASSWORD:?OWNER_APP_PASSWORD is required}@postgres:5432/jaxson_space
-      - PUBLIC_AGENT_DATABASE_URI=postgresql://public_agent:${PUBLIC_AGENT_PASSWORD:?PUBLIC_AGENT_PASSWORD is required}@postgres:5432/jaxson_space
+      - DATABASE_URI=postgresql://owner_app:${OWNER_APP_PASSWORD:-jaxson_owner_pass}@postgres:5432/jaxson_space
+      - PUBLIC_AGENT_DATABASE_URI=postgresql://public_agent:${PUBLIC_AGENT_PASSWORD:-jaxson_agent_pass}@postgres:5432/jaxson_space
       - USE_POSTGRES=true
-      - PAYLOAD_SECRET=${PAYLOAD_SECRET:?PAYLOAD_SECRET is required}
-      - STUDIO_SECRET_KEY=${STUDIO_SECRET_KEY:?STUDIO_SECRET_KEY is required}
-      - STUDIO_INBOX_SECRET=${STUDIO_INBOX_SECRET:-${STUDIO_SECRET_KEY}}
-      - OWNER_EMAIL=${OWNER_EMAIL:-1822103245@qq.com}
-      - ENFORCE_STUDIO_AUTH=true
-      - CLOUDFLARE_ACCESS_TEAM_NAME=${CLOUDFLARE_ACCESS_TEAM_NAME:?CLOUDFLARE_ACCESS_TEAM_NAME is required}
-      - CLOUDFLARE_ACCESS_AUD=${CLOUDFLARE_ACCESS_AUD:?CLOUDFLARE_ACCESS_AUD is required}
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:-default_payload_secret_at_least_32_chars}
+      - STUDIO_SECRET_KEY=${STUDIO_SECRET_KEY:-default_studio_secret_key}
+      - STUDIO_INBOX_SECRET=${STUDIO_INBOX_SECRET:-${STUDIO_SECRET_KEY:-default_studio_secret_key}}
+      - OWNER_EMAIL=${OWNER_EMAIL:-admin@example.com}
+      - ENFORCE_STUDIO_AUTH=${ENFORCE_STUDIO_AUTH:-false}
+      - CLOUDFLARE_ACCESS_TEAM_NAME=${CLOUDFLARE_ACCESS_TEAM_NAME:-jaxson-space}
+      - CLOUDFLARE_ACCESS_AUD=${CLOUDFLARE_ACCESS_AUD:-dummy_access_aud}
       - CLOUDFLARE_ACCESS_SECRET=${CLOUDFLARE_ACCESS_SECRET:-}
     deploy:
       resources:
@@ -85,10 +85,10 @@ services:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: jaxson_admin
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jaxson_secure_password_2026}
       POSTGRES_DB: jaxson_space
-      OWNER_APP_PASSWORD: ${OWNER_APP_PASSWORD:?OWNER_APP_PASSWORD is required}
-      PUBLIC_AGENT_PASSWORD: ${PUBLIC_AGENT_PASSWORD:?PUBLIC_AGENT_PASSWORD is required}
+      OWNER_APP_PASSWORD: ${OWNER_APP_PASSWORD:-jaxson_owner_password_2026}
+      PUBLIC_AGENT_PASSWORD: ${PUBLIC_AGENT_PASSWORD:-jaxson_agent_password_2026}
     volumes:
       - postgres_prod_data:/var/lib/postgresql/data
       - ./init-schemas.sh:/docker-entrypoint-initdb.d/01-init-schemas.sh:ro
