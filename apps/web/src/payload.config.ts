@@ -18,6 +18,7 @@ import { Credentials } from './collections/Credentials'
 import { AIKnowledge } from './collections/AIKnowledge'
 import { Reflections } from './collections/Reflections'
 import { Memories } from './collections/Memories'
+import { migrations } from './migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -65,6 +66,7 @@ export default buildConfig({
           connectionString: process.env.DATABASE_URI || '',
         },
         schemaName: 'owner',
+        prodMigrations: migrations,
       })
     : sqliteAdapter({
         client: {
