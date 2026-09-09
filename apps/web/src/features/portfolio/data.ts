@@ -26,6 +26,7 @@ export async function getHydratedPortfolioData() {
         },
       })
       const experiencesDocs = await payload.find({ collection: 'experiences', limit: 50, sort: 'createdAt' })
+      const credentialsDocs = await payload.find({ collection: 'credentials', limit: 100, sort: 'createdAt' })
 
     const projects: Project[] =
       projectsDocs.totalDocs > 0
@@ -69,12 +70,39 @@ export async function getHydratedPortfolioData() {
           }))
         : [...fallbackExperiences]
 
+    const awardDocs = credentialsDocs.docs.filter((d: any) => d.category === 'award')
+    const awards =
+      awardDocs.length > 0
+        ? awardDocs.map((d: any) => ({
+            id: String(d.id),
+            period: d.year || '',
+            title: d.name,
+            level: d.level || '',
+          }))
+        : fallbackAwards
+
+    const skillDocs = credentialsDocs.docs.filter((d: any) => d.category === 'skill')
+    const skillGroups =
+      skillDocs.length > 0
+        ? skillDocs.map((d: any) => ({
+            id: String(d.id),
+            title: d.name,
+            items:
+              typeof d.items === 'string'
+                ? d.items
+                    .split(/[,，、]/)
+                    .map((s: string) => s.trim())
+                    .filter(Boolean)
+                : [],
+          }))
+        : fallbackSkillGroups
+
     return {
       profile: fallbackProfile,
       projects,
       experiences,
-      skillGroups: fallbackSkillGroups,
-      awards: fallbackAwards,
+      skillGroups,
+      awards,
       isLiveDb: true,
     }
   } catch (error) {
