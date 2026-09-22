@@ -155,63 +155,30 @@ export function HomeView({
         ease: 'sine.inOut',
       })
 
-      // 2. Hero entrance timeline (fromTo + clearProps on complete)
-      const heroTl = gsap.timeline({
-        defaults: { ease: 'power3.out', duration: 0.6 },
-        onComplete: () => {
-          gsap.set(
-            '.hero-badge-wrap, .hero-title, .hero-subtitle, .hero-desc, .hero-cta-group, .hero-highlights-strip .highlight-pill',
-            { clearProps: 'opacity,transform' }
-          )
-        },
-      })
-      heroTl
-        .fromTo('.hero-badge-wrap', { opacity: 0, y: -14 }, { opacity: 1, y: 0, delay: 0.05 })
-        .fromTo('.hero-title', { opacity: 0, y: 20 }, { opacity: 1, y: 0 }, '-=0.35')
-        .fromTo('.hero-subtitle', { opacity: 0, y: 16 }, { opacity: 1, y: 0 }, '-=0.4')
-        .fromTo('.hero-desc', { opacity: 0, y: 14 }, { opacity: 1, y: 0 }, '-=0.4')
-        .fromTo(
-          '.hero-cta-group > *',
-          { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, stagger: 0.06 },
-          '-=0.3'
-        )
-        .fromTo(
-          '.hero-highlights-strip .highlight-pill',
-          { opacity: 0, y: 12, scale: 0.96 },
-          { opacity: 1, y: 0, scale: 1, stagger: 0.06 },
-          '-=0.2'
-        )
-
-      // 3. ScrollTrigger Reveals (always once: true and clearProps to never get stuck)
+      // 2. ScrollTrigger Reveals (always once: true and immediateRender: false to never hide content prematurely)
       const scrollSections = [
         { trigger: '#portfolio', targets: '#portfolio .section-head, #portfolio .project-glass-card' },
         { trigger: '#about', targets: '#about .section-head, #about .about-narrative, #about .tech-profile-card' },
-        { trigger: '#resume', targets: '#resume .section-head, #resume .resume-col, #resume .accolade-summary-bar, #resume .award-glass-card' },
+        { trigger: '#resume', targets: '#resume .section-head, #resume .resume-col, #resume .awards-banner, #resume .award-card' },
         { trigger: '#skills', targets: '#skills .section-head, #skills .skill-category-card' },
         { trigger: '#contact', targets: '#contact .section-head, #contact .contact-glass-tile' },
       ]
 
       scrollSections.forEach(({ trigger, targets }) => {
-        gsap.fromTo(
-          targets,
-          { opacity: 0, y: 22 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            stagger: 0.07,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger,
-              start: 'top 88%',
-              once: true,
-            },
-            onComplete: () => {
-              gsap.set(targets, { clearProps: 'opacity,transform' })
-            },
-          }
-        )
+        gsap.from(targets, {
+          opacity: 0,
+          y: 20,
+          duration: 0.55,
+          stagger: 0.06,
+          ease: 'power2.out',
+          immediateRender: false,
+          clearProps: 'opacity,transform',
+          scrollTrigger: {
+            trigger,
+            start: 'top 92%',
+            once: true,
+          },
+        })
       })
 
       // Refresh layout triggers once loaded
@@ -452,7 +419,7 @@ export function HomeView({
               </div>
             </div>
 
-            <div className="tech-profile-card">
+            <div className="tech-profile-card" onMouseMove={handleCardMouseMove}>
               <div className="tech-profile-header">
                 <div className="tech-profile-dot" />
                 <h4>工程技术侧写</h4>
@@ -589,6 +556,7 @@ export function HomeView({
                   <div
                     key={a.id}
                     className={`award-card ${isFeatured ? 'award-card-featured' : 'award-card-standard'} award-tier-${meta.tier}`}
+                    onMouseMove={handleCardMouseMove}
                   >
                     <div className="award-card-header">
                       <div className="award-badge-wrapper">
@@ -624,7 +592,7 @@ export function HomeView({
 
           <div className="skills-grid-row">
             {skillGroups.map((group) => (
-              <div key={group.id} className="skill-category-card">
+              <div key={group.id} className="skill-category-card" onMouseMove={handleCardMouseMove}>
                 <div className="skill-cat-head">
                   {getCategoryIcon(group.title)}
                   <h4>{group.title}</h4>
@@ -656,6 +624,7 @@ export function HomeView({
             <div
               className="contact-glass-tile"
               onClick={() => copyToClipboard(profile.email, 'email')}
+              onMouseMove={handleCardMouseMove}
               style={{ cursor: 'pointer' }}
             >
               <div className="contact-tile-head">
@@ -671,6 +640,7 @@ export function HomeView({
             <div
               className="contact-glass-tile"
               onClick={() => copyToClipboard(profile.phone, 'phone')}
+              onMouseMove={handleCardMouseMove}
               style={{ cursor: 'pointer' }}
             >
               <div className="contact-tile-head">
@@ -688,6 +658,7 @@ export function HomeView({
               target="_blank"
               rel="noreferrer"
               className="contact-glass-tile"
+              onMouseMove={handleCardMouseMove}
             >
               <div className="contact-tile-head">
                 <GithubIcon size={16} />
@@ -701,6 +672,7 @@ export function HomeView({
               href="/resume/zhang-jinpeng-resume.docx"
               download="张锦鹏-个人简历.docx"
               className="contact-glass-tile highlight-tile"
+              onMouseMove={handleCardMouseMove}
             >
               <div className="contact-tile-head">
                 <FileText size={16} />

@@ -366,8 +366,34 @@ html[data-theme='light'] .hero-ambient-glow {
   align-items: center;
 }
 
+@keyframes appleHeroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-badge-wrap,
+  .hero-title,
+  .hero-subtitle,
+  .hero-desc,
+  .hero-cta-group,
+  .hero-highlights-strip {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 .hero-badge-wrap {
   margin-bottom: 1.5rem;
+  animation: appleHeroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.04s;
 }
 
 .hero-status-pill {
@@ -409,6 +435,8 @@ html[data-theme='light'] .hero-ambient-glow {
   align-items: baseline;
   justify-content: center;
   gap: 16px;
+  animation: appleHeroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.12s;
 }
 
 .hero-en-tag {
@@ -425,6 +453,8 @@ html[data-theme='light'] .hero-ambient-glow {
   color: var(--accent-blue);
   margin-bottom: 1.25rem;
   letter-spacing: -0.015em;
+  animation: appleHeroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.2s;
 }
 
 .hero-desc {
@@ -433,6 +463,8 @@ html[data-theme='light'] .hero-ambient-glow {
   line-height: 1.8;
   max-width: 660px;
   margin: 0 auto 2.5rem;
+  animation: appleHeroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.28s;
 }
 
 .hero-cta-group {
@@ -442,6 +474,8 @@ html[data-theme='light'] .hero-ambient-glow {
   gap: 14px;
   flex-wrap: wrap;
   margin-bottom: 3rem;
+  animation: appleHeroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.36s;
 }
 
 .btn-apple-primary {
@@ -521,6 +555,8 @@ html[data-theme='light'] .hero-ambient-glow {
   justify-content: center;
   gap: 14px;
   flex-wrap: wrap;
+  animation: appleHeroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.44s;
 }
 
 .highlight-pill {
@@ -657,6 +693,8 @@ html[data-theme='light'] .hero-ambient-glow {
 
 /* Tech Profile Card (Right Column) */
 .tech-profile-card {
+  position: relative;
+  overflow: hidden;
   padding: 1.5rem 1.6rem;
   border-radius: var(--radius-md);
   background: var(--bg-surface-elevated);
@@ -1168,14 +1206,18 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
   box-shadow: var(--shadow-card);
 }
 
-.project-glass-card::before {
+.project-glass-card::before,
+.contact-glass-tile::before,
+.tech-profile-card::before,
+.skill-category-card::before,
+.award-card::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background: radial-gradient(
     600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
-    rgba(56, 189, 248, 0.09),
+    rgba(56, 189, 248, 0.08),
     transparent 40%
   );
   pointer-events: none;
@@ -1184,11 +1226,19 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
   z-index: 2;
 }
 
-.project-glass-card:hover::before {
+.project-glass-card:hover::before,
+.contact-glass-tile:hover::before,
+.tech-profile-card:hover::before,
+.skill-category-card:hover::before,
+.award-card:hover::before {
   opacity: 1;
 }
 
-html[data-theme='light'] .project-glass-card::before {
+html[data-theme='light'] .project-glass-card::before,
+html[data-theme='light'] .contact-glass-tile::before,
+html[data-theme='light'] .tech-profile-card::before,
+html[data-theme='light'] .skill-category-card::before,
+html[data-theme='light'] .award-card::before {
   background: radial-gradient(
     600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
     rgba(0, 102, 204, 0.06),
@@ -1374,6 +1424,8 @@ html[data-theme='light'] .macos-card-header {
 }
 
 .skill-category-card {
+  position: relative;
+  overflow: hidden;
   padding: 1.25rem;
   border-radius: var(--radius-md);
   background: var(--bg-surface);
@@ -1421,6 +1473,8 @@ html[data-theme='light'] .macos-card-header {
 }
 
 .contact-glass-tile {
+  position: relative;
+  overflow: hidden;
   padding: 1.25rem;
   border-radius: var(--radius-md);
   background: var(--bg-surface);
