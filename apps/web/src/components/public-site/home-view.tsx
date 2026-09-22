@@ -155,187 +155,71 @@ export function HomeView({
         ease: 'sine.inOut',
       })
 
-      // 2. Hero entrance timeline
-      const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      // 2. Hero entrance timeline (fromTo + clearProps on complete)
+      const heroTl = gsap.timeline({
+        defaults: { ease: 'power3.out', duration: 0.6 },
+        onComplete: () => {
+          gsap.set(
+            '.hero-badge-wrap, .hero-title, .hero-subtitle, .hero-desc, .hero-cta-group, .hero-highlights-strip .highlight-pill',
+            { clearProps: 'opacity,transform' }
+          )
+        },
+      })
       heroTl
-        .from('.hero-badge-wrap', { opacity: 0, y: -16, duration: 0.6, delay: 0.1 })
-        .from('.hero-title', { opacity: 0, y: 24, duration: 0.7 }, '-=0.35')
-        .from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.6 }, '-=0.4')
-        .from('.hero-desc', { opacity: 0, y: 16, duration: 0.6 }, '-=0.4')
-        .from('.hero-cta-group > *', { opacity: 0, y: 16, duration: 0.5, stagger: 0.08 }, '-=0.3')
-        .from(
+        .fromTo('.hero-badge-wrap', { opacity: 0, y: -14 }, { opacity: 1, y: 0, delay: 0.05 })
+        .fromTo('.hero-title', { opacity: 0, y: 20 }, { opacity: 1, y: 0 }, '-=0.35')
+        .fromTo('.hero-subtitle', { opacity: 0, y: 16 }, { opacity: 1, y: 0 }, '-=0.4')
+        .fromTo('.hero-desc', { opacity: 0, y: 14 }, { opacity: 1, y: 0 }, '-=0.4')
+        .fromTo(
+          '.hero-cta-group > *',
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, stagger: 0.06 },
+          '-=0.3'
+        )
+        .fromTo(
           '.hero-highlights-strip .highlight-pill',
-          { opacity: 0, y: 12, scale: 0.95, duration: 0.5, stagger: 0.08 },
+          { opacity: 0, y: 12, scale: 0.96 },
+          { opacity: 1, y: 0, scale: 1, stagger: 0.06 },
           '-=0.2'
         )
 
-      // 3. Portfolio section entrance
-      gsap.from('#portfolio .section-head', {
-        scrollTrigger: {
-          trigger: '#portfolio',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: 'power2.out',
+      // 3. ScrollTrigger Reveals (always once: true and clearProps to never get stuck)
+      const scrollSections = [
+        { trigger: '#portfolio', targets: '#portfolio .section-head, #portfolio .project-glass-card' },
+        { trigger: '#about', targets: '#about .section-head, #about .about-narrative, #about .tech-profile-card' },
+        { trigger: '#resume', targets: '#resume .section-head, #resume .resume-col, #resume .accolade-summary-bar, #resume .award-glass-card' },
+        { trigger: '#skills', targets: '#skills .section-head, #skills .skill-category-card' },
+        { trigger: '#contact', targets: '#contact .section-head, #contact .contact-glass-tile' },
+      ]
+
+      scrollSections.forEach(({ trigger, targets }) => {
+        gsap.fromTo(
+          targets,
+          { opacity: 0, y: 22 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            stagger: 0.07,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger,
+              start: 'top 88%',
+              once: true,
+            },
+            onComplete: () => {
+              gsap.set(targets, { clearProps: 'opacity,transform' })
+            },
+          }
+        )
       })
 
-      gsap.from('#portfolio .project-glass-card', {
-        scrollTrigger: {
-          trigger: '.portfolio-grid-layout',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 35,
-        scale: 0.96,
-        duration: 0.7,
-        stagger: 0.15,
-        ease: 'power3.out',
-      })
+      // Refresh layout triggers once loaded
+      const timer = setTimeout(() => {
+        ScrollTrigger.refresh()
+      }, 150)
 
-      // 4. About section entrance
-      gsap.from('#about .section-head', {
-        scrollTrigger: {
-          trigger: '#about',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('#about .about-narrative', {
-        scrollTrigger: {
-          trigger: '#about .about-layout',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        x: -24,
-        duration: 0.7,
-        ease: 'power2.out',
-      })
-
-      gsap.from('#about .tech-profile-card', {
-        scrollTrigger: {
-          trigger: '#about .about-layout',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        x: 24,
-        duration: 0.7,
-        ease: 'power2.out',
-      })
-
-      // 5. Resume & Experience
-      gsap.from('#resume .section-head', {
-        scrollTrigger: {
-          trigger: '#resume',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('#resume .resume-col', {
-        scrollTrigger: {
-          trigger: '#resume .resume-columns',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 30,
-        duration: 0.7,
-        stagger: 0.15,
-        ease: 'power2.out',
-      })
-
-      // 6. Awards
-      gsap.from('#resume .accolade-summary-bar', {
-        scrollTrigger: {
-          trigger: '.awards-accolade-wrapper',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 15,
-        duration: 0.5,
-        ease: 'power2.out',
-      })
-
-      gsap.from('#resume .award-glass-card', {
-        scrollTrigger: {
-          trigger: '.awards-board-grid',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 20,
-        scale: 0.96,
-        duration: 0.5,
-        stagger: 0.07,
-        ease: 'power2.out',
-      })
-
-      // 7. Skills
-      gsap.from('#skills .section-head', {
-        scrollTrigger: {
-          trigger: '#skills',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('#skills .skill-category-card', {
-        scrollTrigger: {
-          trigger: '.skills-grid-row',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 24,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: 'power2.out',
-      })
-
-      // 8. Contact
-      gsap.from('#contact .section-head', {
-        scrollTrigger: {
-          trigger: '#contact',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('#contact .contact-card', {
-        scrollTrigger: {
-          trigger: '#contact',
-          start: 'top 85%',
-          toggleActions: 'play none none reverse',
-        },
-        opacity: 0,
-        y: 24,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
+      return () => clearTimeout(timer)
     },
     { scope: rootRef }
   )
