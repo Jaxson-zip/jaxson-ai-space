@@ -57,8 +57,8 @@ export const projects = [
     technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
     image: '/assets/opc-cover.svg',
     links: [
-      { label: '在线体验', href: 'http://space.jaxson.bond/', kind: 'live' },
-      { label: 'GitHub 源码', href: 'https://github.com/Jaxson-zip/jaxson-ai-space', kind: 'source' },
+      { label: '在线体验', href: 'https://space.jaxson.bond/', kind: 'live' },
+      { label: '开源仓库', href: 'https://github.com/Jaxson-zip/jaxson-ai-space', kind: 'source' },
     ],
   },
   {
@@ -106,10 +106,10 @@ export const skillGroups = [
 
 export const awards = [
   {
-    id: 'award-computer-design',
-    period: '2024 — 2025',
-    title: '中国大学生计算机设计大赛 - 大数据实践赛',
-    level: '国家级二等奖',
+    id: 'award-taidibei',
+    period: '2023 — 2024',
+    title: '第六届“泰迪杯”数据分析技能赛',
+    level: '全国一等奖',
   },
   {
     id: 'award-gd-vocational-high',
@@ -118,16 +118,16 @@ export const awards = [
     level: '省级一等奖',
   },
   {
+    id: 'award-computer-design',
+    period: '2024 — 2025',
+    title: '中国大学生计算机设计大赛 - 大数据实践赛',
+    level: '国家级二等奖',
+  },
+  {
     id: 'award-brics-security',
     period: '2023 — 2024',
     title: '一带一路暨金砖国家技能大赛 - 企业信息系统安全国赛',
     level: '国家级二等奖',
-  },
-  {
-    id: 'award-taidibei',
-    period: '2023 — 2024',
-    title: '第六届“泰迪杯”数据分析技能赛',
-    level: '全国一等奖',
   },
   {
     id: 'award-scholarship-first',

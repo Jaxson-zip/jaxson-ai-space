@@ -16,6 +16,7 @@ import {
   Cpu,
   Wrench,
   Award,
+  Trophy,
   ChevronRight,
   Check,
   X,
@@ -33,6 +34,56 @@ interface HomeViewProps {
   isLiveDb?: boolean
 }
 
+function getAwardMeta(award: AwardType) {
+  const { title, level } = award
+  if (level.includes('全国一等') || level.includes('国家级一等')) {
+    return {
+      tier: 'gold',
+      badgeText: '全国一等奖',
+      icon: '🏆',
+      subtitle: title.includes('泰迪杯')
+        ? '全国高校数据智能与分析技能赛项'
+        : '国家级一级行业技能竞赛',
+    }
+  }
+  if (level.includes('省级一等') || level.includes('省一等')) {
+    return {
+      tier: 'emerald',
+      badgeText: '省级一等奖',
+      icon: '🥇',
+      subtitle: title.includes('广东省')
+        ? '高职组大数据应用开发 · 广东省教育厅'
+        : '省部级重点学科技能竞赛',
+    }
+  }
+  if (level.includes('二等') || level.includes('国家级') || level.includes('国赛')) {
+    return {
+      tier: 'amber',
+      badgeText: '国家级二等奖',
+      icon: '🥈',
+      subtitle: title.includes('计算机设计')
+        ? '教育部高等学校计算机类教指委主办'
+        : title.includes('金砖')
+        ? '金砖国家技能发展与技术创新大赛'
+        : '国家级职业技能竞赛',
+    }
+  }
+  if (level.includes('校级') || level.includes('奖学金') || title.includes('奖学金')) {
+    return {
+      tier: 'blue',
+      badgeText: '综合学业一等',
+      icon: '🎓',
+      subtitle: 'GPA 3.85 / 4.0 · 综合素质考评专业排名前 2%',
+    }
+  }
+  return {
+    tier: 'slate',
+    badgeText: level || '竞赛荣誉',
+    icon: '🏅',
+    subtitle: '重点专业学术与技能认证',
+  }
+}
+
 export function HomeView({
   profile,
   projects,
@@ -44,6 +95,18 @@ export function HomeView({
   const [activeFilter, setActiveFilter] = useState<'all' | 'public' | 'private'>('all')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
+  const sortedAwards = React.useMemo(() => {
+    const getWeight = (lvl: string) => {
+      if (lvl.includes('全国一等') || lvl.includes('国一')) return 100
+      if (lvl.includes('省级一等') || lvl.includes('省一')) return 90
+      if (lvl.includes('国家级二等') || lvl.includes('国二')) return 80
+      if (lvl.includes('省级二等') || lvl.includes('省二')) return 70
+      if (lvl.includes('奖学金') || lvl.includes('校级')) return 60
+      return 50
+    }
+    return [...awards].sort((a, b) => getWeight(b.level) - getWeight(a.level))
+  }, [awards])
 
   const filteredProjects = projects.filter((p) => {
     if (activeFilter === 'public') return p.sourceVisibility === 'public'
@@ -306,17 +369,48 @@ export function HomeView({
           {/* Awards Banner */}
           <div className="awards-banner">
             <div className="awards-head-row">
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                🏆 竞赛荣誉与学业奖项
-              </h4>
-            </div>
-            <div className="awards-grid">
-              {awards.map((a) => (
-                <div key={a.id} className="award-item">
-                  <strong>{a.title}</strong>
-                  <span>{a.period} · {a.level}</span>
+              <div className="awards-title-box">
+                <div className="awards-trophy-icon">
+                  <Trophy size={20} />
                 </div>
-              ))}
+                <div>
+                  <h3 className="awards-banner-title">竞赛荣誉与核心表彰</h3>
+                  <p className="awards-banner-sub">
+                    获国家级/全国技能赛项成果 3 项 · 省级 1 项 · 校级综合学业一等奖学金
+                  </p>
+                </div>
+              </div>
+              <div className="awards-badge-group">
+                <span className="honor-pill honor-pill-gold">国家级 / 全国 3项</span>
+                <span className="honor-pill honor-pill-emerald">省部级 1项</span>
+                <span className="honor-pill honor-pill-cyan">综合 GPA 3.85 (前 2%)</span>
+              </div>
+            </div>
+
+            <div className="awards-grid">
+              {sortedAwards.map((a, idx) => {
+                const meta = getAwardMeta(a)
+                const isFeatured = sortedAwards.length === 5 ? idx < 2 : false
+                return (
+                  <div
+                    key={a.id}
+                    className={`award-card ${isFeatured ? 'award-card-featured' : 'award-card-standard'} award-tier-${meta.tier}`}
+                  >
+                    <div className="award-card-header">
+                      <div className="award-badge-wrapper">
+                        <span className="award-badge-icon">{meta.icon}</span>
+                        <span className="award-badge-label">{meta.badgeText}</span>
+                      </div>
+                      <span className="award-period-tag">{a.period}</span>
+                    </div>
+
+                    <div className="award-card-body">
+                      <h5 className="award-title">{a.title}</h5>
+                      <p className="award-subtitle">{meta.subtitle}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

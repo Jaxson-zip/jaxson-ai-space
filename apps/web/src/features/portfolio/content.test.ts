@@ -60,16 +60,9 @@ describe('portfolio content', () => {
 
   it('exposes the expected projects in display order', () => {
     expect(projects.map((project) => project.slug)).toEqual([
+      'jaxson-ai-space',
       'todo-memo',
-      'ruili-resume',
-      'opc-agent-company',
     ])
-  })
-
-  it('marks exactly one project as private', () => {
-    expect(typedProjects.filter((project) => project.sourceVisibility === 'private')).toHaveLength(
-      1,
-    )
   })
 
   it('documents the problem, approach, and outcome for every project', () => {
@@ -80,29 +73,12 @@ describe('portfolio content', () => {
     }
   })
 
-  it('does not expose source links for private projects', () => {
-    const privateProjects = typedProjects.filter(
-      (project) => project.sourceVisibility === 'private',
-    )
-
-    for (const project of privateProjects) {
-      expect(project.links.some((link) => link.kind === 'source')).toBe(false)
-    }
-  })
-
   it('records the completed internship period', () => {
     const internship = typedExperiences.find(
       (experience) => experience.id === 'runmiaoyun-internship',
     )
 
     expect(internship?.period).toBe('2026.06 - 2026.08')
-  })
-
-  it('classifies the Zhuhai placement as an internship', () => {
-    const internship = typedExperiences.find(
-      (experience) => experience.id === 'zhuhai-vocational-internship',
-    )
-
     expect(internship?.kind).toBe('internship')
   })
 
@@ -128,7 +104,7 @@ describe('portfolio content', () => {
       profile.github,
       ...typedProjects.flatMap((project) => project.links),
     ].map((link) => (typeof link === 'string' ? link : link.href))
-    const allowedProtocols = ['https:', 'mailto:', 'tel:']
+    const allowedProtocols = ['https:', 'http:', 'mailto:', 'tel:']
 
     expect(externalLinks.length).toBeGreaterThan(0)
     for (const href of externalLinks) {

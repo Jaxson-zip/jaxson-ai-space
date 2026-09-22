@@ -795,45 +795,313 @@ html[data-theme='dark'] .btn-enter-ai {
 }
 
 .awards-banner {
-  padding: 1.4rem;
-  border-radius: var(--radius-md);
+  margin-top: 2rem;
+  padding: 1.75rem 2rem;
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.awards-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #f59e0b 0%, #10b981 40%, #38bdf8 100%);
+  opacity: 0.85;
 }
 
 .awards-head-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.awards-title-box {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.awards-trophy-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  flex-shrink: 0;
+}
+
+.awards-banner-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.01em;
+}
+
+.awards-banner-sub {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.awards-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.honor-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.honor-pill-gold {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.honor-pill-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.honor-pill-cyan {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .awards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
 }
 
-.award-item {
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
+.award-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  justify-content: space-between;
+  padding: 1.25rem 1.4rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 124px;
 }
 
-.award-item strong {
-  font-size: 0.85rem;
-  color: var(--text-primary);
+.award-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
 }
 
-.award-item span {
-  font-size: 0.75rem;
-  color: var(--accent-amber);
+.award-card-featured {
+  grid-column: span 3;
+  padding: 1.4rem 1.5rem;
+  min-height: 132px;
+}
+
+.award-card-standard {
+  grid-column: span 2;
+}
+
+/* Tier Variants */
+.award-tier-gold {
+  border-color: rgba(245, 158, 11, 0.28);
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.06) 0%, var(--bg-surface-elevated) 100%);
+}
+.award-tier-gold:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 12px 28px -6px rgba(245, 158, 11, 0.18);
+}
+
+.award-tier-emerald {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.06) 0%, var(--bg-surface-elevated) 100%);
+}
+.award-tier-emerald:hover {
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.18);
+}
+
+.award-tier-amber {
+  border-color: rgba(217, 119, 6, 0.22);
+}
+.award-tier-amber:hover {
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 10px 24px -5px rgba(217, 119, 6, 0.15);
+}
+
+.award-tier-blue {
+  border-color: rgba(56, 189, 248, 0.22);
+}
+.award-tier-blue:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 10px 24px -5px rgba(56, 189, 248, 0.15);
+}
+
+.award-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.award-badge-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
   font-weight: 600;
+}
+
+.award-tier-gold .award-badge-wrapper {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.award-tier-emerald .award-badge-wrapper {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.award-tier-amber .award-badge-wrapper {
+  background: rgba(217, 119, 6, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.award-tier-blue .award-badge-wrapper {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.award-tier-slate .award-badge-wrapper {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-medium);
+}
+
+.award-badge-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.award-period-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.award-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.award-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.award-card-featured .award-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.award-subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Light Theme Enhancements for Award Badges */
+html[data-theme='light'] .honor-pill-gold,
+html[data-theme='light'] .award-tier-gold .award-badge-wrapper {
+  color: #b45309;
+}
+html[data-theme='light'] .honor-pill-emerald,
+html[data-theme='light'] .award-tier-emerald .award-badge-wrapper {
+  color: #047857;
+}
+html[data-theme='light'] .honor-pill-cyan,
+html[data-theme='light'] .award-tier-blue .award-badge-wrapper {
+  color: #0284c7;
+}
+html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
+  color: #b45309;
+}
+
+/* Responsive queries */
+@media (max-width: 960px) {
+  .awards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .award-card-featured {
+    grid-column: span 1;
+  }
+  .award-card-standard {
+    grid-column: span 1;
+  }
+  .award-card-standard:last-child {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .awards-banner {
+    padding: 1.25rem 1rem;
+  }
+  .awards-head-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .awards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .award-card-featured,
+  .award-card-standard,
+  .award-card-standard:last-child {
+    grid-column: span 1;
+  }
 }
 
 /* ========================================================
