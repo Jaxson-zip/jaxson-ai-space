@@ -26,6 +26,13 @@ import {
 } from 'lucide-react'
 import { GithubIcon } from '@/components/public-site/icons'
 import type { Award as AwardType, Experience, Profile, Project, SkillGroup } from '@/features/portfolio/types'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(useGSAP, ScrollTrigger)
+}
 
 interface HomeViewProps {
   profile: Profile
@@ -131,8 +138,216 @@ export function HomeView({
     return <Wrench size={16} />
   }
 
+  const rootRef = React.useRef<HTMLDivElement>(null)
+
+  useGSAP(
+    () => {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (prefersReducedMotion) return
+
+      // 1. Ambient Glow subtle breathing loop
+      gsap.to('.hero-ambient-glow', {
+        scale: 1.15,
+        opacity: 0.8,
+        duration: 5.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      })
+
+      // 2. Hero entrance timeline
+      const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      heroTl
+        .from('.hero-badge-wrap', { opacity: 0, y: -16, duration: 0.6, delay: 0.1 })
+        .from('.hero-title', { opacity: 0, y: 24, duration: 0.7 }, '-=0.35')
+        .from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.6 }, '-=0.4')
+        .from('.hero-desc', { opacity: 0, y: 16, duration: 0.6 }, '-=0.4')
+        .from('.hero-cta-group > *', { opacity: 0, y: 16, duration: 0.5, stagger: 0.08 }, '-=0.3')
+        .from(
+          '.hero-highlights-strip .highlight-pill',
+          { opacity: 0, y: 12, scale: 0.95, duration: 0.5, stagger: 0.08 },
+          '-=0.2'
+        )
+
+      // 3. Portfolio section entrance
+      gsap.from('#portfolio .section-head', {
+        scrollTrigger: {
+          trigger: '#portfolio',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#portfolio .project-glass-card', {
+        scrollTrigger: {
+          trigger: '.portfolio-grid-layout',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 35,
+        scale: 0.96,
+        duration: 0.7,
+        stagger: 0.15,
+        ease: 'power3.out',
+      })
+
+      // 4. About section entrance
+      gsap.from('#about .section-head', {
+        scrollTrigger: {
+          trigger: '#about',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#about .about-narrative', {
+        scrollTrigger: {
+          trigger: '#about .about-layout',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        x: -24,
+        duration: 0.7,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#about .tech-profile-card', {
+        scrollTrigger: {
+          trigger: '#about .about-layout',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        x: 24,
+        duration: 0.7,
+        ease: 'power2.out',
+      })
+
+      // 5. Resume & Experience
+      gsap.from('#resume .section-head', {
+        scrollTrigger: {
+          trigger: '#resume',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#resume .resume-col', {
+        scrollTrigger: {
+          trigger: '#resume .resume-columns',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 30,
+        duration: 0.7,
+        stagger: 0.15,
+        ease: 'power2.out',
+      })
+
+      // 6. Awards
+      gsap.from('#resume .accolade-summary-bar', {
+        scrollTrigger: {
+          trigger: '.awards-accolade-wrapper',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 15,
+        duration: 0.5,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#resume .award-glass-card', {
+        scrollTrigger: {
+          trigger: '.awards-board-grid',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 20,
+        scale: 0.96,
+        duration: 0.5,
+        stagger: 0.07,
+        ease: 'power2.out',
+      })
+
+      // 7. Skills
+      gsap.from('#skills .section-head', {
+        scrollTrigger: {
+          trigger: '#skills',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#skills .skill-category-card', {
+        scrollTrigger: {
+          trigger: '.skills-grid-row',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 24,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power2.out',
+      })
+
+      // 8. Contact
+      gsap.from('#contact .section-head', {
+        scrollTrigger: {
+          trigger: '#contact',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+
+      gsap.from('#contact .contact-card', {
+        scrollTrigger: {
+          trigger: '#contact',
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+        opacity: 0,
+        y: 24,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+    },
+    { scope: rootRef }
+  )
+
+  const handleCardMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
+  }
+
   return (
-    <div className="portfolio-root">
+    <div ref={rootRef} className="portfolio-root">
       {/* Toast Notification */}
       {copiedKey && (
         <div className="toast-notification">
@@ -142,10 +357,10 @@ export function HomeView({
       )}
 
       {/* ========================================================
-      {/* ========================================================
           1. Hero Section (Apple / Linear Minimalist Focused Layout)
           ======================================================== */}
       <section id="hero" className="hero-section">
+        <div className="hero-ambient-glow" aria-hidden="true" />
         <div className="container">
           <div className="hero-content-wrap">
             <div className="hero-badge-wrap">
@@ -220,7 +435,11 @@ export function HomeView({
               const sourceLink = project.links.find((l) => l.kind === 'source')
 
               return (
-                <article key={project.slug} className="project-glass-card">
+                <article
+                  key={project.slug}
+                  className="project-glass-card"
+                  onMouseMove={handleCardMouseMove}
+                >
                   <div className="macos-card-header">
                     <div className="traffic-lights">
                       <span className="traffic-dot traffic-red" />

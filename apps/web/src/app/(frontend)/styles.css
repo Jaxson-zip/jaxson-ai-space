@@ -323,9 +323,41 @@ input, textarea {
   padding: 5.5rem 0 3.5rem;
   position: relative;
   z-index: 1;
+  overflow: hidden;
+}
+
+.hero-ambient-glow {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 720px;
+  height: 420px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(56, 189, 248, 0.12) 0%,
+    rgba(99, 102, 241, 0.08) 40%,
+    transparent 70%
+  );
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+html[data-theme='light'] .hero-ambient-glow {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(56, 189, 248, 0.09) 0%,
+    rgba(99, 102, 241, 0.04) 45%,
+    transparent 70%
+  );
+  filter: blur(90px);
 }
 
 .hero-content-wrap {
+  position: relative;
+  z-index: 1;
   max-width: 820px;
   margin: 0 auto;
   text-align: center;
@@ -1125,6 +1157,7 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
 }
 
 .project-glass-card {
+  position: relative;
   border-radius: 16px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -1133,6 +1166,34 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
   flex-direction: column;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: var(--shadow-card);
+}
+
+.project-glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
+    rgba(56, 189, 248, 0.09),
+    transparent 40%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 2;
+}
+
+.project-glass-card:hover::before {
+  opacity: 1;
+}
+
+html[data-theme='light'] .project-glass-card::before {
+  background: radial-gradient(
+    600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
+    rgba(0, 102, 204, 0.06),
+    transparent 40%
+  );
 }
 
 .project-glass-card:hover {

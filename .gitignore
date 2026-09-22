@@ -15,4 +15,5 @@ Thumbs.db
 *.db-shm
 *.db-wal
 payload-local.db
-
+.agents/
+*.png
