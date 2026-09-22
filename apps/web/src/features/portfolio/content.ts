@@ -5,7 +5,7 @@ export const profile = {
   title: '全栈开发 · AI 应用开发',
   location: '深圳',
   availability: '2027 届 · 大专在读 · 深圳 (可线下到岗)',
-  summary: '专注于 AI 应用与全栈工程落地，喜欢把想法和业务痛点转化为界面、数据与真正可用的交付流程。',
+  summary: '专注于现代 Web 全栈与 AI 应用工程落地，喜欢把想法和业务痛点转化为可靠、高可用的交付产品。',
   phone: '15347640609',
   email: '1822103245@qq.com',
   github: 'https://github.com/Jaxson-zip',
@@ -46,7 +46,7 @@ export const projects = [
   {
     slug: 'jaxson-ai-space',
     title: 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)',
-    category: '全栈工程 · 真实交付',
+    category: '全栈工程 · 生产交付',
     sourceVisibility: 'public',
     status: '已全量上线',
     role: '独立全栈架构与开发',
@@ -55,7 +55,7 @@ export const projects = [
     approach: '基于 Next.js 16 + React 19 构建流式交互界面，嵌入 Payload CMS 3.x 动态管理内容；后端基于 PostgreSQL 17 + pgvector 构建知识切片余弦相似度检索与物理权限隔离。',
     outcome: '项目已完整部署至外网生产环境（结合 Docker、PM2 与 Cloudflare Tunnel），实现毫秒级首屏加载与稳定第一人称防幻觉 RAG 问答流。',
     technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
-    image: '/assets/opc-cover.svg',
+    image: '/assets/jaxson-ai-space-cover.svg',
     links: [
       { label: '在线体验', href: 'https://space.jaxson.bond/', kind: 'live' },
       { label: '开源仓库', href: 'https://github.com/Jaxson-zip/jaxson-ai-space', kind: 'source' },

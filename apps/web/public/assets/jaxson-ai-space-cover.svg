@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="spaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="100%" stop-color="#18181b" />
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1c1917" />
+      <stop offset="100%" stop-color="#0c0a09" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#spaceBg)" />
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#27272a" stroke-width="1" rx="8" />
+
+  <!-- Top Accent Bar -->
+  <rect x="0" y="0" width="800" height="2" fill="url(#accentLine)" />
+
+  <!-- App Header Bar -->
+  <rect x="0" y="2" width="800" height="42" fill="#121215" />
+  <line x1="0" y1="44" x2="800" y2="44" stroke="#27272a" stroke-width="1" />
+  
+  <circle cx="24" cy="23" r="5" fill="#ef4444" opacity="0.8" />
+  <circle cx="40" cy="23" r="5" fill="#f59e0b" opacity="0.8" />
+  <circle cx="56" cy="23" r="5" fill="#10b981" opacity="0.8" />
+
+  <text x="80" y="28" fill="#f4f4f5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace" font-size="13" font-weight="600">Jaxson AI Space · Full-Stack Personal Portal &amp; RAG Digital Twin</text>
+  <rect x="670" y="11" width="105" height="24" rx="4" fill="#10b981" fill-opacity="0.12" stroke="#10b981" stroke-width="1" />
+  <text x="686" y="27" fill="#34d399" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="600">● 生产环境已上线</text>
+
+  <!-- Architecture Canvas -->
+  <!-- Left Column: Client & Interface Layer -->
+  <rect x="36" y="70" width="220" height="340" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+  <text x="56" y="102" fill="#38bdf8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700">01 / FRONTEND &amp; INTERFACE</text>
+  <text x="56" y="128" fill="#fafafa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="600">Next.js 16 + React 19</text>
+  <text x="56" y="148" fill="#71717a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">App Router · Streaming SSR</text>
+
+  <rect x="52" y="170" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="66" y="192" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">动态个人门户主页</text>
+  <text x="66" y="210" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">极简工程排版 · 双主题切换</text>
+
+  <rect x="52" y="235" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="66" y="257" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">第一人称 AI 分身对话</text>
+  <text x="66" y="275" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">SSE 流式输出 · 事实证据溯源</text>
+
+  <rect x="52" y="300" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="66" y="322" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">/studio 记忆管理工作台</text>
+  <text x="66" y="340" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">JWT 鉴权 · 结构化热力看板</text>
+
+  <!-- Middle Column: API & CMS Services -->
+  <rect x="290" y="70" width="220" height="340" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+  <text x="310" y="102" fill="#818cf8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700">02 / CORE SERVICES &amp; CMS</text>
+  <text x="310" y="128" fill="#fafafa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="600">Payload CMS 3.x Headless</text>
+  <text x="310" y="148" fill="#71717a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">Embedded GraphQL &amp; REST API</text>
+
+  <rect x="306" y="170" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="320" y="192" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Credentials &amp; Projects</text>
+  <text x="320" y="210" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">动态履历 · 竞赛成果 · 项目归档</text>
+
+  <rect x="306" y="235" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="320" y="257" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">RAG Prompt 组装器</text>
+  <text x="320" y="275" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">Prompt Builder · 严格防幻觉</text>
+
+  <rect x="306" y="300" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="320" y="322" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">S3 / R2 媒体对象存储</text>
+  <text x="320" y="340" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">静态资源与凭据附件云托管</text>
+
+  <!-- Right Column: Database & Infrastructure -->
+  <rect x="544" y="70" width="220" height="340" rx="8" fill="#18181b" stroke="#27272a" stroke-width="1" />
+  <text x="564" y="102" fill="#34d399" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700">03 / STORAGE &amp; INFRA</text>
+  <text x="564" y="128" fill="#fafafa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="600">PostgreSQL 17 + pgvector</text>
+  <text x="564" y="148" fill="#71717a" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">Dual Schema 物理隔离安全机制</text>
+
+  <rect x="560" y="170" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="574" y="192" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Vector Embeddings (HNSW)</text>
+  <text x="574" y="210" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">余弦距离检索 · 毫秒级匹配</text>
+
+  <rect x="560" y="235" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="574" y="257" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Docker + PM2 进程守护</text>
+  <text x="574" y="275" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">自动化构建 · 零中断平滑重载</text>
+
+  <rect x="560" y="300" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
+  <text x="574" y="322" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Cloudflare Tunnel 隧道</text>
+  <text x="574" y="340" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">边缘加速 · 全站端到端 HTTPS</text>
+
+  <!-- Connectors -->
+  <line x1="256" y1="240" x2="290" y2="240" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="3,3" />
+  <line x1="510" y1="240" x2="544" y2="240" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="3,3" />
+</svg>

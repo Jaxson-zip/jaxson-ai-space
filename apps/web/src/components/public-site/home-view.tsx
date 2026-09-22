@@ -92,7 +92,6 @@ export function HomeView({
   awards,
   isLiveDb,
 }: HomeViewProps) {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'public' | 'private'>('all')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
@@ -107,12 +106,6 @@ export function HomeView({
     }
     return [...awards].sort((a, b) => getWeight(b.level) - getWeight(a.level))
   }, [awards])
-
-  const filteredProjects = projects.filter((p) => {
-    if (activeFilter === 'public') return p.sourceVisibility === 'public'
-    if (activeFilter === 'private') return p.sourceVisibility === 'private'
-    return true
-  })
 
   // Close modal on ESC
   useEffect(() => {
@@ -154,50 +147,44 @@ export function HomeView({
           <div className="hero-badge-row">
             <span className="status-badge">
               <span className="status-dot"></span>
-              <span>求职中 · 2027 届 · 深圳 (可线下到岗)</span>
+              <span>2027 届在读 · 深圳职业技术大学 · 随时可线下到岗</span>
             </span>
-            {isLiveDb && (
-              <span className="db-live-indicator" title="已与 Payload CMS 数据库实时连接">
-                <Radio size={11} className="db-pulse" />
-                <span>数据库实时联通</span>
-              </span>
-            )}
-            <span className="hero-sub-tag">全栈开发 · AI 应用与 Agent 探索</span>
+            <span className="hero-sub-tag">全栈开发 · AI 应用工程落地</span>
           </div>
 
           <h1 className="hero-title">
             你好，我是 <span className="hero-highlight">{profile.name}</span>
           </h1>
-          <p className="hero-subtitle">全栈与 AI 应用开发 · 喜欢把想法做成真正可用的交付物</p>
+          <p className="hero-subtitle">立足真实业务痛点 · 构建可靠好用的全栈系统与实用 AI 应用</p>
           <p className="hero-desc">{profile.summary}</p>
 
           <div className="hero-cta-group">
             <a href="#portfolio" className="btn-cta-primary">
-              <span>浏览精选作品 ({projects.length})</span>
+              <span>查看精选作品 ({projects.length})</span>
               <ArrowRight size={15} />
             </a>
-            <Link href="/ai" className="btn-cta-ai">
-              <Sparkles size={15} />
-              <span>AI 岗位匹配分身</span>
-            </Link>
-            <a href="/assets/张锦鹏-秋招简历.docx" download className="btn-cta-secondary">
+            <a href="/resume/zhang-jinpeng-resume.docx" download="张锦鹏-个人简历.docx" className="btn-cta-secondary">
               <FileText size={15} />
-              <span>下载 Word 简历</span>
+              <span>下载简历 (DOCX)</span>
             </a>
+            <Link href="/ai" className="btn-cta-ai">
+              <Sparkles size={14} />
+              <span>AI 分身问答 ↗</span>
+            </Link>
           </div>
 
           <div className="hero-trust-bar">
             <div className="trust-item">
-              <span>教育背景与绩点</span>
-              <strong>深圳职业技术大学 · 大数据技术 (GPA 3.67 前 5%)</strong>
+              <span>高校背景与学业</span>
+              <strong>深圳职业技术大学 · 大数据技术 (GPA 3.85 前 2%)</strong>
             </div>
             <div className="trust-item">
-              <span>企业实践产出</span>
-              <strong>广东润喵云科技 · Vue 3 + Go 算力平台联调交付</strong>
+              <span>企业实习产出</span>
+              <strong>广东润喵云科技 · Vue 3 + Go 算力平台联调与运维</strong>
             </div>
             <div className="trust-item">
               <span>核心项目落地</span>
-              <strong>待办备忘 PWA · 锐历简历开源工作台</strong>
+              <strong>Jaxson AI Space (本站) · 待办备忘 PWA</strong>
             </div>
           </div>
         </div>
@@ -212,80 +199,66 @@ export function HomeView({
             <div className="section-title-wrap">
               <h2 className="section-title">关于我</h2>
             </div>
-            <p className="section-sub">立足业务真实痛点，以工程化思维实现闭环交付。</p>
+            <p className="section-sub">实事求是，注重工程质量与落地闭环。</p>
           </div>
 
           <div className="about-layout">
             <div className="about-narrative">
               <p>
-                我是<strong>张锦鹏</strong>，来自<strong>深圳职业技术大学</strong>大数据技术专业（2027 届）。
-                平时热衷于前沿 Web 全栈与 AI 应用开发，喜欢将一个模糊的想法逐步拆解为清晰的交互界面、数据架构、后端接口与可用流程。
+                我是<strong>张锦鹏</strong>，来自<strong>深圳职业技术大学</strong>大数据技术专业（2027 届大专在读，GPA 3.85 / 4.0，专业排名前 2%）。
+                对现代 Web 全栈工程与实用 AI 应用落地保持持续的热情，习惯在真实需求和实际部署中打磨技术，把想法转化为可用、健壮的代码。
               </p>
               <p>
-                在<strong>广东润喵云科技</strong>的实习中，我参与了算力租赁平台的前后端联调与上线维护；业余时间独立上线了
-                <strong>待办备忘 (Todo Memo PWA)</strong>、二开开源了<strong>锐历简历</strong>，并深入探索<strong>多 Agent 研发协同工作台</strong>。
+                在<strong>广东润喵云科技</strong>全栈开发实习期间，主要负责算力租赁平台的日常运维、全栈缺陷排查修复及平台 Docker 运行环境镜像的调优制作。在课余时间，独立开发并上线了 <strong>待办备忘 (Todo Memo PWA)</strong>，并自主架构交付了本站 <strong>Jaxson AI Space</strong>。
+              </p>
+              <p>
+                平时在开发中深度结合 AI 效能工具（Cursor, Claude Code, Git Worktree）进行敏捷交付，同时注重代码类型安全、清晰文档与持续重构。
               </p>
 
               <div className="proof-row">
                 <div className="proof-item">
-                  <span>期望岗位</span>
-                  <strong>AI 应用开发 / 前端 / 全栈</strong>
+                  <span>求职方向</span>
+                  <strong>全栈开发 / AI 应用开发 / 前端开发</strong>
                 </div>
                 <div className="proof-item">
-                  <span>到岗时间</span>
-                  <strong>随时到岗 · 深圳本地</strong>
+                  <span>求职状态</span>
+                  <strong>2027 届 · 随时可到岗 (深圳本地)</strong>
                 </div>
                 <div className="proof-item">
-                  <span>工程习惯</span>
-                  <strong>强类型 · 文档清晰 · 持续重构</strong>
+                  <span>学业表现</span>
+                  <strong>GPA 3.85 (专业前 2%) · 校一等奖学金</strong>
                 </div>
               </div>
             </div>
 
-            <div className="pillars-grid">
-              <div className="pillar-card">
-                <span className="pillar-num">01 / 全栈打通</span>
-                <h3>从界面到数据流闭环</h3>
-                <p>具备 React/Vue 3 前端及 Go/Python 后端接口设计能力，注重状态流清晰与异常兜底。</p>
+            <div className="tech-profile-card">
+              <div className="tech-profile-header">
+                <div className="tech-profile-dot" />
+                <h4>工程技术侧写</h4>
               </div>
-              <div className="pillar-card">
-                <span className="pillar-num">02 / AI 深度融合</span>
-                <h3>Prompt 工程与 Agent 协作</h3>
-                <p>不只调 API，更关注结构化上下文组装、多智能体角色分工及 RAG 知识事实溯源。</p>
-              </div>
-              <div className="pillar-card">
-                <span className="pillar-num">03 / 本土与体验</span>
-                <h3>中文排版与人机交互</h3>
-                <p>对中文字符断行、字体层级、深色暗夜模式及响应式移动端体验有严苛追求。</p>
-              </div>
-              <div className="pillar-card">
-                <span className="pillar-num">04 / 敏捷与交付</span>
-                <h3>现代效能工具流</h3>
-                <p>深度运用 Git Worktree、Cursor、Claude Code 与自动化部署，高标准推进工程进度。</p>
-              </div>
-            </div>
-          </div>
-
-          {/* AI Teaser Banner */}
-          <div className="ai-teaser-banner">
-            <div className="ai-teaser-content">
-              <div className="ai-teaser-tag">
-                <Sparkles size={15} />
-                <span>AI 数字分身互动空间已就绪</span>
-              </div>
-              <h3>想深入了解我的项目技术选型与团队契合度？</h3>
-              <p>你可以自由向我的 AI 数字分身提问，或直接粘贴贵司招聘 JD 进行智能匹配分析。</p>
-              <div className="ai-teaser-chips">
-                <Link href="/ai" className="ai-teaser-chip">📋 测测岗位 JD 匹配度</Link>
-                <Link href="/ai" className="ai-teaser-chip">🏢 聊聊润喵云实习经历</Link>
-                <Link href="/ai" className="ai-teaser-chip">🤖 介绍核心项目架构</Link>
-                <Link href="/ai" className="ai-teaser-chip">📬 求职意向与联系方式</Link>
+              <div className="tech-profile-list">
+                <div className="profile-spec-item">
+                  <span className="spec-label">核心语言</span>
+                  <span className="spec-val">TypeScript, JavaScript, Go, Python, SQL</span>
+                </div>
+                <div className="profile-spec-item">
+                  <span className="spec-label">前端技术栈</span>
+                  <span className="spec-val">Next.js 16, React 19, Vue 3, Tailwind CSS</span>
+                </div>
+                <div className="profile-spec-item">
+                  <span className="spec-label">服务端与接口</span>
+                  <span className="spec-val">Node.js, Go (Gin), Payload CMS 3.x, REST / GraphQL</span>
+                </div>
+                <div className="profile-spec-item">
+                  <span className="spec-label">数据与检索</span>
+                  <span className="spec-val">PostgreSQL 17, pgvector (向量检索), Supabase, Redis</span>
+                </div>
+                <div className="profile-spec-item">
+                  <span className="spec-label">部署与基础设施</span>
+                  <span className="spec-val">Docker 容器构建, Linux / PM2, Cloudflare Tunnel</span>
+                </div>
               </div>
             </div>
-            <Link href="/ai" className="btn-enter-ai">
-              <span>进入 AI 空间</span>
-              <ArrowRight size={16} />
-            </Link>
           </div>
         </div>
       </section>
@@ -423,37 +396,13 @@ export function HomeView({
         <div className="container">
           <div className="section-head">
             <div className="section-title-wrap">
-              <h2 className="section-title">精选落地项目</h2>
+              <h2 className="section-title">精选上线项目</h2>
             </div>
-            <p className="section-sub">实时同步自 Payload CMS 数据库，点击卡片可查看深度技术案例。</p>
-          </div>
-
-          <div className="filter-tabs-row">
-            <button
-              type="button"
-              className={`filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('all')}
-            >
-              全部项目 ({projects.length})
-            </button>
-            <button
-              type="button"
-              className={`filter-pill ${activeFilter === 'public' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('public')}
-            >
-              公开项目 ({projects.filter((p) => p.sourceVisibility === 'public').length})
-            </button>
-            <button
-              type="button"
-              className={`filter-pill ${activeFilter === 'private' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('private')}
-            >
-              私有案例 ({projects.filter((p) => p.sourceVisibility === 'private').length})
-            </button>
+            <p className="section-sub">均具备在线可访问体验与开源代码，真实构建、真实部署。</p>
           </div>
 
           <div className="portfolio-grid-layout">
-            {filteredProjects.map((project) => {
+            {projects.map((project) => {
               const liveLink = project.links.find((l) => l.kind === 'live')
               const sourceLink = project.links.find((l) => l.kind === 'source')
 
@@ -635,8 +584,8 @@ export function HomeView({
             </a>
 
             <a
-              href="/assets/张锦鹏-秋招简历.docx"
-              download
+              href="/resume/zhang-jinpeng-resume.docx"
+              download="张锦鹏-个人简历.docx"
               className="contact-glass-tile highlight-tile"
             >
               <div className="contact-tile-head">
@@ -644,7 +593,7 @@ export function HomeView({
                 <span>离线简历</span>
               </div>
               <strong>张锦鹏-个人简历.docx</strong>
-              <span className="contact-action-hint">点击下载 Word 简历 ↓</span>
+              <span className="contact-action-hint">点击下载 DOCX 简历 ↓</span>
             </a>
           </div>
         </div>
