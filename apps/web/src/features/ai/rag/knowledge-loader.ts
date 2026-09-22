@@ -134,7 +134,7 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
     id: 'profile-intent',
     title: '个人基本信息与求职意向',
     category: 'intent',
-    content: `【姓名】${profile.name} (Jaxson)\n【毕业年份】2027 届（深圳职业技术大学 大数据技术专业，GPA 3.67/4.0 前 5%）\n【期望岗位】AI 应用开发 / Web 全栈开发 / 前端开发工程师\n【工作地点】深圳（可线下到岗/实习）\n【联系方式】电话/微信：${profile.phone}，邮箱：${profile.email}，GitHub：${profile.github}`,
+    content: `【姓名】${profile.name} (Jaxson)\n【毕业年份】2027 届（深圳职业技术大学 大数据技术专业 · 大专在读，GPA 3.85/4.0 前 2%）\n【期望岗位】AI 应用开发 / Web 全栈开发 / 前端开发工程师\n【工作地点】深圳（可线下到岗/实习）\n【联系方式】电话/微信：${profile.phone}，邮箱：${profile.email}，GitHub：${profile.github}`,
     evidenceTag: '张锦鹏个人履历与联系方式',
     keywords: ['张锦鹏', 'Jaxson', '求职', '意向', '电话', '微信', '邮箱', '深职大', 'GPA', '深圳'],
   })

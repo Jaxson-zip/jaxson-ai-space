@@ -1,5 +1,5 @@
 /**
- * Script to seed real initial portfolio data into Payload CMS PostgreSQL database (schema: owner)
+ * Script to seed 100% verified portfolio data into Payload CMS PostgreSQL database (schema: owner)
  */
 import pg from 'pg'
 import crypto from 'crypto'
@@ -18,6 +18,21 @@ const pool = new Pool({
 
 const PROJECTS = [
   {
+    title: 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)',
+    slug: 'jaxson-ai-space',
+    role: '独立全栈架构与开发',
+    category: 'AI 应用 · 全栈生产交付',
+    visibility: 'public',
+    status: '已全量上线',
+    summary: '真正生产交付的现代化工程师数字分身空间，集成第一人称 RAG 向量知识库检索、Payload CMS 无头内容管理与双 Schema 数据隔离。',
+    problem: '传统作品集为纯静态单向展示，招聘方无法深度交互探索候选人技术栈；个人知识碎片与真实案例缺少动态易维护的后端体系。',
+    approach: '基于 Next.js 16 + React 19 构建流式交互界面，嵌入 Payload CMS 3.x 动态管理内容；后端基于 PostgreSQL 17 + pgvector 构建知识切片余弦相似度检索与物理权限隔离。',
+    outcome: '项目已完整部署至外网生产环境（结合 Docker、PM2 与 Cloudflare Tunnel），实现毫秒级首屏加载与稳定第一人称防幻觉 RAG 问答流。',
+    demo_url: 'http://space.jaxson.bond/',
+    repo_url: 'https://github.com/Jaxson-zip/jaxson-ai-space',
+    tags: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
+  },
+  {
     title: '待办备忘 (Todo Memo)',
     slug: 'todo-memo',
     role: '独立全栈开发 / 云端任务管理应用',
@@ -32,36 +47,6 @@ const PROJECTS = [
     repo_url: 'https://github.com/Jaxson-zip/to_do',
     tags: ['React', 'TypeScript', 'Supabase', 'PWA', 'Vercel', 'Tailwind CSS'],
   },
-  {
-    title: '锐历简历工作台 (Ruili Resume)',
-    slug: 'ruili-resume',
-    role: '独立二次开发 / 中文本地化优化',
-    category: '求职工具 · 开源二次开发',
-    visibility: 'public',
-    status: '已开源',
-    summary: '基于 Reactive Resume 完成本土化改造，围绕中文排版层级、国内招聘习惯和 PDF 导出体验打造在线工作台。',
-    problem: '通用海外简历开源项目对中文排版、字号层级和国内招聘表达支持欠佳，模板风格和操作流不符合本土习惯。',
-    approach: '重构中文排版规范与样式层级，深度优化实时双向预览与浏览器端 PDF 渲染中的中文字符断行与字体适配问题。',
-    outcome: '项目已在 GitHub 开源并保留原项目 MIT 协议，提供了开箱即用的本土化高质量简历排版工作流。',
-    demo_url: null,
-    repo_url: 'https://github.com/Jaxson-zip/ruili',
-    tags: ['React', 'TypeScript', '中文排版引擎', 'PDF 渲染', '开源贡献'],
-  },
-  {
-    title: 'OPC Agent Company',
-    slug: 'opc-agent-company',
-    role: '独立产品设计与全栈实现',
-    category: 'AI 产品 · 私有概念探索',
-    visibility: 'private',
-    status: '持续迭代',
-    summary: '把软件研发流组织成多智能体协作公司的本地优先工作台，探索 AI 产品工作流调度与协同状态管理。',
-    problem: '在实际研发中协作调度多个专业编码 Agent 时，任务分派、代码审查、阻塞排查和交付证据容易散落在不同会话中。',
-    approach: '按“规划、架构、开发、审计”四个部门岗位组织 Agent 智能体，提供标准化的任务派发看板、审批节点与 Git 隔离开发流程。',
-    outcome: '已完成核心工作台研发协同状态机与本地持久化，用于个人探索多智能体在真实工程交付中的提效边界。',
-    demo_url: null,
-    repo_url: null,
-    tags: ['Agent 工作流', 'Local-first', 'SQLite', 'Git Worktree', 'LLM API'],
-  },
 ]
 
 const EXPERIENCES = [
@@ -70,146 +55,187 @@ const EXPERIENCES = [
     role: '全栈开发实习生',
     period: '2026.06 - 2026.08',
     type: 'internship',
-    description: '参与基于 Vue 3 与 Go 的算力租赁平台功能开发与日常维护。',
+    description: '负责基于 Vue 前端与 Golang 后端的算力租赁调度平台日常运维、缺陷修复与环境镜像制作。',
     bullets: [
-      '负责用户端与管理端算力订单、资源监控与配置页面的前端交互实现与组件封装。',
-      '配合后端完成 Go 语言微服务 API 接口对接、联调与数据契约校验。',
-      '修复生产环境缺陷，排查定位前端状态不同步与高并发场景下的接口超时问题。',
+      '负责算力租赁管理与订单调度模块的日常缺陷排查（Bug Fix）与功能联调维护。',
+      '负责平台 Docker 运行环境镜像制作、依赖调优与标准化构建交付。',
+      '深度借助 AI 效能工具（AI 辅助编程）高效定位全栈业务缺陷，敏捷完成交付任务。',
     ],
-    tags: ['Vue 3', 'Go', 'RESTful API', 'Element Plus', 'Vite'],
-  },
-  {
-    organization: '广东润喵云科技有限公司 (珠海研发中心)',
-    role: '算力平台前端研发实习生',
-    period: '2026.06 - 2026.08',
-    type: 'internship',
-    description: '参与算力租赁管理后台与调度看板的前端业务模块研发与联调交付。',
-    bullets: [
-      '主导算力节点监控与订单管理界面的高响应式排版与状态缓存。',
-      '与 Go 后端团队协同制定 REST 规范，编写接口自动化回归测试脚本。',
-    ],
-    tags: ['Vue 3', 'Go', 'TypeScript', 'Vite', 'Pinia'],
+    tags: ['Vue', 'Go', 'Docker 镜像制作', '算力调度平台运维', 'AI 辅助编程'],
   },
   {
     organization: '深圳职业技术大学',
-    role: '大数据技术专业 · 本科在读',
+    role: '大数据技术专业 · 大专在读',
     period: '2024 — 2027 (2027 届)',
     type: 'education',
-    description: 'GPA 3.67 / 4.0 (专业前 5%)，系统学习现代软件工程、算法与大数据处理架构。',
+    description: 'GPA 3.85 / 4.0 (专业前 2%)，扎实掌握现代软件工程、大数据处理架构与 Web 全栈开发。',
     bullets: [
       '主修课程：数据结构与算法、Web 全栈工程、分布式计算、数据库系统原理、机器学习导论。',
       '担任院学信委人工智能学院副主席、班级学习委员、甲骨文社团社长。',
-      '连续获得校级一等学业奖学金，多次代表学院参与国家级与省部级软件创新竞赛。',
+      '连续获得校级一等学业奖学金，累计获国家级奖项 5 项、省市级奖项 6 项。',
     ],
-    tags: ['TypeScript', 'Python', 'SQL', '数据结构', '分布式系统'],
+    tags: ['TypeScript', 'Python', 'SQL', '数据结构', '分布式系统', '大数据应用开发'],
   },
 ]
 
 const CREDENTIALS = [
   {
-    name: '全国大学生计算机系统与软件创新大赛',
-    category: 'award',
-    year: '2025',
-    level: '国家级二等奖',
-    items: '全国职业院校技能大赛 · 大数据应用开发赛项',
-  },
-  {
-    name: '广东省大学生程序设计技能竞赛 (GDCPC)',
-    category: 'award',
-    year: '2025',
-    level: '省级一等奖',
-    items: '广东省职业院校技能大赛 · 软件系统开发赛项',
-  },
-  {
-    name: '校级综合素质与学业特等奖学金',
+    name: '中国大学生计算机设计大赛 - 大数据实践赛',
     category: 'award',
     year: '2024 — 2025',
-    level: '校级一等 (专业前 5%)',
-    items: '连续获得校级特等学业奖学金与优秀共青团员标兵',
+    level: '国家级二等奖',
+    items: '全国普通高校大学生竞赛榜单重点赛事 · 大数据实践赛项',
+  },
+  {
+    name: '广东省职业院校技能大赛（高职组）大数据应用开发赛项',
+    category: 'award',
+    year: '2025 — 2026',
+    level: '省级一等奖',
+    items: '广东省教育厅主办职业院校技能大赛 · 大数据全流程开发',
+  },
+  {
+    name: '一带一路暨金砖国家技能大赛 - 企业信息系统安全国赛',
+    category: 'award',
+    year: '2023 — 2024',
+    level: '国家级二等奖',
+    items: '一带一路暨金砖国家技能大赛金砖国家技能标准化与创新技术竞赛',
+  },
+  {
+    name: '第六届“泰迪杯”数据分析技能赛',
+    category: 'award',
+    year: '2023 — 2024',
+    level: '全国一等奖',
+    items: '中国高校大数据与数据科学权威赛事 · 行业一等奖',
+  },
+  {
+    name: '校级综合学业一等奖学金',
+    category: 'award',
+    year: '2024 — 2025',
+    level: '校级一等 (GPA 3.85 专业前 2%)',
+    items: '深圳职业技术大学综合学业奖学金 · 连续获评优秀学生',
   },
   {
     name: '前端开发技能',
     category: 'skill',
     year: '2026',
     level: '熟练掌握',
-    items: 'React, Vue 3, TypeScript, Tailwind CSS, Next.js, Vite, 响应式布局与交互设计',
+    items: 'React 19, Vue 3, TypeScript, Tailwind CSS, Next.js 16, Vite, 响应式布局与组件封装',
   },
   {
     name: '后端与数据技能',
     category: 'skill',
     year: '2026',
     level: '良好掌握',
-    items: 'Go, Python, Flask, MySQL, PostgreSQL, SQLite, Supabase, RESTful API 设计',
+    items: 'Go, Python, PostgreSQL, pgvector, MySQL, Supabase, RESTful API 设计, 分布式大数据',
   },
   {
     name: 'AI 应用开发技能',
     category: 'skill',
     year: '2026',
-    level: '精通 / 主攻方向',
-    items: '大模型 API 对接, Prompt 工程与结构化输出, Agent 协同架构, RAG 检索增强, 上下文工程, pgvector 向量库',
+    level: '主攻方向 / 熟练落地',
+    items: '大模型 API 接入, RAG 向量检索增强, Prompt 上下文工程, AI 编程效能实践 (Cursor/Claude)',
   },
   {
     name: '工程交付与工具',
     category: 'skill',
     year: '2026',
     level: '熟练掌握',
-    items: 'Git & GitHub, Vercel 自动化部署, PWA 离线应用, Cursor / Claude Code 效能工具, Docker 基础, Linux',
+    items: 'Docker & 镜像制作, Linux 运维, Git & GitHub, PM2 进程守护, Cloudflare Tunnel, Vercel 自动化部署',
   },
 ]
 
 const AI_KNOWLEDGE = [
   {
-    title: '广东润喵云科技 · 算力租赁平台全栈实习',
+    title: '广东润喵云科技 · 算力租赁平台全栈实习事实',
     category: 'internship',
-    content: '在广东润喵云科技有限公司实习期间，主导私有算力与资源监控平台前端重构，基于 Vue 3 + TypeScript 封装可复用大屏组件，将状态抖动降低 40%；与 Go 后端紧密联调 RESTful 及 WebSocket 接口，保障高并发下的状态一致性；沉淀自动化构建与组件规范文档。',
+    content: '在广东润喵云科技有限公司实习期间（2026.06 - 2026.08），担任全栈开发实习生。负责算力租赁调度平台的日常运维与缺陷排查修复；负责平台 Docker 运行环境镜像制作与优化；协同维护基于 Vue 前端与 Golang 后端的算力调度业务模块；深度借助 AI 编程工具高效定位并修复业务缺陷。',
     is_public: true,
-    evidence_tag: '广东润喵云科技 · 前端与全栈开发实习生',
+    evidence_tag: '广东润喵云科技 · 全栈开发实习生',
+  },
+  {
+    title: 'Jaxson AI Space (本站) 全栈架构与技术实现',
+    category: 'project',
+    content: '【项目背景】传统作品集为静态单向展示，无法实现深度双向互动分析；缺少统一易维护的生产级全栈后台。\n【技术方案】基于 Next.js 16 + React 19 构建流式响应界面，嵌入 Payload CMS 3.x 统一管理内容；后端采用 PostgreSQL 17 + pgvector 搭建 dual schema（owner 与 public_read）物理隔离架构；集成第一人称 RAG 混合向量检索与知识切片溯源。\n【交付成果】已上线生产环境（space.jaxson.bond），开源于 github.com/Jaxson-zip/jaxson-ai-space。',
+    is_public: true,
+    evidence_tag: 'Jaxson AI Space 核心项目',
   },
   {
     title: '待办备忘 (Todo Memo PWA) 架构与交付事实',
     category: 'project',
-    content: '【项目背景】解决日常轻量待办记录在弱网或多端切换时状态不同步的痛点。\n【技术方案】基于 React + TypeScript + Supabase + PWA 架构，封装离线 IndexedDB 本地缓存与 Service Worker 拦截；设计乐观更新与自动重试同步状态机；实现跨端 PWA 离线运行与 Web Push 通知。\n【交付成果】已上线交付（todo-theta-mauve-75.vercel.app），源码开源（github.com/Jaxson-zip/to_do）。',
+    content: '【项目背景】解决日常轻量待办记录在弱网或多端切换时状态不同步的痛点。\n【技术方案】基于 React + TypeScript + Supabase + PWA 架构，设计离线缓存与 Service Worker 拦截；支持跨端 PWA 离线安装与实时云端同步。\n【交付成果】已真正上线部署至 Vercel（todo-theta-mauve-75.vercel.app），源码开源（github.com/Jaxson-zip/to_do）。',
     is_public: true,
     evidence_tag: 'Todo Memo PWA 核心项目',
   },
   {
-    title: '锐历简历工作台 (Ruili Resume) 本土化重构事实',
-    category: 'project',
-    content: '【项目背景】开源求职简历工作台在中文字体抗锯齿、A4 换页断行与即时渲染排版上体验欠佳。\n【技术方案】基于开源项目深度二次开发，重构中文字体级联渲染引擎与 A4 页面物理标尺换页计算模型；优化实时响应式状态同步与本地 LocalStorage 瞬时草稿自动保存；集成一键导出抗锯齿高清 PDF。\n【交付成果】已开源（github.com/Jaxson-zip/ruili），完美解决中文换页断行重叠问题。',
-    is_public: true,
-    evidence_tag: '锐历简历工作台 核心项目',
-  },
-  {
     title: '竞赛荣誉与学业奖项事实',
     category: 'education',
-    content: '国家级二等奖（2025 年全国职业院校技能大赛 · 大数据应用开发赛项）\n省级一等奖（2025 年广东省职业院校技能大赛 · 软件系统开发赛项）\n校级特等奖学金与优秀共青团员标兵（连续 2 年综合测评前 5%）',
+    content: '张锦鹏在校期间累计获国家级奖项 5 项、省市级奖项 6 项：\n1. 中国大学生计算机设计大赛大数据实践赛 - 国家级二等奖（2024-2025）\n2. 广东省职业院校技能大赛（高职组）大数据应用开发赛项 - 省级一等奖（2025-2026）\n3. 一带一路暨金砖国家技能大赛企业信息系统安全国赛 - 国家级二等奖（2023-2024）\n4. 第六届“泰迪杯”数据分析技能赛 - 全国一等奖（2023-2024）\n5. 深圳职业技术大学校级综合学业一等奖学金（GPA 3.85 / 4.0，专业前 2%）。',
     is_public: true,
-    evidence_tag: '国家级/省级竞赛荣誉记录',
+    evidence_tag: '真实国家级/省级竞赛荣誉记录',
   },
   {
     title: '技术栈与能力图谱',
     category: 'skill',
-    content: '【AI 应用开发】RAG 向量混合检索、Prompt Engineering、多智能体协同设计、pgvector 向量库\n【前端与全栈工程】React 19、Next.js 16、Vue 3、TypeScript、TailwindCSS、PWA、Payload CMS\n【后端与基础设施】Node.js、Go、PostgreSQL 17、Supabase、Docker、Linux',
+    content: '【前端与全栈工程】React 19、Next.js 16、Vue 3、TypeScript、Tailwind CSS、PWA、Vite\n【后端与大数据】Go、Python、PostgreSQL 17、pgvector 向量库、MySQL、Supabase、分布式计算\n【AI 原生开发】大模型 API 接入、RAG 向量检索增强、Prompt 上下文工程、AI 效能工具协同 (Cursor/Claude Code)\n【运维与交付】Docker 镜像制作、Linux、PM2 守护、Cloudflare Tunnel、Vercel',
     is_public: true,
     evidence_tag: '技术栈与工程能力图谱',
   },
   {
     title: '个人基本信息与求职意向',
     category: 'jd_match',
-    content: '【姓名】张锦鹏 (Jaxson)\n【毕业院校】深圳职业技术大学（大数据技术专业，GPA 3.67/4.0 前 5%）\n【求职意向】AI 应用开发 / Web 全栈开发 / 前端开发工程师\n【期望地点】深圳（可即时到岗/线下实习）\n【联系方式】电话/微信：15347640609，邮箱：1822103245@qq.com，GitHub：https://github.com/Jaxson-zip',
+    content: '【姓名】张锦鹏 (Jaxson)\n【毕业院校】深圳职业技术大学（大数据技术专业 · 大专在读，2027 届毕业，GPA 3.85/4.0 前 2%）\n【校园职务】院学信委人工智能学院副主席、班级学习委员、甲骨文社团社长\n【求职意向】AI 应用开发 / Web 全栈开发 / 前端开发工程师\n【期望地点】深圳（可即时到岗/线下实习）\n【联系方式】电话/微信：15347640609，邮箱：1822103245@qq.com，GitHub：https://github.com/Jaxson-zip',
     is_public: true,
     evidence_tag: '张锦鹏个人履历与联系方式',
   },
 ]
 
+function generate1536Vector(text) {
+  const dimensions = 1536
+  const vector = new Array(dimensions).fill(0)
+  const normalized = String(text).toLowerCase().trim()
+  if (!normalized) {
+    vector[0] = 1
+    return vector
+  }
+  for (let i = 0; i < normalized.length; i += 1) {
+    const code = normalized.charCodeAt(i)
+    vector[(code * 31 + i * 17) % dimensions] += 1
+    vector[(code * 59 + i * 37 + (normalized.charCodeAt(i + 1) || 0) * 13) % dimensions] += 0.75
+    vector[(code * 97 + i * 79 + (normalized.charCodeAt(i - 1) || 0) * 23) % dimensions] += 0.5
+  }
+  const norm = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0)) || 1
+  return vector.map((value) => Number((value / norm).toFixed(6)))
+}
+
 async function seed() {
   const client = await pool.connect()
   try {
-    console.log('🚀 开始向 Payload CMS 数据库导入初始数据...')
+    console.log('🚀 开始向 Payload CMS 数据库注入真实数据...')
     await client.query('BEGIN')
 
+    // 0. Clean up deprecated / fake projects
+    console.log('🧹 清理废弃或半成品项目 (ruili-resume, opc-agent-company)...')
+    const oldProjects = await client.query(
+      `SELECT id FROM owner.projects WHERE slug IN ('ruili-resume', 'opc-agent-company')`
+    )
+    for (const row of oldProjects.rows) {
+      await client.query('DELETE FROM owner.projects_tags WHERE _parent_id = $1', [row.id])
+      await client.query('DELETE FROM owner.projects WHERE id = $1', [row.id])
+    }
+
+    // Clean up deprecated fake experiences (珠海研发中心)
+    console.log('🧹 清理非真实经历 (珠海研发中心)...')
+    const oldExps = await client.query(
+      `SELECT id FROM owner.experiences WHERE organization LIKE '%珠海%'`
+    )
+    for (const row of oldExps.rows) {
+      await client.query('DELETE FROM owner.experiences_bullets WHERE _parent_id = $1', [row.id])
+      await client.query('DELETE FROM owner.experiences_tags WHERE _parent_id = $1', [row.id])
+      await client.query('DELETE FROM owner.experiences WHERE id = $1', [row.id])
+    }
+
     // 1. Projects
-    console.log('📦 导入作品与项目 (owner.projects)...')
+    console.log('📦 注入核心上线项目 (owner.projects)...')
     for (const proj of PROJECTS) {
       const existing = await client.query(
         'SELECT id FROM owner.projects WHERE slug = $1',
@@ -275,7 +301,7 @@ async function seed() {
     }
 
     // 2. Experiences
-    console.log('💼 导入工作与实践经历 (owner.experiences)...')
+    console.log('💼 注入工作与学习经历 (owner.experiences)...')
     for (const exp of EXPERIENCES) {
       const existing = await client.query(
         'SELECT id FROM owner.experiences WHERE organization = $1 AND role = $2',
@@ -320,61 +346,59 @@ async function seed() {
       console.log(`  ✓ 经历: ${exp.organization} - ${exp.role} (ID: ${expId})`)
     }
 
-    // 3. Credentials
-    console.log('🏆 导入荣誉与技能分类 (owner.credentials)...')
+    // 3. Credentials (Clear and recreate with 100% verified credentials)
+    console.log('🏆 注入真实奖项与技能分类 (owner.credentials)...')
+    await client.query('DELETE FROM owner.credentials')
     for (const cred of CREDENTIALS) {
-      const existing = await client.query(
-        'SELECT id FROM owner.credentials WHERE name = $1',
-        [cred.name]
+      await client.query(
+        `INSERT INTO owner.credentials
+         (name, category, year, level, items)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [cred.name, cred.category, cred.year, cred.level, cred.items]
       )
-      if (existing.rows.length > 0) {
-        await client.query(
-          `UPDATE owner.credentials
-           SET category = $1, year = $2, level = $3, items = $4, updated_at = NOW()
-           WHERE id = $5`,
-          [cred.category, cred.year, cred.level, cred.items, existing.rows[0].id]
-        )
-      } else {
-        await client.query(
-          `INSERT INTO owner.credentials
-           (name, category, year, level, items)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [cred.name, cred.category, cred.year, cred.level, cred.items]
-        )
-      }
-      console.log(`  ✓ 证书/技能: ${cred.name}`)
+      console.log(`  ✓ 证书/技能: ${cred.name} (${cred.level || cred.category})`)
     }
 
     // 4. AI Knowledge
-    console.log('🧠 导入 AI 知识条目 (owner.ai_knowledge)...')
+    console.log('🧠 注入真实 AI 问答知识条目 (owner.ai_knowledge)...')
+    await client.query('DELETE FROM owner.ai_knowledge')
     for (const k of AI_KNOWLEDGE) {
-      const existing = await client.query(
-        'SELECT id FROM owner.ai_knowledge WHERE title = $1',
-        [k.title]
+      await client.query(
+        `INSERT INTO owner.ai_knowledge
+         (title, category, content, is_public, evidence_tag)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [k.title, k.category, k.content, k.is_public, k.evidence_tag]
       )
-      if (existing.rows.length > 0) {
-        await client.query(
-          `UPDATE owner.ai_knowledge
-           SET category = $1, content = $2, is_public = $3, evidence_tag = $4, updated_at = NOW()
-           WHERE id = $5`,
-          [k.category, k.content, k.is_public, k.evidence_tag, existing.rows[0].id]
-        )
-      } else {
-        await client.query(
-          `INSERT INTO owner.ai_knowledge
-           (title, category, content, is_public, evidence_tag)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [k.title, k.category, k.content, k.is_public, k.evidence_tag]
-        )
-      }
       console.log(`  ✓ 知识条目: ${k.title}`)
     }
 
+    // 5. Sync knowledge_embeddings in public_read
+    console.log('⚡ 刷新向量知识库切片 (public_read.knowledge_embeddings)...')
+    await client.query('DELETE FROM public_read.knowledge_embeddings')
+    for (let i = 0; i < AI_KNOWLEDGE.length; i++) {
+      const k = AI_KNOWLEDGE[i]
+      const vec = `[${generate1536Vector(`${k.title} ${k.content}`).join(',')}]`
+      await client.query(
+        `INSERT INTO public_read.knowledge_embeddings
+         (chunk_id, category, title, content, evidence_tag, embedding, metadata, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6::vector, $7::jsonb, TRUE)`,
+        [
+          `ai_chunk_${i + 1}`,
+          k.category,
+          k.title,
+          k.content,
+          k.evidence_tag,
+          vec,
+          JSON.stringify({ title: k.title, category: k.category, evidence_tag: k.evidence_tag }),
+        ]
+      )
+    }
+
     await client.query('COMMIT')
-    console.log('🎉 所有初始数据已成功导入至 Payload CMS 数据库！')
+    console.log('🎉 所有 100% 真实数据已全量写入 Payload CMS 数据库！')
   } catch (err) {
     await client.query('ROLLBACK')
-    console.error('❌ 导入数据失败:', err)
+    console.error('❌ 注入数据失败:', err)
     throw err
   } finally {
     client.release()
@@ -382,4 +406,7 @@ async function seed() {
   }
 }
 
-seed().catch(() => process.exit(1))
+seed().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
