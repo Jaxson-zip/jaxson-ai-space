@@ -1125,19 +1125,19 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
 }
 
 .project-glass-card {
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: var(--shadow-card);
 }
 
 .project-glass-card:hover {
   border-color: var(--border-highlight);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
 }
 
@@ -1145,8 +1145,8 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -1156,14 +1156,14 @@ html[data-theme='light'] .macos-card-header {
 
 .macos-card-title {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
 
 .card-cover-container {
-  height: 200px;
+  height: 240px;
   background: var(--cover-bg);
   position: relative;
   overflow: hidden;

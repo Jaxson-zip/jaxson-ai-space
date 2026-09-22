@@ -55,7 +55,7 @@ export const projects = [
     approach: '基于 Next.js 16 + React 19 构建流式交互界面，嵌入 Payload CMS 3.x 动态管理内容；后端基于 PostgreSQL 17 + pgvector 构建知识切片余弦相似度检索与物理权限隔离。',
     outcome: '项目已完整部署至外网生产环境（结合 Docker、PM2 与 Cloudflare Tunnel），实现毫秒级首屏加载与稳定第一人称防幻觉 RAG 问答流。',
     technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
-    image: '/assets/jaxson-ai-space-cover.svg',
+    image: '/assets/jaxson-ai-space-cover.png',
     links: [
       { label: '在线体验', href: 'https://space.jaxson.bond/', kind: 'live' },
       { label: '开源仓库', href: 'https://github.com/Jaxson-zip/jaxson-ai-space', kind: 'source' },

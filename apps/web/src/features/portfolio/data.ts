@@ -44,6 +44,8 @@ export async function getHydratedPortfolioData() {
             technologies: (doc.tags || []).map((t: any) => t.tag || '').filter(Boolean),
             image: typeof doc.coverImage === 'object' && doc.coverImage?.url
               ? doc.coverImage.url
+              : doc.slug === 'jaxson-ai-space' || doc.slug === 'space'
+              ? '/assets/jaxson-ai-space-cover.png'
               : doc.slug === 'ruili-resume' || doc.slug === 'ruili'
               ? '/assets/ruili-cover.svg'
               : doc.slug === 'opc-agent-company' || doc.slug === 'opc'

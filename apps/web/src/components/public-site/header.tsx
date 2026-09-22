@@ -16,9 +16,9 @@ export function Header() {
 
         <div className="header-right">
           <nav className="navbar" aria-label="页面导航">
+            <Link href="/#portfolio">作品</Link>
             <Link href="/#about">关于</Link>
             <Link href="/#resume">实践</Link>
-            <Link href="/#portfolio">作品</Link>
             <Link href="/#skills">技能</Link>
             <Link href="/#contact">联系</Link>
           </nav>

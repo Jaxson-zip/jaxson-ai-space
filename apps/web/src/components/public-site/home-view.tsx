@@ -203,7 +203,113 @@ export function HomeView({
       </section>
 
       {/* ========================================================
-          2. About & AI Clone Teaser
+          2. Portfolio Section (Featured Projects)
+          ======================================================== */}
+      <section id="portfolio" className="section">
+        <div className="container">
+          <div className="section-head">
+            <div className="section-title-wrap">
+              <h2 className="section-title">精选上线项目</h2>
+            </div>
+            <p className="section-sub">均具备在线可访问体验与开源代码，真实构建、真实部署。</p>
+          </div>
+
+          <div className="portfolio-grid-layout">
+            {projects.map((project) => {
+              const liveLink = project.links.find((l) => l.kind === 'live')
+              const sourceLink = project.links.find((l) => l.kind === 'source')
+
+              return (
+                <article key={project.slug} className="project-glass-card">
+                  <div className="macos-card-header">
+                    <div className="traffic-lights">
+                      <span className="traffic-dot traffic-red" />
+                      <span className="traffic-dot traffic-yellow" />
+                      <span className="traffic-dot traffic-green" />
+                    </div>
+                    <span className="macos-card-title">{project.slug}.app</span>
+                    <span className="badge-status badge-live">{project.status}</span>
+                  </div>
+
+                  <div
+                    className="card-cover-container"
+                    onClick={() => setSelectedProject(project)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <Image
+                      src={project.image || '/assets/todo-memo-cover.png'}
+                      alt={project.title}
+                      width={480}
+                      height={240}
+                      className="card-cover-img"
+                    />
+                    <div className="card-cover-overlay">
+                      <span>点击查看技术架构与深度案例 →</span>
+                    </div>
+                  </div>
+
+                  <div className="project-details-body">
+                    <div className="card-meta-bar">
+                      <span className="project-category-tag">{project.category}</span>
+                    </div>
+
+                    <h3 onClick={() => setSelectedProject(project)} style={{ cursor: 'pointer' }}>
+                      {project.title}
+                    </h3>
+                    <p>{project.summary}</p>
+
+                    <div className="card-tag-row" style={{ marginBottom: '1rem' }}>
+                      {project.technologies.slice(0, 4).map((tech) => (
+                        <span key={tech} className="mini-tag">{tech}</span>
+                      ))}
+                    </div>
+
+                    <div className="project-action-row">
+                      <button
+                        type="button"
+                        className="btn-case-study"
+                        onClick={() => setSelectedProject(project)}
+                      >
+                        <span>案例详情</span>
+                        <ChevronRight size={14} />
+                      </button>
+
+                      <div className="project-ext-links">
+                        {liveLink && (
+                          <a
+                            href={liveLink.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="ext-icon-link"
+                            title="在线体验 Demo"
+                          >
+                            <span>体验</span>
+                            <ExternalLink size={13} />
+                          </a>
+                        )}
+                        {sourceLink && (
+                          <a
+                            href={sourceLink.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="ext-icon-link"
+                            title="查看 GitHub 仓库"
+                          >
+                            <GithubIcon size={14} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================
+          3. About & Narrative
           ======================================================== */}
       <section id="about" className="section">
         <div className="container">
@@ -397,112 +503,6 @@ export function HomeView({
                 )
               })}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================
-          4. Portfolio Section
-          ======================================================== */}
-      <section id="portfolio" className="section">
-        <div className="container">
-          <div className="section-head">
-            <div className="section-title-wrap">
-              <h2 className="section-title">精选上线项目</h2>
-            </div>
-            <p className="section-sub">均具备在线可访问体验与开源代码，真实构建、真实部署。</p>
-          </div>
-
-          <div className="portfolio-grid-layout">
-            {projects.map((project) => {
-              const liveLink = project.links.find((l) => l.kind === 'live')
-              const sourceLink = project.links.find((l) => l.kind === 'source')
-
-              return (
-                <article key={project.slug} className="project-glass-card">
-                  <div className="macos-card-header">
-                    <div className="traffic-lights">
-                      <span className="traffic-dot traffic-red" />
-                      <span className="traffic-dot traffic-yellow" />
-                      <span className="traffic-dot traffic-green" />
-                    </div>
-                    <span className="macos-card-title">{project.slug}.app</span>
-                    <span className="badge-status badge-live">{project.status}</span>
-                  </div>
-
-                  <div
-                    className="card-cover-container"
-                    onClick={() => setSelectedProject(project)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <Image
-                      src={project.image || '/assets/todo-memo-cover.png'}
-                      alt={project.title}
-                      width={480}
-                      height={240}
-                      className="card-cover-img"
-                    />
-                    <div className="card-cover-overlay">
-                      <span>点击查看技术架构与深度案例 →</span>
-                    </div>
-                  </div>
-
-                  <div className="project-details-body">
-                    <div className="card-meta-bar">
-                      <span className="project-category-tag">{project.category}</span>
-                    </div>
-
-                    <h3 onClick={() => setSelectedProject(project)} style={{ cursor: 'pointer' }}>
-                      {project.title}
-                    </h3>
-                    <p>{project.summary}</p>
-
-                    <div className="card-tag-row" style={{ marginBottom: '1rem' }}>
-                      {project.technologies.slice(0, 4).map((tech) => (
-                        <span key={tech} className="mini-tag">{tech}</span>
-                      ))}
-                    </div>
-
-                    <div className="project-action-row">
-                      <button
-                        type="button"
-                        className="btn-case-study"
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        <span>案例详情</span>
-                        <ChevronRight size={14} />
-                      </button>
-
-                      <div className="project-ext-links">
-                        {liveLink && (
-                          <a
-                            href={liveLink.href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="ext-icon-link"
-                            title="在线体验 Demo"
-                          >
-                            <span>体验</span>
-                            <ExternalLink size={13} />
-                          </a>
-                        )}
-                        {sourceLink && (
-                          <a
-                            href={sourceLink.href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="ext-icon-link"
-                            title="查看 GitHub 仓库"
-                          >
-                            <GithubIcon size={14} />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
           </div>
         </div>
       </section>
