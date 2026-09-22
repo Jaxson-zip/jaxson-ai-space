@@ -46,7 +46,7 @@ export const projects = [
   {
     slug: 'jaxson-ai-space',
     title: 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)',
-    category: 'AI 应用 · 全栈生产交付',
+    category: '全栈工程 · 真实交付',
     sourceVisibility: 'public',
     status: '已全量上线',
     role: '独立全栈架构与开发',

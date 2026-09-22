@@ -21,7 +21,7 @@ const PROJECTS = [
     title: 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)',
     slug: 'jaxson-ai-space',
     role: '独立全栈架构与开发',
-    category: 'AI 应用 · 全栈生产交付',
+    category: '全栈工程 · 真实交付',
     visibility: 'public',
     status: '已全量上线',
     summary: '真正生产交付的现代化工程师数字分身空间，集成第一人称 RAG 向量知识库检索、Payload CMS 无头内容管理与双 Schema 数据隔离。',
