@@ -17,6 +17,8 @@ import {
   Wrench,
   Award,
   Trophy,
+  Medal,
+  GraduationCap,
   ChevronRight,
   Check,
   X,
@@ -40,7 +42,7 @@ function getAwardMeta(award: AwardType) {
     return {
       tier: 'gold',
       badgeText: '全国一等奖',
-      icon: '🏆',
+      icon: <Trophy size={13} className="award-svg-icon" />,
       subtitle: title.includes('泰迪杯')
         ? '全国高校数据智能与分析技能赛项'
         : '国家级一级行业技能竞赛',
@@ -50,7 +52,7 @@ function getAwardMeta(award: AwardType) {
     return {
       tier: 'emerald',
       badgeText: '省级一等奖',
-      icon: '🥇',
+      icon: <Medal size={13} className="award-svg-icon" />,
       subtitle: title.includes('广东省')
         ? '高职组大数据应用开发 · 广东省教育厅'
         : '省部级重点学科技能竞赛',
@@ -60,7 +62,7 @@ function getAwardMeta(award: AwardType) {
     return {
       tier: 'amber',
       badgeText: '国家级二等奖',
-      icon: '🥈',
+      icon: <Award size={13} className="award-svg-icon" />,
       subtitle: title.includes('计算机设计')
         ? '教育部高等学校计算机类教指委主办'
         : title.includes('金砖')
@@ -72,14 +74,14 @@ function getAwardMeta(award: AwardType) {
     return {
       tier: 'blue',
       badgeText: '综合学业一等',
-      icon: '🎓',
+      icon: <GraduationCap size={13} className="award-svg-icon" />,
       subtitle: 'GPA 3.85 / 4.0 · 综合素质考评专业排名前 2%',
     }
   }
   return {
     tier: 'slate',
     badgeText: level || '竞赛荣誉',
-    icon: '🏅',
+    icon: <Award size={13} className="award-svg-icon" />,
     subtitle: '重点专业学术与技能认证',
   }
 }
@@ -166,35 +168,35 @@ export function HomeView({
 
               <div className="hero-cta-group">
                 <a href="#portfolio" className="btn-macos-primary">
-                  <span>查看精选作品 ({projects.length})</span>
-                  <ArrowRight size={15} />
+                  <span>浏览项目 ({projects.length})</span>
+                  <ArrowRight size={14} />
                 </a>
                 <a
                   href="/resume/zhang-jinpeng-resume.docx"
                   download="张锦鹏-个人简历.docx"
                   className="btn-macos-secondary"
                 >
-                  <FileText size={15} />
-                  <span>下载简历 (DOCX)</span>
+                  <FileText size={14} />
+                  <span>下载个人简历</span>
                 </a>
                 <Link href="/ai" className="btn-macos-ghost">
                   <Sparkles size={14} />
-                  <span>AI 分身对话 ↗</span>
+                  <span>AI 分身问答</span>
                 </Link>
               </div>
 
               <div className="hero-mini-facts">
                 <div className="fact-item">
                   <span className="fact-label">学业表现</span>
-                  <strong className="fact-val">GPA 3.85 (专业前 2%) · 校一等奖</strong>
+                  <strong className="fact-val">GPA 3.85 (专业前 2%) · 综合一等奖</strong>
                 </div>
                 <div className="fact-item">
                   <span className="fact-label">企业历练</span>
-                  <strong className="fact-val">润喵云 · 算力租赁平台全栈维护</strong>
+                  <strong className="fact-val">润喵云 · 算力调度平台运维与镜像制作</strong>
                 </div>
                 <div className="fact-item">
                   <span className="fact-label">赛项荣誉</span>
-                  <strong className="fact-val">全国一等奖 · 国家二等奖 ×2 · 省一等奖</strong>
+                  <strong className="fact-val">国家及全国奖项 3 项 · 省一等奖 1 项</strong>
                 </div>
               </div>
             </div>
@@ -766,17 +768,26 @@ export function HomeView({
             <p className="modal-role-text">{selectedProject.role}</p>
 
             <div className="modal-section-block">
-              <h4>💡 业务痛点与初衷</h4>
+              <div className="modal-section-title">
+                <Cpu size={15} />
+                <h4>业务痛点与初衷</h4>
+              </div>
               <p>{selectedProject.problem}</p>
             </div>
 
             <div className="modal-section-block">
-              <h4>🛠️ 技术方案与实现</h4>
+              <div className="modal-section-title">
+                <Wrench size={15} />
+                <h4>技术方案与实现</h4>
+              </div>
               <p>{selectedProject.approach}</p>
             </div>
 
             <div className="modal-section-block">
-              <h4>📈 交付结果与当前状态</h4>
+              <div className="modal-section-title">
+                <Check size={15} />
+                <h4>交付成果与现状</h4>
+              </div>
               <p>{selectedProject.outcome}</p>
             </div>
 
