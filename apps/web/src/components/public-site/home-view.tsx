@@ -140,51 +140,185 @@ export function HomeView({
       )}
 
       {/* ========================================================
-          1. Hero Section
+          1. Hero Section (macOS Minimalist Two-Column Layout)
           ======================================================== */}
       <section id="hero" className="hero-section">
         <div className="container">
-          <div className="hero-badge-row">
-            <span className="status-badge">
-              <span className="status-dot"></span>
-              <span>2027 届在读 · 深圳职业技术大学 · 随时可线下到岗</span>
-            </span>
-            <span className="hero-sub-tag">全栈开发 · AI 应用工程落地</span>
-          </div>
+          <div className="hero-grid-layout">
+            {/* Left Column: Intro & Actions */}
+            <div className="hero-left-col">
+              <div className="hero-badge-row">
+                <span className="macos-status-badge">
+                  <span className="status-dot"></span>
+                  <span>2027 届在读 · 深圳职业技术大学 · 随时到岗</span>
+                </span>
+              </div>
 
-          <h1 className="hero-title">
-            你好，我是 <span className="hero-highlight">{profile.name}</span>
-          </h1>
-          <p className="hero-subtitle">立足真实业务痛点 · 构建可靠好用的全栈系统与实用 AI 应用</p>
-          <p className="hero-desc">{profile.summary}</p>
+              <h1 className="hero-title">
+                张锦鹏 <span className="hero-en-tag">Jaxson</span>
+              </h1>
+              <p className="hero-subtitle">
+                大数据技术在读 · 全栈与实用 AI 应用工程实践
+              </p>
+              <p className="hero-desc">
+                实事求是，注重业务真实痛点与高质量交付。在广东润喵云完成算力平台运维与 Docker 镜像交付；业余自主开发 PWA 工具与基于 RAG 的数字分身空间。
+              </p>
 
-          <div className="hero-cta-group">
-            <a href="#portfolio" className="btn-cta-primary">
-              <span>查看精选作品 ({projects.length})</span>
-              <ArrowRight size={15} />
-            </a>
-            <a href="/resume/zhang-jinpeng-resume.docx" download="张锦鹏-个人简历.docx" className="btn-cta-secondary">
-              <FileText size={15} />
-              <span>下载简历 (DOCX)</span>
-            </a>
-            <Link href="/ai" className="btn-cta-ai">
-              <Sparkles size={14} />
-              <span>AI 分身问答 ↗</span>
-            </Link>
-          </div>
+              <div className="hero-cta-group">
+                <a href="#portfolio" className="btn-macos-primary">
+                  <span>查看精选作品 ({projects.length})</span>
+                  <ArrowRight size={15} />
+                </a>
+                <a
+                  href="/resume/zhang-jinpeng-resume.docx"
+                  download="张锦鹏-个人简历.docx"
+                  className="btn-macos-secondary"
+                >
+                  <FileText size={15} />
+                  <span>下载简历 (DOCX)</span>
+                </a>
+                <Link href="/ai" className="btn-macos-ghost">
+                  <Sparkles size={14} />
+                  <span>AI 分身对话 ↗</span>
+                </Link>
+              </div>
 
-          <div className="hero-trust-bar">
-            <div className="trust-item">
-              <span>高校背景与学业</span>
-              <strong>深圳职业技术大学 · 大数据技术 (GPA 3.85 前 2%)</strong>
+              <div className="hero-mini-facts">
+                <div className="fact-item">
+                  <span className="fact-label">学业表现</span>
+                  <strong className="fact-val">GPA 3.85 (专业前 2%) · 校一等奖</strong>
+                </div>
+                <div className="fact-item">
+                  <span className="fact-label">企业历练</span>
+                  <strong className="fact-val">润喵云 · 算力租赁平台全栈维护</strong>
+                </div>
+                <div className="fact-item">
+                  <span className="fact-label">赛项荣誉</span>
+                  <strong className="fact-val">全国一等奖 · 国家二等奖 ×2 · 省一等奖</strong>
+                </div>
+              </div>
             </div>
-            <div className="trust-item">
-              <span>企业实习产出</span>
-              <strong>广东润喵云科技 · Vue 3 + Go 算力平台联调与运维</strong>
-            </div>
-            <div className="trust-item">
-              <span>核心项目落地</span>
-              <strong>Jaxson AI Space (本站) · 待办备忘 PWA</strong>
+
+            {/* Right Column: macOS Developer Terminal Window */}
+            <div className="hero-right-col">
+              <div className="macos-window">
+                <div className="macos-titlebar">
+                  <div className="traffic-lights">
+                    <span className="traffic-dot traffic-red" />
+                    <span className="traffic-dot traffic-yellow" />
+                    <span className="traffic-dot traffic-green" />
+                  </div>
+                  <div className="macos-window-title">
+                    <Code2 size={13} className="window-icon" />
+                    <span>jaxson.config.ts</span>
+                  </div>
+                  <div className="macos-titlebar-right">
+                    <span className="badge-run">● Live</span>
+                  </div>
+                </div>
+
+                <div className="macos-code-body">
+                  <div className="code-line">
+                    <span className="code-num">01</span>
+                    <span className="code-kw">export const</span>{' '}
+                    <span className="code-var">developer</span> = &#123;
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">02</span>
+                    <span className="code-indent-1">
+                      <span className="code-prop">name:</span>{' '}
+                      <span className="code-str">&apos;张锦鹏 (Jaxson)&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">03</span>
+                    <span className="code-indent-1">
+                      <span className="code-prop">education:</span> &#123;
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">04</span>
+                    <span className="code-indent-2">
+                      <span className="code-prop">university:</span>{' '}
+                      <span className="code-str">&apos;深圳职业技术大学 (SZPU)&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">05</span>
+                    <span className="code-indent-2">
+                      <span className="code-prop">gpa:</span>{' '}
+                      <span className="code-str">&apos;3.85 / 4.0 (Top 2%)&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">06</span>
+                    <span className="code-indent-1">&#125;,</span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">07</span>
+                    <span className="code-indent-1">
+                      <span className="code-prop">internship:</span>{' '}
+                      <span className="code-str">&apos;广东润喵云科技 · 全栈实习&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">08</span>
+                    <span className="code-indent-1">
+                      <span className="code-prop">stack:</span> [
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">09</span>
+                    <span className="code-indent-2">
+                      <span className="code-str">&apos;Next.js 16&apos;</span>,{' '}
+                      <span className="code-str">&apos;React 19&apos;</span>,{' '}
+                      <span className="code-str">&apos;TypeScript&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">10</span>
+                    <span className="code-indent-2">
+                      <span className="code-str">&apos;Go&apos;</span>,{' '}
+                      <span className="code-str">&apos;Python&apos;</span>,{' '}
+                      <span className="code-str">&apos;PostgreSQL 17 + pgvector&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">11</span>
+                    <span className="code-indent-2">
+                      <span className="code-str">&apos;Docker&apos;</span>,{' '}
+                      <span className="code-str">&apos;Vue 3&apos;</span>,{' '}
+                      <span className="code-str">&apos;Tailwind CSS&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">12</span>
+                    <span className="code-indent-1">],</span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">13</span>
+                    <span className="code-indent-1">
+                      <span className="code-prop">availability:</span>{' '}
+                      <span className="code-str">&apos;随时到岗 (深圳本地)&apos;</span>,
+                    </span>
+                  </div>
+                  <div className="code-line">
+                    <span className="code-num">14</span>
+                    &#125;
+                  </div>
+                </div>
+
+                <div className="macos-statusbar">
+                  <div className="status-left">
+                    <span>UTF-8</span>
+                    <span>TypeScript 5.7</span>
+                    <span>Next.js 16</span>
+                  </div>
+                  <div className="status-right">
+                    <span>Prettier ✓</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -408,6 +542,16 @@ export function HomeView({
 
               return (
                 <article key={project.slug} className="project-glass-card">
+                  <div className="macos-card-header">
+                    <div className="traffic-lights">
+                      <span className="traffic-dot traffic-red" />
+                      <span className="traffic-dot traffic-yellow" />
+                      <span className="traffic-dot traffic-green" />
+                    </div>
+                    <span className="macos-card-title">{project.slug}.app</span>
+                    <span className="badge-status badge-live">{project.status}</span>
+                  </div>
+
                   <div
                     className="card-cover-container"
                     onClick={() => setSelectedProject(project)}
@@ -421,24 +565,13 @@ export function HomeView({
                       className="card-cover-img"
                     />
                     <div className="card-cover-overlay">
-                      <span>点击查看完整深度案例 →</span>
+                      <span>点击查看技术架构与深度案例 →</span>
                     </div>
                   </div>
 
                   <div className="project-details-body">
                     <div className="card-meta-bar">
-                      <span
-                        className={`badge-status ${
-                          project.sourceVisibility === 'public'
-                            ? project.status.includes('上线')
-                              ? 'badge-live'
-                              : 'badge-oss'
-                            : 'badge-private'
-                        }`}
-                      >
-                        {project.status}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{project.category}</span>
+                      <span className="project-category-tag">{project.category}</span>
                     </div>
 
                     <h3 onClick={() => setSelectedProject(project)} style={{ cursor: 'pointer' }}>

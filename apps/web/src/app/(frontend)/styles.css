@@ -86,7 +86,7 @@ html {
 }
 
 body {
-  background: var(--bg-root);
+  background-color: var(--bg-root);
   color: var(--text-secondary);
   font-family: var(--font-sans);
   line-height: 1.65;
@@ -96,6 +96,26 @@ body {
   position: relative;
   min-height: 100vh;
   transition: background-color 0.25s ease, color 0.25s ease;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html[data-theme='light'] body {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 520px;
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(56, 189, 248, 0.12), rgba(129, 140, 248, 0.06) 50%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .skip-link {
@@ -169,8 +189,8 @@ input, textarea {
   height: var(--header-height);
   background: var(--bg-header);
   border-bottom: 1px solid var(--border-subtle);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
@@ -301,179 +321,355 @@ input, textarea {
 }
 
 /* ========================================================
-   Hero Section
+   macOS Minimalist Hero Section
    ======================================================== */
 .hero-section {
-  padding: 5rem 0 3rem;
+  padding: 4.5rem 0 3.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-grid-layout {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 36px;
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .hero-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+.hero-left-col {
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-badge-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.85rem;
 }
 
-.status-badge {
+.macos-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 0.28rem 0.85rem;
+  padding: 0.3rem 0.85rem;
   border-radius: var(--radius-full);
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: var(--accent-emerald);
-  font-size: 0.8rem;
+  background: rgba(39, 201, 63, 0.1);
+  border: 1px solid rgba(39, 201, 63, 0.3);
+  color: #34d399;
+  font-size: 0.78rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent-emerald);
-}
-
-.hero-sub-tag {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  background: #27c93f;
+  box-shadow: 0 0 8px rgba(39, 201, 63, 0.6);
 }
 
 .hero-title {
-  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-size: clamp(2.4rem, 4.5vw, 3.4rem);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.03em;
   color: var(--text-primary);
-  margin-bottom: 0.75rem;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 
-.hero-highlight {
-  color: var(--text-primary);
-  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-html[data-theme='light'] .hero-highlight {
-  background: linear-gradient(135deg, #09090b 0%, #52525b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.hero-en-tag {
+  font-size: 0.46em;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
 }
 
 .hero-subtitle {
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #38bdf8;
   margin-bottom: 0.85rem;
   letter-spacing: -0.01em;
 }
 
 .hero-desc {
-  font-size: 1rem;
+  font-size: 0.94rem;
   color: var(--text-secondary);
-  max-width: 680px;
   line-height: 1.75;
-  margin-bottom: 2.25rem;
+  margin-bottom: 1.75rem;
 }
 
 .hero-cta-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
-.btn-cta-primary {
+.btn-macos-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0.65rem 1.35rem;
-  border-radius: var(--radius-sm);
-  background: var(--text-primary);
-  color: var(--bg-root);
-  font-size: 0.9rem;
+  gap: 7px;
+  padding: 0.62rem 1.3rem;
+  border-radius: 8px;
+  background: #0071e3;
+  color: #ffffff;
+  font-size: 0.88rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-.btn-cta-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.btn-cta-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.65rem 1.35rem;
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 500;
+  box-shadow: 0 4px 14px -2px rgba(0, 113, 227, 0.4);
   transition: all 0.15s ease;
 }
 
-.btn-cta-secondary:hover {
-  background: var(--bg-surface-elevated);
-  border-color: var(--border-highlight);
+.btn-macos-primary:hover {
+  background: #0077ed;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -2px rgba(0, 113, 227, 0.5);
+}
+
+.btn-macos-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0.62rem 1.25rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  transition: all 0.15s ease;
+}
+
+html[data-theme='light'] .btn-macos-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.btn-macos-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
 }
 
-.btn-cta-ai {
+.btn-macos-ghost {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.65rem 1.15rem;
-  border-radius: var(--radius-sm);
+  padding: 0.62rem 1rem;
+  border-radius: 8px;
   background: transparent;
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.15s ease;
 }
 
-.btn-cta-ai:hover {
+.btn-macos-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border-color: var(--border-medium);
-  background: var(--bg-surface-elevated);
 }
 
-.hero-trust-bar {
+.hero-mini-facts {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 1.5rem 0;
+  gap: 14px;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
 }
 
-.trust-item {
+@media (max-width: 640px) {
+  .hero-mini-facts {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.fact-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
-.trust-item span {
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.fact-label {
+  font-size: 0.72rem;
   color: var(--text-muted);
+  text-transform: uppercase;
   font-family: var(--font-mono);
+  letter-spacing: 0.05em;
 }
 
-.trust-item strong {
-  font-size: 0.88rem;
+.fact-val {
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.45;
+  line-height: 1.35;
+}
+
+/* ========================================================
+   macOS Window Component (Developer Terminal)
+   ======================================================== */
+.hero-right-col {
+  display: flex;
+  justify-content: center;
+}
+
+.macos-window {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 12px;
+  background: rgba(24, 24, 28, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+html[data-theme='light'] .macos-window {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.macos-window:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.macos-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='light'] .macos-titlebar {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.traffic-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.traffic-red { background: #ff5f56; border: 0.5px solid #e0443e; }
+.traffic-yellow { background: #ffbd2e; border: 0.5px solid #dea123; }
+.traffic-green { background: #27c93f; border: 0.5px solid #1aab29; }
+
+.macos-window-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.window-icon {
+  color: #38bdf8;
+}
+
+.macos-titlebar-right .badge-run {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.macos-code-body {
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+
+.code-line {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  white-space: pre;
+}
+
+.code-num {
+  color: rgba(255, 255, 255, 0.18);
+  user-select: none;
+  width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+}
+
+html[data-theme='light'] .code-num {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.code-indent-1 { padding-left: 1.1rem; }
+.code-indent-2 { padding-left: 2.2rem; }
+
+.code-kw { color: #f43f5e; font-weight: 600; }
+.code-var { color: #38bdf8; }
+.code-prop { color: #a78bfa; }
+.code-str { color: #34d399; }
+
+html[data-theme='light'] .code-kw { color: #e11d48; }
+html[data-theme='light'] .code-var { color: #0284c7; }
+html[data-theme='light'] .code-prop { color: #7c3aed; }
+html[data-theme='light'] .code-str { color: #059669; }
+
+.macos-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+html[data-theme='light'] .macos-statusbar {
+  background: rgba(0, 0, 0, 0.03);
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+.status-left {
+  display: flex;
+  gap: 12px;
+}
+
+.status-right {
+  color: #34d399;
 }
 
 /* ========================================================
@@ -1055,7 +1251,7 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
 }
 
 .project-glass-card {
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   overflow: hidden;
@@ -1069,6 +1265,27 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
   border-color: var(--border-highlight);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.macos-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+html[data-theme='light'] .macos-card-header {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.macos-card-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .card-cover-container {
