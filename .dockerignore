@@ -4,4 +4,10 @@
 **/playwright-report
 **/payload-local.db
 **/.env
+**/.env.*
+**/scratch
+**/dist
+archive/
 *.log
+backups
+exports

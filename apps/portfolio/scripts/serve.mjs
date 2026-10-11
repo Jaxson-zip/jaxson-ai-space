@@ -1,0 +1,84 @@
+import { createServer } from 'node:http'
+import { createReadStream } from 'node:fs'
+import { stat } from 'node:fs/promises'
+import { dirname, extname, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { browserConfig } from './config.mjs'
+import { createShowcaseFeed } from './showcase.mjs'
+
+const root = dirname(dirname(fileURLToPath(import.meta.url)))
+const production = process.argv.includes('--production')
+const files = production ? resolve(root, 'dist') : resolve(root, 'public')
+const port = Number(process.env.PORT || 3000)
+const host = process.env.HOST || '127.0.0.1'
+const serveShowcase = createShowcaseFeed()
+const mime = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
+  '.woff2': 'font/woff2',
+}
+
+createServer(async (request, response) => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    response.writeHead(405, { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' }).end()
+    return
+  }
+  try {
+    const pathname = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`).pathname
+    if (pathname === '/api/showcase-projects') {
+      await serveShowcase(request, response)
+      return
+    }
+    if (pathname === '/portfolio/jaxson_biaoge_restart.html') {
+      response.writeHead(307, { Location: '/' }).end()
+      return
+    }
+    if (pathname === '/config.js' && !production) {
+      const body = browserConfig()
+      response.writeHead(200, { 'Content-Type': mime['.js'], 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body) })
+      response.end(request.method === 'HEAD' ? undefined : body)
+      return
+    }
+    const file = pathname === '/' || pathname === '/index.html'
+      ? resolve(root, production ? 'dist/index.html' : 'index.html')
+      : resolve(files, `.${decodeURIComponent(pathname)}`)
+    const allowedRoot = pathname === '/' || pathname === '/index.html' ? resolve(root, production ? 'dist' : '.') : files
+    if (!file.startsWith(allowedRoot + sep)) {
+      response.writeHead(403).end()
+      return
+    }
+    const info = await stat(file)
+    if (!info.isFile()) throw new Error('Not a file')
+    const entryPage = pathname === '/' || pathname === '/index.html' || pathname === '/config.js' || pathname.startsWith('/resume/')
+    const versionedAsset = /\.[a-f0-9]{12}\.(webp|woff2)$/.test(pathname)
+    const etag = `W/"${info.size.toString(16)}-${Math.trunc(info.mtimeMs).toString(16)}"`
+    const headers = {
+      'Content-Type': mime[extname(file).toLowerCase()] || 'application/octet-stream',
+      'Content-Length': info.size,
+      'Cache-Control': !production || entryPage ? 'no-store' : versionedAsset
+        ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+      ETag: etag,
+    }
+    const ifNoneMatch = request.headers['if-none-match']
+    if (!entryPage && ifNoneMatch?.split(',').some(value =>
+      value.trim() === '*' || value.trim().replace(/^W\//, '') === etag.replace(/^W\//, ''))) {
+      delete headers['Content-Length']
+      response.writeHead(304, headers).end()
+      return
+    }
+    response.writeHead(200, headers)
+    if (request.method === 'HEAD') response.end()
+    else createReadStream(file).on('error', () => response.destroy()).pipe(response)
+  } catch {
+    response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }).end('Not found')
+  }
+}).listen(port, host, () => {
+  console.log(`Portfolio listening at http://${host}:${port} (${production ? 'dist' : 'source'})`)
+})

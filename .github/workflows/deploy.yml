@@ -5,7 +5,15 @@ on:
     branches:
       - main
       - master
+  pull_request:
   workflow_dispatch:
+
+concurrency:
+  group: jaxson-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   test-and-verify:
@@ -47,37 +55,102 @@ jobs:
           USE_POSTGRES: "false"
           NEXT_TELEMETRY_DISABLED: "1"
 
+      - name: Build Public Portfolio
+        run: pnpm --filter @jaxson/portfolio build
+        env:
+          PORTFOLIO_API_ORIGIN: https://api.example.com
+
+      - name: Setup Python operations dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install verified backup dependencies
+        run: python -m pip install -r docker/requirements.pc-ops.txt
+
+      - name: Test Public Portfolio
+        run: pnpm --filter @jaxson/portfolio test
+
+      - name: Validate Production Compose Template
+        run: |
+          docker compose --env-file docker/.env.example -f docker/compose.prod.yaml --profile bootstrap --profile tunnel --profile maintenance config --quiet
+          sh -n docker/backup.sh
+          sh -n docker/restore.sh
+          sh -n docker/lib/compose.sh
+          node --check apps/web/scripts/cms-content.mjs
+          node --check apps/web/scripts/reindex-knowledge.mjs
+          node --check apps/web/scripts/check-smtp.mjs
+          sh -n docker/backup-vps-existing.sh
+          sh -n docker/restore-vps-existing.sh
+          sh -n docker/deploy-vps-existing.sh
+          sh -n docker/notify-vps-failure.sh
+          node --test docker/tests/notify-vps-failure.test.mjs
+          node --test integrations/openclaw/weixin-admission.test.mjs integrations/openclaw/weixin-context.test.mjs
+          node --test integrations/openclaw/weixin-inbox.test.mjs integrations/openclaw/weixin-inbox-path.test.mjs
+          node --test integrations/openclaw/jaxson-inbox/*.test.mjs
+          sh -n integrations/openclaw/prepare-vps.sh
+          sh -n docker/lib/release.sh
+          python3 -m unittest discover -s docker/tests -v
+
   deploy-to-vps:
-    name: 🚀 Deploy to Cloud Server (Docker Compose)
+    name: Deploy verified images to the existing VPS
     needs: test-and-verify
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment: production
+    if: github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || github.ref_name == 'master')
 
     steps:
-      - name: SSH Remote Deployment
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: actions/checkout@v4
+      - name: Build immutable application images
+        env:
+          PORTFOLIO_URL: ${{ vars.PORTFOLIO_URL || 'https://jaxson.bond' }}
+          API_URL: ${{ vars.API_URL || 'https://api.jaxson.bond' }}
+        run: |
+          set -eu
+          docker build -f docker/Dockerfile.web --build-arg NEXT_PUBLIC_PORTFOLIO_URL="$PORTFOLIO_URL" --build-arg NEXT_PUBLIC_SERVER_URL="$API_URL" -t "jaxson-web:$GITHUB_SHA" .
+          docker build -f docker/Dockerfile.portfolio --build-arg PORTFOLIO_API_ORIGIN="$API_URL" -t "jaxson-portfolio:$GITHUB_SHA" .
+          mkdir -p release-artifact/tools/lib
+          docker save "jaxson-web:$GITHUB_SHA" "jaxson-portfolio:$GITHUB_SHA" -o release-artifact/images.tar
+          WEB_IMAGE=$(docker image inspect --format '{{.Id}}' "jaxson-web:$GITHUB_SHA")
+          PORTFOLIO_IMAGE=$(docker image inspect --format '{{.Id}}' "jaxson-portfolio:$GITHUB_SHA")
+          export WEB_IMAGE PORTFOLIO_IMAGE
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          migrations = re.findall(r"name: '([0-9]{8}_[0-9]{6}_[a-z0-9_]+)'", Path('apps/web/src/migrations/index.ts').read_text())
+          data = dict(version=1, release_id=os.environ['GITHUB_SHA'], web_image=os.environ['WEB_IMAGE'], portfolio_image=os.environ['PORTFOLIO_IMAGE'], migrations=migrations)
+          Path('release-artifact/artifact.json').write_text(json.dumps(data) + '\n')
+          PY
+          cp docker/backup-vps-existing.sh docker/restore-vps-existing.sh docker/deploy-vps-existing.sh release-artifact/tools/
+          cp docker/notify-vps-failure.sh docker/notify-vps-failure.mjs release-artifact/tools/
+          cp docker/lib/release.sh docker/lib/release_snapshot.py docker/lib/release_candidate.py release-artifact/tools/lib/
+          (cd release-artifact && sha256sum images.tar artifact.json > SHA256SUMS)
+          python3 docker/lib/release_snapshot.py artifact release-artifact
+      - name: Retain the verified deployment artifact
+        uses: actions/upload-artifact@v4
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          script: |
-            echo "🚀 Starting automated deployment for Jaxson AI Space..."
-            if [ -d "$HOME/jaxson-ai-space" ]; then
-              cd "$HOME/jaxson-ai-space"
-            elif [ -d "/opt/jaxson-ai-space" ]; then
-              cd "/opt/jaxson-ai-space"
-            else
-              echo "Repository folder not found, please check deployment path."
-              exit 1
-            fi
-            
-            git pull origin main
-            # Bootstrap/migrate PostgreSQL before web and worker can consume the outbox.
-            docker compose -f docker/compose.prod.yaml up -d postgres
-            until docker compose -f docker/compose.prod.yaml exec -T postgres pg_isready -U jaxson_admin -d jaxson_space; do
-              sleep 2
-            done
-            docker compose -f docker/compose.prod.yaml exec -T postgres psql -v ON_ERROR_STOP=1 -U jaxson_admin -d jaxson_space < docker/migrations/002-public-index.sql
-            docker compose -f docker/compose.prod.yaml up -d --build
-            echo "✅ Deployment completed successfully!"
+          name: release-${{ github.sha }}
+          path: release-artifact
+          retention-days: 14
+      - name: Upload and deploy with pinned SSH host trust
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          test -n "$VPS_HOST" && test -n "$VPS_USERNAME" && test -n "$VPS_SSH_KEY" && test -n "$VPS_KNOWN_HOSTS" || { echo 'Configure the VPS SSH secrets and pinned known_hosts before deployment'; exit 1; }
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ ]] && [[ "$VPS_USERNAME" =~ ^[a-z_][a-z0-9_-]*$ ]] && [[ "$VPS_PORT" =~ ^[0-9]+$ ]] && [[ "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ ]]
+          private=$(mktemp -d)
+          trap 'rm -rf -- "$private"' EXIT
+          chmod 700 "$private"
+          printf '%s\n' "$VPS_SSH_KEY" > "$private/key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$private/known_hosts"
+          chmod 600 "$private/key" "$private/known_hosts"
+          remote="/opt/jaxson-releases/artifacts/$GITHUB_SHA"
+          ssh_args=(-i "$private/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$private/known_hosts")
+          ssh "${ssh_args[@]}" -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" "umask 077; mkdir -p '$remote'; chmod 700 '$remote'"
+          scp "${ssh_args[@]}" -P "$VPS_PORT" -r release-artifact/. "$VPS_USERNAME@$VPS_HOST:$remote/"
+          ssh "${ssh_args[@]}" -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" "sh '$remote/tools/deploy-vps-existing.sh' '$remote' --verify"
+          ssh "${ssh_args[@]}" -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" "sh '$remote/tools/deploy-vps-existing.sh' '$remote' --apply"

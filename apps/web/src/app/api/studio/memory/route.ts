@@ -1,122 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'node:crypto'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
+import { studioTransaction } from '@/features/studio/transaction'
 import {
   extractCandidateMemories,
-  type CandidateMemory,
   type ReflectionInput,
 } from '@/features/studio/memory-extractor'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const payload = await getPayload({ config: configPromise })
-
-    // Fetch reflections and memories from Payload CMS
-    let reflections: any[] = []
-    let candidateMemories: any[] = []
-    let approvedMemories: any[] = []
-
-    try {
-      const refRes = await payload.find({
-        collection: 'reflections',
-        limit: 50,
-        sort: '-date',
-      })
-      reflections = refRes.docs
-    } catch (e) {
-      console.warn('[Studio API] Failed to fetch reflections from CMS:', e)
-    }
-
-    try {
-      const memRes = await payload.find({
-        collection: 'memories',
-        limit: 100,
-        sort: '-updatedAt',
-      })
-      const normalizeDoc = (d: any) => ({
-        ...d,
-        tags: Array.isArray(d.tags)
-          ? d.tags.map((t: any) => (typeof t === 'string' ? t : t?.tag || '')).filter(Boolean)
-          : [],
-      })
-      candidateMemories = memRes.docs.filter((d: any) => d.status === 'candidate').map(normalizeDoc)
-      approvedMemories = memRes.docs.filter((d: any) => d.status === 'approved').map(normalizeDoc)
-    } catch (e) {
-      console.warn('[Studio API] Failed to fetch memories from CMS:', e)
-    }
-
-    // Default Seed Memories fallback if database was recently initialized
-    if (approvedMemories.length === 0 && candidateMemories.length === 0) {
-      approvedMemories = [
-        {
-          id: 'seed-mem-1',
-          title: '企业实战：广东润喵云算力平台大屏防抖与微服务联调',
-          category: 'internship_business',
-          status: 'approved',
-          content: '【业务场景】在广东润喵云实习期间，负责算力租赁管理后台与大屏监控看板的前端交互实现与组件封装。\n【攻坚突破】配合 Go 后端微服务完成高并发接口联调，引入动态防抖与状态锁，将大屏状态抖动降低了 40%。',
-          evidenceTag: '广东润喵云科技有限公司 · 全栈开发实习生证明',
-          confidence: 0.98,
-          tags: ['Vue 3', 'Go', '算力平台', '高并发', '防抖'],
-        },
-        {
-          id: 'seed-mem-2',
-          title: '核心交付：Todo Memo PWA 离线缓存与 Supabase 实时同步',
-          category: 'project_experience',
-          status: 'approved',
-          content: '【技术方案】独立设计并交付了 Todo Memo PWA 应用，围绕“极速收集、场景分组、离线可用和云端持久化”构建，通过 Service Worker 与 Supabase 实现弱网下的无损数据流闭环。',
-          evidenceTag: 'Todo Memo PWA 核心项目发布记录',
-          confidence: 0.96,
-          tags: ['React', 'TypeScript', 'Supabase', 'PWA', 'Tailwind CSS'],
-        },
-        {
-          id: 'seed-mem-3',
-          title: '开源贡献：锐历简历本土化中文字体排版与双向预览',
-          category: 'project_experience',
-          status: 'approved',
-          content: '【技术方案】二次开发海外简历开源项目，重构中文排版规范与样式层级，深度攻克了浏览器端 A4 换页断行与字体适配问题，已在 GitHub 开源。',
-          evidenceTag: '锐历简历工作台开源贡献记录',
-          confidence: 0.95,
-          tags: ['React', 'TypeScript', '中文排版引擎', 'PDF 渲染', '开源二次开发'],
-        },
-        {
-          id: 'seed-mem-4',
-          title: '学业与竞赛：深职大大数据技术 (GPA 3.67 前 5%) 与国赛/省赛奖项',
-          category: 'architecture_thinking',
-          status: 'approved',
-          content: '【在校经历】深圳职业技术大学大数据技术专业（GPA 3.67/4.0 前 5%），连续获得校级一等学业奖学金；获全国大学生计算机系统与软件创新大赛国家级二等奖、广东省大学生程序设计技能竞赛省级一等奖。',
-          evidenceTag: '深职大学业成绩单与国家级/省级竞赛获奖证书',
-          confidence: 0.99,
-          tags: ['GPA 前 5%', '国家级二等奖', '省赛一等奖', '深职大'],
-        },
-      ]
-
-      candidateMemories = [
-        {
-          id: 'seed-cand-1',
-          title: '技术攻坚：Next.js 16 + Payload CMS 3.x 嵌入式双 Schema 隔离',
-          category: 'architecture_thinking',
-          status: 'candidate',
-          content: '【难点与场景】如何确保公开端 AI 即使遭遇 Prompt Injection 也无法越权读取私人复盘。\n【架构决策】在 PostgreSQL 层面建立 owner（私有）与 public_read（只读快照）双角色物理隔离。',
-          evidenceTag: 'Jaxson Space 系统架构演进复盘',
-          confidence: 0.94,
-          tags: ['Next.js 16', 'Payload CMS', 'PostgreSQL', '物理隔离', '安全性'],
-        },
-      ]
-    }
-
+    const [reflections, memories] = await Promise.all([
+      payload.find({ collection: 'reflections', pagination: false, sort: '-date', depth: 0 }),
+      payload.find({ collection: 'memories', pagination: false, sort: '-updatedAt', depth: 0 }),
+    ])
+    const normalized = memories.docs.map((doc) => ({
+      ...doc,
+      tags: Array.isArray(doc.tags)
+        ? doc.tags.filter((tag): tag is string => typeof tag === 'string')
+        : [],
+    }))
     return NextResponse.json({
       success: true,
-      reflections,
-      candidateMemories,
-      approvedMemories,
+      reflections: reflections.docs,
+      candidateMemories: normalized.filter((doc) => doc.status === 'candidate'),
+      approvedMemories: normalized.filter((doc) => doc.status === 'approved'),
     })
-  } catch (error: any) {
-    console.error('[Studio API] Error fetching data:', error)
+  } catch (error) {
+    console.error('[Studio API] Failed to fetch private data:', error)
     return NextResponse.json(
-      { success: false, error: error?.message || 'Failed to fetch studio data' },
-      { status: 500 }
+      { success: false, error: '私人工作台数据暂时不可用，请稍后重试。' },
+      { status: 503 },
     )
   }
 }
@@ -126,6 +43,33 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const action = body.action || 'submit_reflection'
     const payload = await getPayload({ config: configPromise })
+
+    if (action === 'create_knowledge_draft') {
+      const memoryId = body.memoryId
+      if (typeof memoryId !== 'string' || !memoryId.trim()) {
+        return NextResponse.json({ success: false, error: '缺少 memoryId' }, { status: 400 })
+      }
+      const memory = await payload.findByID({ collection: 'memories', id: memoryId, depth: 0 })
+      if (memory.status !== 'approved') {
+        return NextResponse.json({ success: false, error: '请先人工确认这条私人记忆。' }, { status: 409 })
+      }
+      const privateMemoryKey = createHash('sha256').update(`memory:${memory.id}`).digest('hex')
+      const lookup = async () => (await payload.find({ collection: 'ai-knowledge', where: { privateMemoryKey: { equals: privateMemoryKey } }, limit: 1, depth: 0 })).docs[0]
+      let draft = await lookup()
+      if (!draft) {
+        try {
+          draft = await payload.create({ collection: 'ai-knowledge', data: {
+            title: memory.title, content: memory.content, evidenceTag: memory.evidenceTag,
+            category: memory.category === 'internship_business' ? 'internship' : memory.category === 'project_experience' ? 'project' : 'skill',
+            isPublic: false, privateMemoryKey,
+          } })
+        } catch (error) {
+          draft = await lookup()
+          if (!draft) throw error
+        }
+      }
+      return NextResponse.json({ success: true, knowledgeId: String(draft.id), editUrl: `/admin/collections/ai-knowledge/${draft.id}` })
+    }
 
     // 1. Submit a new reflection and extract candidate memories
     if (action === 'submit_reflection') {
@@ -150,76 +94,34 @@ export async function POST(req: NextRequest) {
         nextSteps: reflectionData.nextSteps || '',
       }
 
-      // Save reflection in CMS
-      let savedReflection: any
       try {
-        savedReflection = await payload.create({
-          collection: 'reflections',
-          data: {
-            title: normalizedReflection.title,
-            type: normalizedReflection.type,
-            date: normalizedReflection.date,
-            content: normalizedReflection.content,
-            challenges: normalizedReflection.challenges,
-            solution: normalizedReflection.solution,
-            takeaways: normalizedReflection.takeaways,
-            nextSteps: normalizedReflection.nextSteps,
-            extractionStatus: 'extracted',
-          },
-        })
-      } catch (err: any) {
-        console.error('[Studio API] Failed to save reflection to database:', err)
-        return NextResponse.json(
-          { success: false, error: `保存复盘失败: ${err?.message || '数据库写入异常'}` },
-          { status: 500 }
-        )
-      }
-
-      // Extract candidate memories using normalized reflection
-      const candidates = extractCandidateMemories({
-        ...normalizedReflection,
-        id: String(savedReflection.id),
-      })
-
-      // Save candidate memories into CMS with Rollback on Failure
-      const savedCandidates: any[] = []
-      for (const cand of candidates) {
-        try {
-          const doc = await payload.create({
-            collection: 'memories',
+        const result = await studioTransaction(payload, async (txReq) => {
+          const savedReflection = await payload.create({
+            collection: 'reflections', req: txReq,
             data: {
-              title: cand.title,
-              category: cand.category,
-              status: 'candidate',
-              content: cand.content,
-              evidenceTag: cand.evidenceTag,
-              confidence: cand.confidence,
-              sourceReflectionId: String(savedReflection.id),
-              tags: cand.tags,
+              title: normalizedReflection.title, type: normalizedReflection.type,
+              date: normalizedReflection.date, content: normalizedReflection.content,
+              challenges: normalizedReflection.challenges, solution: normalizedReflection.solution,
+              takeaways: normalizedReflection.takeaways, nextSteps: normalizedReflection.nextSteps,
+              extractionStatus: 'extracted',
             },
           })
-          savedCandidates.push(doc)
-        } catch (e: any) {
-          console.error('[Studio API] Failed to save candidate memory, executing rollback:', e)
-          // Rollback created candidate memories and reflection
-          for (const s of savedCandidates) {
-            await payload.delete({ collection: 'memories', id: s.id }).catch(() => {})
+          const candidates = extractCandidateMemories({ ...normalizedReflection, id: String(savedReflection.id) })
+          const savedCandidates = []
+          for (const candidate of candidates) {
+            savedCandidates.push(await payload.create({ collection: 'memories', req: txReq, data: {
+              title: candidate.title, category: candidate.category, status: 'candidate', content: candidate.content,
+              evidenceTag: candidate.evidenceTag, confidence: candidate.confidence,
+              sourceReflectionId: String(savedReflection.id), tags: candidate.tags,
+            } }))
           }
-          await payload.delete({ collection: 'reflections', id: savedReflection.id }).catch(() => {})
-
-          return NextResponse.json(
-            { success: false, error: `保存候选记忆条目失败: ${e?.message || '数据库写入异常'}` },
-            { status: 500 }
-          )
-        }
+          return { reflection: savedReflection, candidates: savedCandidates }
+        })
+        return NextResponse.json({ success: true, message: '复盘与候选记忆已保存，等待人工确认。', ...result })
+      } catch (error) {
+        console.error('[Studio Memory] Transaction failed:', error)
+        return NextResponse.json({ success: false, error: '复盘保存失败，请稍后重试。' }, { status: 503 })
       }
-
-      return NextResponse.json({
-        success: true,
-        message: `复盘已保存，并提炼出 ${candidates.length} 条待确认候选记忆！`,
-        reflection: savedReflection,
-        candidates: savedCandidates,
-      })
     }
 
     // 2. Approve a candidate memory
@@ -239,7 +141,7 @@ export async function POST(req: NextRequest) {
         })
         return NextResponse.json({
           success: true,
-          message: '已成功转为正式长期记忆！',
+          message: '已确认并保存为私人记忆，不会自动公开。',
           memory: updated,
         })
       } catch (e: any) {

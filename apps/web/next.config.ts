@@ -7,6 +7,26 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    const portfolioUrl = process.env.NEXT_PUBLIC_PORTFOLIO_URL
+    const legacyManageRedirects = [
+      {
+        source: '/manage/projects',
+        destination: '/admin/collections/projects',
+        permanent: false,
+      },
+      {
+        source: '/manage/knowledge',
+        destination: '/admin/collections/ai-knowledge',
+        permanent: false,
+      },
+    ]
+    return portfolioUrl ? [...legacyManageRedirects, {
+      source: '/portfolio/jaxson_biaoge_restart.html',
+      destination: portfolioUrl,
+      permanent: false,
+    }] : legacyManageRedirects
+  },
   serverExternalPackages: [
     'pino',
     'pino-pretty',
@@ -20,9 +40,6 @@ const nextConfig: NextConfig = {
     'drizzle-orm',
     '@payloadcms/drizzle',
   ],
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   agentRules: false,
   images: {
     localPatterns: [

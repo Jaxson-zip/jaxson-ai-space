@@ -1,6 +1,11 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { middleware } from './middleware'
+import { createHash } from 'node:crypto'
+
+function payloadSigningSecret(secret: string) {
+  return createHash('sha256').update(secret).digest('hex').slice(0, 32)
+}
 
 describe('Studio Security & 404 Disguise Middleware', () => {
   const originalEnv = process.env
@@ -144,7 +149,7 @@ describe('Studio Security & 404 Disguise Middleware', () => {
     const { SignJWT } = await import('jose')
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      new TextEncoder().encode(process.env.PAYLOAD_SECRET),
+      new TextEncoder().encode(payloadSigningSecret(process.env.PAYLOAD_SECRET)),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign']
@@ -176,7 +181,7 @@ describe('Studio Security & 404 Disguise Middleware', () => {
     const { SignJWT } = await import('jose')
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      new TextEncoder().encode(process.env.PAYLOAD_SECRET),
+      new TextEncoder().encode(payloadSigningSecret(process.env.PAYLOAD_SECRET)),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign']

@@ -6,27 +6,45 @@ import {
   awards as fallbackAwards,
 } from './content'
 import type { Experience, Project } from './types'
+import cinematicProjects from './cinematic-projects.json'
+import { safeExternalUrl } from './urls'
 
-export async function getHydratedPortfolioData() {
-  if (process.env.USE_POSTGRES === 'true') {
-    try {
-      const { getPayload } = await import('payload')
-      const { default: configPromise } = await import('@/payload.config')
-      const payload = await getPayload({ config: configPromise })
+const knownCoverBySlug = new Map(
+  cinematicProjects.map((project) => [project.slug, `/assets/${project.image}`]),
+)
 
-      // Query active database records (Strictly filter visibility = 'public' for public portfolio)
-      const projectsDocs = await payload.find({
-        collection: 'projects',
-        limit: 50,
-        sort: 'createdAt',
-        where: {
-          visibility: {
-            equals: 'public',
-          },
+export async function getHydratedPortfolioData(
+  { allowStaticFallback = true, projectSlug }: { allowStaticFallback?: boolean; projectSlug?: string } = {},
+) {
+  try {
+    const { getPayload } = await import('payload')
+    const { default: configPromise } = await import('@/payload.config')
+    const payload = await getPayload({ config: configPromise })
+
+    // Query active database records (Strictly filter visibility = 'public' for public portfolio)
+    const projectsDocs = await payload.find({
+      collection: 'projects',
+      overrideAccess: false,
+      limit: projectSlug ? 1 : 0,
+      pagination: Boolean(projectSlug),
+      sort: 'createdAt',
+      where: {
+        visibility: {
+          equals: 'public',
         },
-      })
-      const experiencesDocs = await payload.find({ collection: 'experiences', limit: 50, sort: 'createdAt' })
-      const credentialsDocs = await payload.find({ collection: 'credentials', limit: 100, sort: 'createdAt' })
+        ...(projectSlug ? { slug: { equals: projectSlug } } : {}),
+      },
+    })
+    const experiencesDocs = await payload.find({
+      collection: 'experiences',
+      limit: 50,
+      sort: 'createdAt',
+    })
+    const credentialsDocs = await payload.find({
+      collection: 'credentials',
+      limit: 100,
+      sort: 'createdAt',
+    })
 
     const projects: Project[] =
       projectsDocs.totalDocs > 0
@@ -42,21 +60,30 @@ export async function getHydratedPortfolioData() {
             approach: doc.approach || '',
             outcome: doc.outcome || '',
             technologies: (doc.tags || []).map((t: any) => t.tag || '').filter(Boolean),
-            image: typeof doc.coverImage === 'object' && doc.coverImage?.url
-              ? doc.coverImage.url
-              : doc.slug === 'jaxson-ai-space' || doc.slug === 'space'
-              ? '/assets/jaxson-ai-space-cover.png'
-              : doc.slug === 'ruili-resume' || doc.slug === 'ruili'
-              ? '/assets/ruili-cover.svg'
-              : doc.slug === 'opc-agent-company' || doc.slug === 'opc'
-              ? '/assets/opc-cover.svg'
-              : '/assets/todo-memo-cover.png',
+            image:
+              typeof doc.coverImage === 'object' && doc.coverImage?.url
+                ? doc.coverImage.url
+                : knownCoverBySlug.get(doc.slug)
+                  ? knownCoverBySlug.get(doc.slug)!
+                  : doc.slug === 'jaxson-ai-space' || doc.slug === 'space'
+                    ? '/assets/jaxson-ai-space-cover.png'
+                    : doc.slug === 'ruili-resume' || doc.slug === 'ruili'
+                      ? '/assets/ruili-cover.svg'
+                      : doc.slug === 'opc-agent-company' || doc.slug === 'opc'
+                        ? '/assets/opc-cover.svg'
+                        : doc.slug === 'todo-memo'
+                          ? '/assets/todo-memo-cover.png'
+                          : '/assets/project-dossier-cover.svg',
             links: [
-              ...(doc.demoUrl ? [{ label: '在线体验', href: doc.demoUrl, kind: 'live' as const }] : []),
-              ...(doc.repoUrl ? [{ label: 'GitHub 源码', href: doc.repoUrl, kind: 'source' as const }] : []),
+              ...(safeExternalUrl(doc.demoUrl)
+                ? [{ label: '在线体验', href: safeExternalUrl(doc.demoUrl), kind: 'live' as const }]
+                : []),
+              ...(safeExternalUrl(doc.repoUrl)
+                ? [{ label: 'GitHub 源码', href: safeExternalUrl(doc.repoUrl), kind: 'source' as const }]
+                : []),
             ],
           }))
-        : fallbackProjects.filter((p) => p.sourceVisibility === 'public')
+        : allowStaticFallback ? fallbackProjects.filter((p) => p.sourceVisibility === 'public') : []
 
     const experiences: Experience[] =
       experiencesDocs.totalDocs > 0
@@ -70,7 +97,7 @@ export async function getHydratedPortfolioData() {
             technologies: (doc.tags || []).map((t: any) => t.tag || '').filter(Boolean),
             kind: (doc.type as 'internship' | 'education' | 'campus' | 'other') || 'internship',
           }))
-        : [...fallbackExperiences]
+        : allowStaticFallback ? [...fallbackExperiences] : []
 
     const awardDocs = credentialsDocs.docs.filter((d: any) => d.category === 'award')
     const awards =
@@ -81,7 +108,7 @@ export async function getHydratedPortfolioData() {
             title: d.name,
             level: d.level || '',
           }))
-        : fallbackAwards
+        : allowStaticFallback ? fallbackAwards : []
 
     const skillDocs = credentialsDocs.docs.filter((d: any) => d.category === 'skill')
     const skillGroups =
@@ -97,7 +124,7 @@ export async function getHydratedPortfolioData() {
                     .filter(Boolean)
                 : [],
           }))
-        : fallbackSkillGroups
+        : allowStaticFallback ? fallbackSkillGroups : []
 
     return {
       profile: fallbackProfile,
@@ -110,14 +137,13 @@ export async function getHydratedPortfolioData() {
   } catch (error) {
     console.warn('[Payload CMS] Falling back to static data due to:', error)
   }
-}
 
   return {
     profile: fallbackProfile,
-    projects: fallbackProjects.filter((p) => p.sourceVisibility === 'public'),
-    experiences: fallbackExperiences,
-    skillGroups: fallbackSkillGroups,
-    awards: fallbackAwards,
+    projects: allowStaticFallback ? fallbackProjects.filter((p) => p.sourceVisibility === 'public') : [],
+    experiences: allowStaticFallback ? fallbackExperiences : [],
+    skillGroups: allowStaticFallback ? fallbackSkillGroups : [],
+    awards: allowStaticFallback ? fallbackAwards : [],
     isLiveDb: false,
   }
 }

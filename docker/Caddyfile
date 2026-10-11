@@ -1,39 +1,35 @@
-# =========================================================================
-# Caddy Production Reverse Proxy Configuration
-# Automatic HTTPS, HTTP/3, Zstd/Gzip Compression & Security Headers
-# =========================================================================
-
-{$SITE_DOMAIN:localhost} {
-    # 1. Reverse Proxy to Next.js Web App
-    reverse_proxy web:3000 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
-
-    # 2. Performance Compression
+{$SITE_DOMAIN} {
     encode zstd gzip
+    reverse_proxy portfolio:3000
 
-    # 3. Static Asset Aggressive Caching (Static chunks, fonts, images ONLY)
-    @static {
-        path /_next/static/* /assets/* *.svg *.png *.jpg *.jpeg *.ico *.woff2 *.webp
+    @page path / /index.html /config.js
+    header @page >Cache-Control "no-store"
+    @resume path /resume/zhang-jinpeng-ai-product-builder.pdf
+    header @resume >Content-Disposition "attachment; filename=Jaxson-Resume.pdf"
+    header X-Content-Type-Options "nosniff"
+    header Referrer-Policy "strict-origin-when-cross-origin"
+    log {
+        output stdout
+        format json
     }
-    header @static Cache-Control "public, max-age=31536000, immutable"
+}
 
-    # 4. Security & Hardening Headers
-    header {
-        # Prevent MIME type sniffing
-        X-Content-Type-Options "nosniff"
-        # Referrer Policy
-        Referrer-Policy "strict-origin-when-cross-origin"
-        # XSS Protection
-        X-XSS-Protection "1; mode=block"
-        # Remove Server Header
-        -Server
+{$API_DOMAIN} {
+    encode zstd gzip
+    # The portfolio, CMS and indexing worker use REST. Chinese enum values in
+    # the current collections cannot form a valid GraphQL schema.
+    @unusedGraphQL path /api/graphql* /api/graphql-playground*
+    respond @unusedGraphQL 404
+    reverse_proxy web:3000 {
+        # Caddy is the public edge in this deployment; these incoming headers
+        # must not let a caller choose a different identity for rate limiting.
+        header_up -CF-Connecting-IP
+        header_up -Forwarded
+        header_up -X-Real-IP
     }
 
-    # 5. Logging
+    header X-Content-Type-Options "nosniff"
+    header Referrer-Policy "strict-origin-when-cross-origin"
     log {
         output stdout
         format json

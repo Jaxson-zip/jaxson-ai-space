@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
-import { cosineSimilarity, hybridRetrieve } from './retriever'
+import { describe, expect, it, vi } from 'vitest'
+import { cosineSimilarity, groundedRetrieve, hybridRetrieve } from './retriever'
 import { generateLocalEmbedding, fetchSemanticEmbedding } from './embedder'
 import { buildSystemPrompt } from './prompt-builder'
+import { buildLocalRAGAnswer, createRAGStream } from './llm-stream'
 import type { KnowledgeChunk } from './types'
 
 const MOCK_CHUNKS: KnowledgeChunk[] = [
@@ -25,13 +26,19 @@ const MOCK_CHUNKS: KnowledgeChunk[] = [
     id: 'profile-szpu',
     title: '教育与求职意向：深圳职业技术大学',
     category: 'education',
-    content: '深圳职业技术大学大数据技术专业 2027 届（GPA 3.67/4.0 专业前 5%），期望岗位为全栈与 AI 应用开发。',
+    content: '深圳职业技术大学大数据技术专业 2027 届（GPA 3.85/4.0，专业前 3%），期望岗位为全栈与 AI 应用开发。',
     evidenceTag: '张锦鹏在校成绩单与基本信息',
     keywords: ['深职大', '深圳职业技术大学', 'GPA', '大数据', '张锦鹏', '联系方式'],
   },
 ]
 
 describe('RAG Engine & Hybrid Retriever', () => {
+  it('accepts a strong validated semantic match while rejecting hash similarity without keyword evidence', () => {
+    const chunk: KnowledgeChunk = { id: 'semantic-fact', title: 'Portable tasks', category: 'project', content: 'Offline task application', evidenceTag: 'CMS', keywords: [], vectorScore: 0.95, vectorSource: 'semantic' }
+    expect(groundedRetrieve('多设备待办', [chunk])).toHaveLength(1)
+    expect(groundedRetrieve('多设备待办', [{ ...chunk, vectorSource: 'local' }])).toHaveLength(0)
+  })
+
   it('computes exact cosine similarity for identical and orthogonal vectors', () => {
     const vecA = [1, 0, 0, 0]
     const vecB = [1, 0, 0, 0]
@@ -97,6 +104,83 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(prompt).toContain('张锦鹏（Jaxson）本人的 AI 数字分身')
     expect(prompt).toContain('第一人称“我”')
     expect(prompt).toContain('岗位契合度分析')
+  })
+
+  it('does not use a hash collision as evidence for an unrecorded topic', () => {
+    expect(groundedRetrieve('量子计算经验', MOCK_CHUNKS)).toEqual([])
+    const relatedButNotRelevant = {
+      ...MOCK_CHUNKS[2],
+      content: '主修分布式计算课程。',
+    }
+    expect(groundedRetrieve('量子计算经验', [relatedButNotRelevant])).toEqual([])
+  })
+
+  it('finds all published project facts for a general project-list question', () => {
+    const secondProject: KnowledgeChunk = {
+      ...MOCK_CHUNKS[1],
+      id: 'project-resume',
+      title: '项目：锐历简历工作台',
+      content: '中文简历模板排版和 PDF 导出。',
+      keywords: ['锐历简历', '中文简历'],
+    }
+
+    const results = groundedRetrieve('你有哪些项目？', [...MOCK_CHUNKS, secondProject])
+
+    expect(results.map((result) => result.chunk.id)).toEqual(
+      expect.arrayContaining(['project-todo-memo', 'project-resume']),
+    )
+    expect(results.every((result) => result.chunk.category === 'project')).toBe(true)
+  })
+
+  it('lists multiple retrieved live projects without adding canned claims', () => {
+    const projects: KnowledgeChunk[] = [
+      { ...MOCK_CHUNKS[1], content: '【交付结果】支持离线任务。\n【状态】已上线' },
+      { ...MOCK_CHUNKS[1], id: 'portfolio', title: '项目：个人作品集网站', content: '【交付结果】作品站点可访问。\n【状态】已上线' },
+      { ...MOCK_CHUNKS[1], id: 'draft', title: '项目：尚未上线的原型', content: '【状态】项目经历' },
+    ]
+    const results = projects.map((chunk) => ({ chunk, score: 0.8, vectorScore: 0.8, bm25Score: 0.8 }))
+    const answer = buildLocalRAGAnswer('你有哪些已经上线的项目？', results)
+
+    expect(answer).toContain('待办备忘 (Todo Memo)')
+    expect(answer).toContain('个人作品集网站')
+    expect(answer).not.toContain('尚未上线的原型')
+    expect(answer).not.toContain('代码与架构均经过严格测试')
+  })
+
+  it('does not claim qualifications absent from retrieved JD evidence', () => {
+    const results = hybridRetrieve('React 岗位要求', MOCK_CHUNKS, 1)
+    const answer = buildLocalRAGAnswer('React 岗位要求', results, true)
+
+    expect(answer).toContain(results[0].chunk.content)
+    expect(answer).toContain('不能直接声称具备')
+    expect(answer).not.toContain('国家级二等奖')
+  })
+
+  it('does not call an external model when no CMS fact matches the question', async () => {
+    const previousKey = process.env.DEEPSEEK_API_KEY
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }))
+    process.env.DEEPSEEK_API_KEY = 'test-key'
+
+    try {
+      const stream = await createRAGStream({
+        messages: [{ id: 'question', role: 'user', content: '没有收录的个人经历是什么？' }],
+        retrievalResults: [],
+      })
+      const reader = stream.getReader()
+      let output = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        output += new TextDecoder().decode(value)
+      }
+
+      expect(fetchSpy).not.toHaveBeenCalled()
+      expect(output).toContain('没有收录')
+    } finally {
+      fetchSpy.mockRestore()
+      if (previousKey === undefined) delete process.env.DEEPSEEK_API_KEY
+      else process.env.DEEPSEEK_API_KEY = previousKey
+    }
   })
 
   it('fetchSemanticEmbedding returns null when no API keys are configured', async () => {

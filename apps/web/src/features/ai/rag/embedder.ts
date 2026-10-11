@@ -16,14 +16,18 @@ export const VECTOR_DIM = 64
 // Common Chinese & English stop words to filter out
 const STOP_WORDS = new Set([
   '的', '了', '和', '是', '在', '我', '有', '于', '与', '这', '也', '但', '就', '你', '他', '她', '它',
+  '请问', '了解', '介绍', '一下', '我想', '你在', '真实', '什么', '某项', '完全', '技术',
   'a', 'an', 'the', 'in', 'on', 'at', 'for', 'to', 'of', 'and', 'or', 'is', 'are', 'was', 'were',
 ])
 
 export function tokenize(text: string): string[] {
   const normalized = text.toLowerCase()
-  // Extract Chinese characters, English words, and technical terms
-  const rawTokens = normalized.match(/[\u4e00-\u9fa5]|[a-zA-Z0-9_#+.-]+/g) || []
-  return rawTokens.filter((token) => !STOP_WORDS.has(token) && token.trim().length > 0)
+  const segments = normalized.match(/[\u4e00-\u9fa5]+|[a-z0-9_#+.-]+/g) || []
+  const tokens = segments.flatMap((segment) => {
+    if (!/[\u4e00-\u9fa5]/.test(segment) || segment.length === 1) return [segment]
+    return Array.from({ length: segment.length - 1 }, (_, index) => segment.slice(index, index + 2))
+  })
+  return tokens.filter((token) => !STOP_WORDS.has(token) && token.trim().length > 0)
 }
 
 function stringToHash(str: string): number {

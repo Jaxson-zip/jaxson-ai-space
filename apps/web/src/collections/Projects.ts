@@ -9,8 +9,8 @@ import {
 export const Projects: CollectionConfig = {
   slug: 'projects',
   labels: {
-    singular: '作品项目',
-    plural: '📁 作品与项目库',
+    singular: '作品 / 项目经历',
+    plural: '📁 作品与项目经历',
   },
   admin: {
     useAsTitle: 'title',
@@ -39,6 +39,16 @@ export const Projects: CollectionConfig = {
       label: '项目名称',
       type: 'text',
       required: true,
+    },
+    {
+      name: 'shortTitle',
+      label: '作品页短标题（可选）',
+      type: 'text',
+    },
+    {
+      name: 'projectDate',
+      label: '项目时间（例如 2026.05）',
+      type: 'text',
     },
     {
       name: 'slug',
@@ -123,6 +133,11 @@ export const Projects: CollectionConfig = {
     {
       name: 'outcome',
       label: '📈 交付成果与当前状态',
+      type: 'textarea',
+    },
+    {
+      name: 'editorialNote',
+      label: '项目档案补充说明（可选）',
       type: 'textarea',
     },
     {

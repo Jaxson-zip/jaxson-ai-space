@@ -1,0 +1,11 @@
+[Unit]
+Description=Back up Jaxson CMS database and media
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/jaxson-ai-space
+Environment=ENV_FILE=/opt/jaxson-ai-space/docker/.env.production
+ExecStart=/bin/sh /opt/jaxson-ai-space/docker/backup.sh /var/backups/jaxson-ai-space
+UMask=0077

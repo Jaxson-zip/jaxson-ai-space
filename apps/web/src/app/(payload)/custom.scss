@@ -1,0 +1,99 @@
+.template-minimal {
+  min-height: 100vh;
+  background: #1c251d;
+  color: #202c22;
+}
+
+.template-minimal__wrap {
+  width: min(520px, calc(100% - 32px));
+  padding: clamp(26px, 4vw, 42px);
+  background: #eeeee5;
+  border: 1px solid #d5d8ca;
+  border-radius: 10px;
+}
+
+.template-minimal h1 { color: #202c22; letter-spacing: -.04em; }
+.template-minimal .field-label { color: #364437; }
+.template-minimal input { background: #f9f9f3; border-color: #bdc8b9; color: #202c22; }
+.template-minimal input:focus-visible { outline: 2px solid #b98835; outline-offset: 2px; }
+.template-minimal button[type='submit'] { background: #efc05c; color: #19231b; border-radius: 7px; }
+.template-minimal button[type='submit']:hover { background: #ffcf70; }
+
+.jaxson-dashboard-start {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin: 0 0 36px;
+  padding: clamp(24px, 3vw, 40px);
+  border: 1px solid #394a3a;
+  border-radius: 12px;
+  background: #1c281e;
+  color: #f5f3e9;
+}
+
+.jaxson-dashboard-start__eyebrow {
+  margin: 0 0 16px;
+  color: #efbe53;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.jaxson-dashboard-start h1 {
+  margin: 0 0 12px;
+  color: inherit;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.15;
+}
+
+.jaxson-dashboard-start p:last-child {
+  max-width: 620px;
+  margin: 0;
+  color: #c9d0c3;
+  line-height: 1.65;
+}
+
+.jaxson-dashboard-start__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.jaxson-dashboard-start__actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 9px 16px;
+  border: 1px solid #667460;
+  border-radius: 7px;
+  color: #f5f3e9;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.jaxson-dashboard-start__actions a:hover,
+.jaxson-dashboard-start__actions a:focus-visible {
+  border-color: #efbe53;
+  color: #fff;
+}
+
+.jaxson-dashboard-start__actions .jaxson-dashboard-start__primary {
+  border-color: #efbe53;
+  background: #efbe53;
+  color: #1c281e;
+}
+
+.jaxson-dashboard-start__actions .jaxson-dashboard-start__primary:hover,
+.jaxson-dashboard-start__actions .jaxson-dashboard-start__primary:focus-visible {
+  background: #ffd373;
+  color: #1c281e;
+}
+
+@media (max-width: 900px) {
+  .jaxson-dashboard-start { align-items: stretch; flex-direction: column; }
+  .jaxson-dashboard-start__actions { flex: initial; }
+}

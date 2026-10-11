@@ -33,7 +33,7 @@ export function generateYearlyActivityData(
     d.setDate(startDate.getDate() + i)
     const dateStr = d.toISOString().slice(0, 10)
 
-    const count = activeDates[dateStr] || (i % 7 === 2 || i % 11 === 0 || i > 330 ? ((i * 7) % 4) : 0)
+    const count = activeDates[dateStr] || 0
     if (count > 0) {
       totalActiveDays++
       totalCount += count
@@ -65,17 +65,9 @@ export function generateYearlyActivityData(
 }
 
 /**
- * Sample / Aggregated Recruiter Search Keywords based on RAG inquiries.
+ * Recruiter analytics is not connected yet; return no observations.
  */
 export function getRecruiterTopicInsights(): RecruiterKeywordStat[] {
-  return [
-    { keyword: 'Vue 3 / 状态防抖', count: 48, category: 'frontend', trend: 'up' },
-    { keyword: 'React 19 / Next.js', count: 42, category: 'frontend', trend: 'up' },
-    { keyword: 'Todo Memo PWA / 离线', count: 35, category: 'engineering', trend: 'up' },
-    { keyword: 'Go 微服务接口联调', count: 29, category: 'backend', trend: 'stable' },
-    { keyword: 'RAG 向量检索与防幻觉', count: 27, category: 'ai', trend: 'up' },
-    { keyword: 'PostgreSQL / Supabase', count: 21, category: 'backend', trend: 'stable' },
-    { keyword: '锐历简历 / PDF 中文排版', count: 18, category: 'engineering', trend: 'stable' },
-    { keyword: '深职大 GPA 前 5% / 竞赛', count: 16, category: 'engineering', trend: 'up' },
-  ]
+  // No recruiter analytics backend is connected. Do not substitute sample counts.
+  return []
 }

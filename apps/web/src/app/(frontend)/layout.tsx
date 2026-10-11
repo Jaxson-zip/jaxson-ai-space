@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: '%s · 张锦鹏 (Jaxson)',
   },
   description:
-    '张锦鹏的个人工程师作品集与 AI 数字分身。深圳职业技术大学大数据技术专业（GPA 3.85 前 2%），主修 React 19、TypeScript、Vue 3 全栈开发与 RAG 智能应用落地。',
+    '张锦鹏的个人工程师作品集与 AI 数字分身。深圳职业技术大学大数据技术专业（GPA 3.85，专业前 3%），主修 React 19、TypeScript、Vue 3 全栈开发与 RAG 智能应用落地。',
   keywords: [
     '张锦鹏',
     'Jaxson',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '张锦鹏 (Jaxson) · 全栈开发与 AI 应用作品集',
-    description: '深职大大数据技术（GPA 3.85 前 2%），国家级二等奖、省级一等奖，全栈交付与 AI 应用落地。',
+    description: '深职大大数据技术（GPA 3.85，专业前 3%），国家级二等奖、省级一等奖，全栈交付与 AI 应用落地。',
   },
 }
 

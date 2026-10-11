@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { jwtVerify } from 'jose'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
+
+// Keep the verifier across requests so Access does not fetch JWKS on every page load.
+const accessVerifiers = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 
 /**
  * Security & Anti-Probing Middleware for Private Studio Route
@@ -13,17 +16,26 @@ import { jwtVerify } from 'jose'
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/')
+  const accessRequired = process.env.CLOUDFLARE_ACCESS_REQUIRED === 'true'
+  const isPublicAppApi = ['/api/chat', '/api/showcase-projects', '/api/studio/inbox'].includes(pathname)
+  const isAnonymousCollectionRead = /^(GET|HEAD)$/.test(request.method)
+    && /^\/api\/(projects|media|experiences|credentials)(\/|$)/.test(pathname)
+    && !request.cookies.get('payload-token')?.value && !request.headers.get('authorization')
+  const isPrivatePayloadApi = pathname.startsWith('/api/') && !isPublicAppApi
+    && !pathname.startsWith('/api/studio/') && !isAnonymousCollectionRead
 
   // Only intercept /studio and /api/studio routes
-  if (!pathname.startsWith('/studio') && !pathname.startsWith('/api/studio')) {
+  if (!isAdminRoute && !(accessRequired && isPrivatePayloadApi) && !pathname.startsWith('/studio') && !pathname.startsWith('/api/studio')) {
     return NextResponse.next()
   }
+  if (isAdminRoute && !accessRequired) return NextResponse.next()
 
   // 1. Development Bypass (allows local dev without Cloudflare Access unless explicitly forced)
   const isDev = process.env.NODE_ENV === 'development'
   const enforceAuth = process.env.ENFORCE_STUDIO_AUTH === 'true'
 
-  if (isDev && !enforceAuth) {
+  if (isDev && !enforceAuth && !accessRequired) {
     return NextResponse.next()
   }
 
@@ -41,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
   // 2.1 Validate Cloudflare Access (Cryptographically verified via JWKS / Secret)
   let isCfAuthorized = false
-  const cfJwt = request.headers.get('cf-access-jwt-assertion')
+  const cfJwt = request.headers.get('cf-access-jwt-assertion') || request.cookies.get('CF_Authorization')?.value
   if (cfJwt) {
     try {
       const teamName = process.env.CLOUDFLARE_ACCESS_TEAM_NAME
@@ -49,13 +61,16 @@ export async function middleware(request: NextRequest) {
       const cfSecret = process.env.CLOUDFLARE_ACCESS_SECRET
 
       if (teamName && expectedAud) {
-        const { createRemoteJWKSet } = await import('jose')
-        const JWKS = createRemoteJWKSet(
-          new URL(`https://${teamName}.cloudflareaccess.com/cdn-cgi/access/certs`)
-        )
+        if (!/^[a-z0-9-]+$/.test(teamName)) throw new Error('Invalid Access team')
+        let JWKS = accessVerifiers.get(teamName)
+        if (!JWKS) {
+          JWKS = createRemoteJWKSet(new URL(`https://${teamName}.cloudflareaccess.com/cdn-cgi/access/certs`))
+          accessVerifiers.set(teamName, JWKS)
+        }
         const { payload } = await jwtVerify(cfJwt, JWKS, {
           issuer: `https://${teamName}.cloudflareaccess.com`,
           audience: expectedAud,
+          algorithms: ['RS256'],
         })
         if (
           payload &&
@@ -64,7 +79,7 @@ export async function middleware(request: NextRequest) {
         ) {
           isCfAuthorized = true
         }
-      } else if (cfSecret) {
+      } else if (cfSecret && !accessRequired && process.env.NODE_ENV !== 'production') {
         // Supported for staging/mock or custom HS256 zero trust gateway verification
         const secretKey = await crypto.subtle.importKey(
           'raw',
@@ -107,14 +122,19 @@ export async function middleware(request: NextRequest) {
   let isPayloadTokenValid = false
   if (payloadToken && payloadSecret) {
     try {
+      // Payload derives its runtime signing key when initializing the CMS.
+      // Verify the actual login cookie using the same derivation.
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payloadSecret.trim()))
+      const signingSecret = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0'))
+        .join('').slice(0, 32)
       const secretKey = await crypto.subtle.importKey(
         'raw',
-        new TextEncoder().encode(payloadSecret),
+        new TextEncoder().encode(signingSecret),
         { name: 'HMAC', hash: 'SHA-256' },
         false,
         ['verify']
       )
-      const { payload } = await jwtVerify(payloadToken, secretKey)
+      const { payload } = await jwtVerify(payloadToken, secretKey, { algorithms: ['HS256'] })
       // Strictly ensure the token belongs to the users collection and matches the owner email
       if (
         payload &&
@@ -129,11 +149,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const isAuthorized = isCfAuthorized || isSecretKeyAuthorized || isPayloadTokenValid
+  // The inbox keeps its separate bot authentication. Interactive private routes
+  // require Access when enabled; an old CMS cookie or shared secret cannot bypass it.
+  const isAuthorized = accessRequired && !isInboxRoute
+    ? isCfAuthorized
+    : isCfAuthorized || isSecretKeyAuthorized || isPayloadTokenValid
 
   // 3. If unauthorized, strictly disguise as 404 NOT FOUND
   if (!isAuthorized) {
-    if (pathname.startsWith('/api/studio')) {
+    if (pathname.startsWith('/api/')) {
       return NextResponse.json(
         { error: 'Not Found' },
         { status: 404 }
@@ -158,5 +182,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/studio/:path*', '/api/studio/:path*'],
+  matcher: ['/admin/:path*', '/studio/:path*', '/api/:path*'],
 }

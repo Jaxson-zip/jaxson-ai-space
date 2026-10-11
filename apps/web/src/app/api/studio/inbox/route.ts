@@ -1,147 +1,72 @@
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
+import { z } from 'zod'
 import configPromise from '@/payload.config'
 import { parseRawMessageToReflection } from '@/features/studio/inbox-parser'
 import { extractCandidateMemories } from '@/features/studio/memory-extractor'
-
-import { z } from 'zod'
+import { inboxIdentities } from '@/features/studio/inbox-identities'
+import { studioTransaction } from '@/features/studio/transaction'
 
 export const dynamic = 'force-dynamic'
-
-const inboxPayloadSchema = z.object({
-  message: z.string().min(1, 'Message cannot be empty').max(5000, 'Message cannot exceed 5000 characters').optional(),
-  text: z.string().min(1).max(5000).optional(),
-  content: z.string().min(1).max(5000).optional(),
-  senderId: z.string().max(100).optional(),
-}).refine((data) => Boolean((data.message || data.text || data.content)?.trim()), {
-  message: 'One of message, text, or content must be provided and non-empty',
+const id = z.string().trim().min(1).max(200)
+const schema = z.object({
+  message: z.string().trim().min(1).max(5000),
+  channelId: id, accountId: id, senderId: id, conversationId: id, messageId: id,
 })
+const hash = (value: string) => createHash('sha256').update(value).digest('hex')
+const failure = (error: string, status: number) => NextResponse.json({ success: false, error }, { status })
 
-/**
- * Webhook Ingestion API for WeChat / OpenClaw / Mobile Shortcuts.
- * Endpoint: POST /api/studio/inbox
- */
 export async function POST(req: NextRequest) {
+  const secret = process.env.STUDIO_INBOX_SECRET?.trim()
+  if (!secret) return failure('Inbox secret is not configured', 503)
+  const token = (req.headers.get('x-studio-token') || req.headers.get('x-bot-secret') || req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim()
+  if (!timingSafeEqual(Buffer.from(hash(token)), Buffer.from(hash(secret)))) return failure('Unauthorized', 401)
+  const parsed = schema.safeParse(await req.json().catch(() => null))
+  if (!parsed.success) return failure('Message, sender, channel, account, conversation and message IDs are required', 400)
+  const allowed = inboxIdentities(process.env.STUDIO_INBOX_ALLOWED_IDENTITIES)
+  if (!allowed) return failure('Inbox sender allowlist is not configured', 503)
+  const input = parsed.data
+  if (!allowed.some((entry) => entry.channelId === input.channelId && entry.accountId === input.accountId && entry.senderId === input.senderId)) {
+    return failure('Sender is not allowed', 403)
+  }
+  const key = hash(JSON.stringify([input.channelId, input.accountId, input.senderId, input.conversationId, input.messageId]))
+  const digest = hash(input.message)
   try {
-    // 1. Secret Authentication
-    const authHeader = req.headers.get('x-bot-secret') || req.headers.get('x-studio-token') || req.headers.get('authorization') || ''
-    const expectedSecret = process.env.STUDIO_INBOX_SECRET || process.env.PAYLOAD_SECRET
-
-    if (process.env.NODE_ENV === 'production' && !expectedSecret) {
-      return NextResponse.json({ error: 'Server configuration error: Webhook secret not set' }, { status: 500 })
-    }
-
-    const cleanToken = authHeader.replace(/^Bearer\s+/i, '').trim()
-
-    if (cleanToken !== (expectedSecret || 'jaxson_studio_secret_2026')) {
-      return NextResponse.json({ error: 'Unauthorized webhook request' }, { status: 401 })
-    }
-
-    // 2. Parse & Validate Body
-    const rawBody = await req.json().catch(() => ({}))
-    const parsed = inboxPayloadSchema.safeParse(rawBody)
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid inbox payload format', details: parsed.error.issues },
-        { status: 400 }
-      )
-    }
-
-    const rawMessage = (parsed.data.message || parsed.data.text || parsed.data.content || '').trim()
-
-    // 3. Extract Reflection & Candidate Memories
-    const reflection = parseRawMessageToReflection(rawMessage)
+    const payload = await getPayload({ config: configPromise })
+    const lookup = async () => (await payload.find({ collection: 'reflections', where: { inboxKey: { equals: key } }, limit: 1, depth: 0 })).docs[0]
+    const replay = (doc: NonNullable<Awaited<ReturnType<typeof lookup>>>) => doc.inboxDigest !== digest
+      ? failure('Message ID was already used for different content', 409)
+      : NextResponse.json({ success: true, duplicate: true, reflectionId: String(doc.id), reply: doc.inboxReply, extractedCount: doc.inboxCount })
+    const existing = await lookup()
+    if (existing) return replay(existing)
+    const reflection = parseRawMessageToReflection(input.message)
     const candidates = extractCandidateMemories(reflection)
-
-    // 4. Persist to Database (Payload CMS with Rollback on Failure)
-    let reflectionDocId: string | undefined
-    const createdMemoryIds: string[] = []
+    const reply = `复盘已保存：${reflection.title}\n已提炼 ${candidates.length} 条候选记忆，等待你在私人工作台确认。\n不会自动公开给 AI 访客。`
     try {
-      const payload = await getPayload({ config: configPromise })
-
-      // Create reflection log
-      const refDoc = await payload.create({
-        collection: 'reflections',
-        data: {
-          title: reflection.title,
-          type: reflection.type,
-          date: reflection.date,
-          content: reflection.content,
-          challenges: reflection.challenges,
-          solution: reflection.solution,
-        },
+      const saved = await studioTransaction(payload, async (txReq) => {
+        const doc = await payload.create({ collection: 'reflections', req: txReq, data: {
+          title: reflection.title, type: reflection.type, date: reflection.date, content: reflection.content,
+          challenges: reflection.challenges, solution: reflection.solution, extractionStatus: 'extracted',
+          inboxKey: key, inboxDigest: digest, inboxReply: reply, inboxCount: candidates.length,
+        } })
+        for (const item of candidates) {
+          await payload.create({ collection: 'memories', req: txReq, data: {
+            title: item.title, category: item.category, status: 'candidate', content: item.content,
+            evidenceTag: item.evidenceTag, confidence: item.confidence, sourceReflectionId: String(doc.id), tags: item.tags,
+          } })
+        }
+        return doc
       })
-      reflectionDocId = String(refDoc.id)
-
-      // Create candidate memory items
-      for (const item of candidates) {
-        const memDoc = await payload.create({
-          collection: 'memories',
-          data: {
-            title: item.title,
-            category: item.category,
-            status: 'candidate', // Strictly candidate until human approved
-            content: item.content,
-            evidenceTag: item.evidenceTag,
-            confidence: item.confidence,
-            sourceReflectionId: reflectionDocId,
-            tags: item.tags,
-          },
-        })
-        createdMemoryIds.push(String(memDoc.id))
-      }
-    } catch (dbErr: any) {
-      const reqId = `webhook_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`
-      // Rollback on partial failure
-      try {
-        const payload = await getPayload({ config: configPromise })
-        for (const memId of createdMemoryIds) {
-          await payload.delete({ collection: 'memories', id: memId }).catch(() => {})
-        }
-        if (reflectionDocId) {
-          await payload.delete({ collection: 'reflections', id: reflectionDocId }).catch(() => {})
-        }
-      } catch {
-        // Ignore rollback failure
-      }
-
-      if (process.env.NODE_ENV === 'production') {
-        console.error(`[Studio Inbox][${reqId}] Database persistence failed in production:`, dbErr)
-        return NextResponse.json(
-          { error: 'Failed to persist reflection to database', requestId: reqId },
-          { status: 500 }
-        )
-      }
-      console.warn('[Studio Inbox] Database persistence skipped in offline/test environment:', dbErr?.message)
+      return NextResponse.json({ success: true, duplicate: false, reflectionId: String(saved.id), reply, extractedCount: candidates.length })
+    } catch (error) {
+      // Concurrent deliveries race on the unique key. Only a committed receipt may be replayed.
+      const concurrent = await lookup()
+      if (concurrent) return replay(concurrent)
+      throw error
     }
-
-    // 5. Format WeChat Friendly Reply
-    const allTags = Array.from(new Set(candidates.flatMap((c) => c.tags)))
-    const tagsStr = allTags.length > 0 ? allTags.map((t) => `#${t}`).join(' ') : '#技术复盘'
-
-    const wechatReply = `🧠 【复盘大脑已接收】
-• 主题：${reflection.title}
-• 提炼：已提取 ${candidates.length} 条事实证据候选
-• 标签：${tagsStr}
-• 状态：已存入待确认看板 (请登录 Web 端审批)
-
-(若想转为待办事项，回复「转待办」)`
-
-    return NextResponse.json({
-      success: true,
-      reply: wechatReply,
-      reflectionId: reflectionDocId,
-      extractedCount: candidates.length,
-      reflection,
-      candidates,
-    })
-  } catch (error: any) {
-    const reqId = `inbox_err_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`
-    console.error(`[API /api/studio/inbox][${reqId}] Error processing incoming message:`, error)
-    return NextResponse.json(
-      { error: 'Internal server error processing inbox reflection', requestId: reqId },
-      { status: 500 }
-    )
+  } catch (error) {
+    console.error('[Studio Inbox] Persistence failed:', error)
+    return failure('复盘未确认保存，请使用同一消息 ID 重试。', 503)
   }
 }

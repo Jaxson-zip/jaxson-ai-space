@@ -1,0 +1,39 @@
+name: jaxson-openclaw
+services:
+  gateway:
+    image: ghcr.io/openclaw/openclaw:2026.9.8@sha256:d0ded1dd76939b2bf4d67ef2d13247b8b160aa5666331d4a0b0e58811182cbb8
+    init: true
+    hostname: jaxson-openclaw
+    restart: unless-stopped
+    stop_grace_period: 60s
+    user: "1000:1000"
+    environment:
+      HOME: /home/node
+      NODE_OPTIONS: --max-old-space-size=512
+      JAXSON_INBOX_ONLY: "true"
+    env_file: ./inbox.env
+    ports:
+      - "127.0.0.1:18789:18789"
+    volumes:
+      - ./state:/home/node/.openclaw
+    # Configuration is reviewed by prepare-vps.sh; avoid unattended doctor --fix
+    # rewriting plugin permissions on every container restart.
+    entrypoint: ["node"]
+    command: ["dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]
+    mem_limit: 768m
+    cpus: 2.0
+    pids_limit: 128
+    healthcheck:
+      # Probe the configured HTTP health endpoint without loading gateway config modules.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:18789/healthz',{signal:AbortSignal.timeout(4000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 600s
+      retries: 3
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"

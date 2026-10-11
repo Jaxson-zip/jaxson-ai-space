@@ -20,5 +20,5 @@ export const Media: CollectionConfig = {
       required: true,
     },
   ],
-  upload: true,
+  upload: process.env.MEDIA_DIR ? { staticDir: process.env.MEDIA_DIR } : true,
 }

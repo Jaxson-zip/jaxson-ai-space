@@ -43,7 +43,8 @@ psql -v ON_ERROR_STOP=1 \
 
     -- 4. Set Search Paths and Schema Permissions
     ALTER ROLE owner_app SET search_path TO owner, public;
-    ALTER ROLE public_agent SET search_path TO public_read;
+    -- pgvector types and operators live in public; access remains read-only.
+    ALTER ROLE public_agent SET search_path TO public_read, public;
 
     GRANT ALL ON SCHEMA owner TO owner_app;
     GRANT CREATE ON SCHEMA owner TO owner_app;
@@ -58,6 +59,7 @@ psql -v ON_ERROR_STOP=1 \
     ALTER DEFAULT PRIVILEGES IN SCHEMA public_read GRANT ALL ON SEQUENCES TO owner_app;
 
     GRANT USAGE ON SCHEMA public_read TO public_agent;
+    GRANT USAGE ON SCHEMA public TO public_agent;
     GRANT SELECT ON ALL TABLES IN SCHEMA public_read TO public_agent;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public_read GRANT SELECT ON TABLES TO public_agent;
 

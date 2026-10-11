@@ -1,0 +1,20 @@
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY apps/portfolio ./apps/portfolio
+ARG PORTFOLIO_API_ORIGIN
+ENV PORTFOLIO_API_ORIGIN=${PORTFOLIO_API_ORIGIN}
+RUN test -n "$PORTFOLIO_API_ORIGIN" && node apps/portfolio/scripts/build.mjs
+
+FROM node:24-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+ARG PORTFOLIO_API_ORIGIN
+ENV PORTFOLIO_API_ORIGIN=${PORTFOLIO_API_ORIGIN}
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 portfolio
+COPY --from=builder --chown=portfolio:nodejs /app/apps/portfolio/dist ./apps/portfolio/dist
+COPY --from=builder --chown=portfolio:nodejs /app/apps/portfolio/scripts/serve.mjs /app/apps/portfolio/scripts/config.mjs /app/apps/portfolio/scripts/showcase.mjs ./apps/portfolio/scripts/
+USER portfolio
+EXPOSE 3000
+CMD ["node", "apps/portfolio/scripts/serve.mjs", "--production"]
