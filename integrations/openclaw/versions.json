@@ -1,0 +1,13 @@
+{
+  "verifiedAt": "2026-10-09",
+  "core": "2026.9.8",
+  "node": ">=24.16.0 <25 || >=26.1.0",
+  "plugins": {
+    "@tencent-weixin/openclaw-weixin": "2.4.9",
+    "@wecom/wecom-openclaw-plugin": "2026.9.15"
+  },
+  "sdkContract": "before_dispatch",
+  "imageDigest": "sha256:d0ded1dd76939b2bf4d67ef2d13247b8b160aa5666331d4a0b0e58811182cbb8",
+  "weixinAdmissionPatch": "weixin-admission.mjs; validated 2.4.9 compiled entry only",
+  "realAccountVerification": false
+}

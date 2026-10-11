@@ -358,12 +358,336 @@ html[data-theme='light'] .hero-ambient-glow {
 .hero-content-wrap {
   position: relative;
   z-index: 1;
-  max-width: 820px;
+  max-width: 1140px;
   margin: 0 auto;
-  text-align: center;
+}
+
+/* ========================================================
+   Split-Hero & AI Studio Console (Bento Architecture)
+   ======================================================== */
+.split-hero-container {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 32px;
+  align-items: stretch;
+  max-width: 1140px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 960px) {
+  .split-hero-container {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.hero-identity-box {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.hero-identity-box .hero-title {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.hero-identity-box .hero-subtitle {
+  text-align: left;
+}
+
+.hero-identity-box .hero-desc {
+  margin: 0 0 1.25rem 0;
+  text-align: left;
+  max-width: 100%;
+}
+
+.hero-identity-box .hero-cta-group {
+  justify-content: flex-start;
+  margin-bottom: 0;
+}
+
+.hero-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.hero-stat-card {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-card);
+}
+
+.hero-stat-card:hover {
+  border-color: var(--border-medium);
+  transform: translateY(-2px);
+}
+
+.hero-stat-num {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  line-height: 1.2;
+}
+
+.hero-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* AI Studio Console Card */
+.ai-studio-console {
+  position: relative;
+  border-radius: 20px;
+  background: rgba(16, 20, 35, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.45);
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.ai-console-header {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ai-avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+}
+
+.ai-console-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-console-tag {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent-blue);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.ai-console-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chat-bubble-ai {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border-top-left-radius: 3px;
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.ai-answer-box {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(8, 47, 73, 0.4);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-size: 0.82rem;
+  color: #bae6fd;
+  line-height: 1.65;
+  animation: appleHeroFadeUp 0.3s ease both;
+}
+
+.quick-chip {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+  font-size: 0.78rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.quick-chip:hover {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.quick-chip:active {
+  transform: scale(0.99);
+}
+
+/* ========================================================
+   Bento Grid for Core Works
+   ======================================================== */
+.bento-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 22px;
+}
+
+.bento-card-7 {
+  grid-column: span 7;
+}
+
+.bento-card-5 {
+  grid-column: span 5;
+}
+
+.bento-card-12 {
+  grid-column: span 12;
+}
+
+@media (max-width: 960px) {
+  .bento-card-7,
+  .bento-card-5,
+  .bento-card-12 {
+    grid-column: span 12;
+  }
+}
+
+.bento-glass-card {
+  position: relative;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  padding: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-card);
+}
+
+.bento-glass-card:hover {
+  border-color: var(--border-highlight);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.bento-head-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.bento-cover-preview {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: #0d111e;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  cursor: pointer;
+}
+
+.bento-cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.bento-cover-preview:hover img {
+  transform: scale(1.02);
+}
+
+.bento-cover-bar {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 8px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.ops-terminal-widget {
+  border-radius: 12px;
+  background: #080a12;
+  border: 1px solid var(--border-subtle);
+  padding: 0.9rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ops-terminal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 5px;
+}
+
+.arch-specs-widget {
+  border-radius: 12px;
+  background: #080a12;
+  border: 1px solid var(--border-subtle);
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.arch-specs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 @keyframes appleHeroFadeUp {
@@ -383,7 +707,9 @@ html[data-theme='light'] .hero-ambient-glow {
   .hero-subtitle,
   .hero-desc,
   .hero-cta-group,
-  .hero-highlights-strip {
+  .hero-highlights-strip,
+  .ai-studio-console,
+  .bento-glass-card {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -1207,6 +1533,8 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
 }
 
 .project-glass-card::before,
+.bento-glass-card::before,
+.ai-studio-console::before,
 .contact-glass-tile::before,
 .tech-profile-card::before,
 .skill-category-card::before,
@@ -1227,6 +1555,8 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
 }
 
 .project-glass-card:hover::before,
+.bento-glass-card:hover::before,
+.ai-studio-console:hover::before,
 .contact-glass-tile:hover::before,
 .tech-profile-card:hover::before,
 .skill-category-card:hover::before,
@@ -1235,6 +1565,8 @@ html[data-theme='light'] .award-tier-amber .award-badge-wrapper {
 }
 
 html[data-theme='light'] .project-glass-card::before,
+html[data-theme='light'] .bento-glass-card::before,
+html[data-theme='light'] .ai-studio-console::before,
 html[data-theme='light'] .contact-glass-tile::before,
 html[data-theme='light'] .tech-profile-card::before,
 html[data-theme='light'] .skill-category-card::before,

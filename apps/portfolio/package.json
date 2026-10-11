@@ -1,0 +1,14 @@
+{
+  "name": "@jaxson/portfolio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test scripts/*.test.mjs",
+    "start": "node scripts/serve.mjs --production"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

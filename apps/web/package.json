@@ -7,10 +7,11 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
-    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation NEXT_PUBLIC_PORTFOLIO_URL=http://localhost:3000 next dev -p 3001",
     "lint": "eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start -p 3001",
+    "sync:cinematic": "node scripts/sync-cinematic-portfolio.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -21,6 +22,7 @@
     "@payloadcms/db-postgres": "3.88.0",
     "@payloadcms/db-sqlite": "3.88.0",
     "@payloadcms/drizzle": "3.88.0",
+    "@payloadcms/email-nodemailer": "3.88.0",
     "@payloadcms/next": "3.88.0",
     "@payloadcms/richtext-lexical": "3.88.0",
     "@payloadcms/storage-s3": "3.88.0",

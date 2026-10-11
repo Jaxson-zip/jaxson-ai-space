@@ -1,0 +1,40 @@
+body:has(.resume-download) { background: #19231b; }
+body:has(.resume-download) .site-header,
+body:has(.resume-download) .site-footer { display: none; }
+
+.resume-download {
+  --gold: #efc04c;
+  min-height: 100vh;
+  color: #f7f7ef;
+  background: radial-gradient(circle at 80% 20%, #384532 0, #202c21 40%, #19231b 75%);
+  font-family: 'Plus Jakarta Sans', 'Microsoft YaHei', sans-serif;
+}
+.resume-download__top {
+  min-height: 76px;
+  padding: 14px clamp(20px, 4vw, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e6e9d629;
+}
+.resume-download__top a { color: #dce1d2; font-size: 13px; font-weight: 700; text-decoration: none; }
+.resume-download__top a:hover { color: var(--gold); }
+.resume-download__top .resume-download__brand { color: #fffef7; font-size: 28px; font-weight: 800; letter-spacing: -.06em; }
+.resume-download__brand span, .resume-download h1 span { color: var(--gold); }
+.resume-download__content { width: min(100% - 40px, 760px); margin: 0 auto; padding: clamp(96px, 15vh, 180px) 0 110px; }
+.resume-download__eyebrow { margin: 0 0 24px; color: var(--gold); font: 700 12px/1.5 'JetBrains Mono', monospace; letter-spacing: .1em; }
+.resume-download h1 { margin: 0; font-size: clamp(54px, 8vw, 104px); line-height: 1.08; letter-spacing: -.07em; font-weight: 800; }
+.resume-download__description { max-width: 34ch; margin: 28px 0 32px; color: #e3e8da; font-size: clamp(16px, 2vw, 19px); line-height: 1.8; }
+.resume-download__button { display: flex; align-items: center; justify-content: space-between; gap: 30px; width: min(100%, 330px); min-height: 62px; padding: 16px 22px; border-radius: 8px; background: var(--gold); color: #182219; font-size: 17px; font-weight: 800; text-decoration: none; transition: transform .18s ease, background .18s ease; }
+.resume-download__button:hover { transform: translateY(-2px); background: #ffdb78; }
+.resume-download__button span { font-size: 24px; line-height: 1; }
+.resume-download__note { max-width: 43ch; margin: 40px 0 0; padding-top: 20px; border-top: 1px solid #e5ead33f; color: #bfc9b9; font-size: 13px; line-height: 1.75; }
+.resume-download__note a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
+.resume-download a:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+@media (max-width: 640px) {
+  .resume-download__top { min-height: 64px; }
+  .resume-download__top .resume-download__brand { font-size: 23px; }
+  .resume-download__content { padding-top: 90px; }
+  .resume-download h1 { font-size: clamp(50px, 12vw, 72px); }
+}
+@media (prefers-reduced-motion: reduce) { .resume-download__button { transition: none; } }

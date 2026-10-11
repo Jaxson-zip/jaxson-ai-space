@@ -1,38 +1,23 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { generateYearlyActivityData, getRecruiterTopicInsights } from './analytics'
 
-describe('Studio Growth Heatmap & Analytics Engine', () => {
-  it('generates 52 weeks of activity grid data correctly', () => {
-    const activeDates = {
-      '2026-08-30': 3,
-      '2026-08-29': 2,
-      '2026-08-28': 1,
-    }
-
-    const { weeks, totalActiveDays, totalCount } = generateYearlyActivityData(activeDates)
-
-    expect(weeks.length).toBeGreaterThanOrEqual(52)
-    expect(totalActiveDays).toBeGreaterThan(0)
-    expect(totalCount).toBeGreaterThan(0)
-
-    // Verify cell structures
-    const firstWeek = weeks[0]
-    expect(firstWeek.length).toBe(7)
-    expect(firstWeek[0]).toHaveProperty('date')
-    expect(firstWeek[0]).toHaveProperty('count')
-    expect(firstWeek[0]).toHaveProperty('level')
+describe('real private dashboard metrics', () => {
+  it('retains a full yearly grid and counts only supplied records', () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const previous = new Date()
+    previous.setDate(previous.getDate() - 1)
+    const grid = generateYearlyActivityData({ [today]: 3, [previous.toISOString().slice(0, 10)]: 2 })
+    expect(grid.weeks.length).toBeGreaterThanOrEqual(52)
+    expect(grid.weeks[0]).toHaveLength(7)
+    expect(grid.weeks[0][0]).toHaveProperty('date')
+    expect(grid.totalCount).toBe(5)
+    expect(grid.totalActiveDays).toBe(2)
+    expect(grid.weeks.flat().find((day) => day.date === today)).toMatchObject({ count: 3, level: 3 })
   })
-
-  it('provides recruiter inquiry insights with valid keyword categories and counts', () => {
-    const insights = getRecruiterTopicInsights()
-
-    expect(insights.length).toBeGreaterThan(0)
-    expect(insights[0]).toHaveProperty('keyword')
-    expect(insights[0]).toHaveProperty('count')
-    expect(insights[0]).toHaveProperty('category')
-
-    const vueInsight = insights.find((i) => i.keyword.includes('Vue 3'))
-    expect(vueInsight).toBeDefined()
-    expect(vueInsight?.count).toBeGreaterThan(0)
+  it('does not invent activity or recruiter queries for an empty workspace', () => {
+    const grid = generateYearlyActivityData()
+    expect(grid.totalCount).toBe(0)
+    expect(grid.totalActiveDays).toBe(0)
+    expect(getRecruiterTopicInsights()).toEqual([])
   })
 })

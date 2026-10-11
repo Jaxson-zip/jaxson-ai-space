@@ -69,7 +69,7 @@ export const Memories: CollectionConfig = {
     },
     {
       name: 'confidence',
-      label: '置信度',
+      label: '规则参考值（不是模型置信度）',
       type: 'number',
       min: 0,
       max: 1,

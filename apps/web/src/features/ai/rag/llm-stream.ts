@@ -1,5 +1,6 @@
 import type { ChatMessage, RetrievalResult } from './types'
 import { buildSystemPrompt } from './prompt-builder'
+import { SSEParser } from '../sse'
 
 interface StreamResponseConfig {
   messages: ChatMessage[]
@@ -13,15 +14,16 @@ interface StreamResponseConfig {
  */
 export async function createRAGStream(config: StreamResponseConfig): Promise<ReadableStream<Uint8Array>> {
   const { messages, retrievalResults, isJdMatch, signal } = config
+  signal?.throwIfAborted()
   const encoder = new TextEncoder()
 
   const systemPrompt = buildSystemPrompt(retrievalResults, isJdMatch)
   const userMessage = messages[messages.length - 1]?.content || ''
 
   // 1. Check for external LLM API configurations
-  const deepseekKey = process.env.DEEPSEEK_API_KEY
-  const dashscopeKey = process.env.DASHSCOPE_API_KEY
-  const openaiKey = process.env.OPENAI_API_KEY
+  const deepseekKey = process.env.DEEPSEEK_API_KEY?.trim()
+  const dashscopeKey = process.env.DASHSCOPE_API_KEY?.trim()
+  const openaiKey = process.env.OPENAI_API_KEY?.trim()
 
   const apiKey = deepseekKey || dashscopeKey || openaiKey
   const baseUrl = deepseekKey
@@ -30,15 +32,28 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
     ? (process.env.DASHSCOPE_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1')
     : (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1')
   const model = deepseekKey
-    ? 'deepseek-chat'
+    ? (process.env.DEEPSEEK_MODEL || 'deepseek-flash')
     : dashscopeKey
     ? 'qwen-plus'
     : (process.env.OPENAI_MODEL || 'gpt-4o-mini')
+  const provider = deepseekKey ? 'deepseek' : dashscopeKey ? 'dashscope' : 'openai'
 
   const evidenceTags = retrievalResults.map((r) => r.chunk.evidenceTag)
 
   // If a live LLM API key is present, stream and transform from the provider
-  if (apiKey) {
+  if (apiKey && retrievalResults.length > 0) {
+    const upstreamAbort = new AbortController()
+    const upstreamSignal = signal ? AbortSignal.any([signal, upstreamAbort.signal]) : upstreamAbort.signal
+    // Budget the wait for the first answer separately from gaps during generation.
+    // A progressing long answer must not hit an absolute 20-second body deadline.
+    let timeoutCode = 'first_token_timeout'
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const armTimeout = (code: string) => {
+      clearTimeout(timer)
+      timeoutCode = code
+      timer = setTimeout(() => upstreamAbort.abort(), 20000)
+    }
+    armTimeout('first_token_timeout')
     try {
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
@@ -54,134 +69,109 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
           ],
           stream: true,
           temperature: 0.3,
+          max_tokens: 1024,
+          ...(deepseekKey ? { thinking: { type: 'disabled' } } : {}),
         }),
-        signal,
+        signal: upstreamSignal,
       })
+      signal?.throwIfAborted()
 
       if (response.ok && response.body) {
         const upstreamReader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
-
-        return new ReadableStream<Uint8Array>({
-          async start(controller) {
-            // 1. Emit evidence meta first
-            const initialMeta = `event: meta\ndata: ${JSON.stringify({ evidence: evidenceTags, isJdMatch })}\n\n`
-            controller.enqueue(encoder.encode(initialMeta))
-
-            try {
-              while (true) {
-                const { done, value } = await upstreamReader.read()
-                if (done) break
-
-                buffer += decoder.decode(value, { stream: true })
-                const lines = buffer.split('\n')
-                buffer = lines.pop() || ''
-
-                for (const line of lines) {
-                  const trimmed = line.trim()
-                  if (!trimmed || trimmed.startsWith(':')) continue
-                  if (trimmed === 'data: [DONE]') {
-                    controller.enqueue(encoder.encode('event: done\ndata: {}\n\n'))
-                    controller.close()
-                    return
-                  }
-
-                  if (trimmed.startsWith('data: ')) {
-                    try {
-                      const json = JSON.parse(trimmed.slice(6))
-                      const delta = json.choices?.[0]?.delta?.content || ''
-                      if (delta) {
-                        const sseEvent = `event: text\ndata: ${JSON.stringify({ text: delta })}\n\n`
-                        controller.enqueue(encoder.encode(sseEvent))
-                      }
-                    } catch {
-                      // Skip partial or unparsable JSON lines
-                    }
-                  }
+        const parser = new SSEParser()
+        let ended = false
+        let cancelled = false
+        let hasText = false
+        let controller: ReadableStreamDefaultController<Uint8Array>
+        const emit = (event: string, data: object) => controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+        const finish = (code?: string) => {
+          if (ended) return
+          ended = true
+          clearTimeout(timer)
+          upstreamSignal.removeEventListener('abort', onAbort)
+          if (!cancelled) {
+            if (!signal?.aborted) emit(code ? 'error' : 'done', code ? { code } : {})
+            controller.close()
+          }
+          void upstreamReader.cancel().catch(() => {})
+          upstreamAbort.abort()
+        }
+        const onAbort = () => finish(signal?.aborted ? 'cancelled' : timeoutCode)
+        const pump = async () => {
+          try {
+            while (!ended) {
+              const { done, value } = await upstreamReader.read()
+              if (ended) return
+              if (done) { finish('upstream_incomplete'); return }
+              for (const event of parser.push(value)) {
+                if (event.data === '[DONE]') { finish(hasText ? undefined : 'upstream_empty'); return }
+                const json = JSON.parse(event.data)
+                if (!json || typeof json !== 'object' || json.error) { finish('upstream_invalid'); return }
+                const choice = json.choices?.[0]
+                const delta = choice?.delta?.content
+                if (typeof delta === 'string' && delta) {
+                  hasText = true
+                  armTimeout('stream_idle_timeout')
+                  emit('text', { text: delta })
                 }
+                if (choice?.finish_reason && choice.finish_reason !== 'stop') { finish('upstream_truncated'); return }
               }
-              controller.enqueue(encoder.encode('event: done\ndata: {}\n\n'))
-              controller.close()
-            } catch (streamErr) {
-              console.error('[RAG] Error reading external LLM stream:', streamErr)
-              controller.error(streamErr)
             }
+          } catch {
+            finish('upstream_interrupted')
+          }
+        }
+        return new ReadableStream<Uint8Array>({
+          start(value) {
+            controller = value
+            upstreamSignal.addEventListener('abort', onAbort, { once: true })
+            if (upstreamSignal.aborted) { onAbort(); return }
+            emit('meta', { evidence: evidenceTags, isJdMatch, generator: 'external', provider, model })
+            void pump()
+          },
+          cancel() {
+            cancelled = true
+            finish('cancelled')
           },
         })
       }
-      console.warn('[RAG] External LLM error, falling back to built-in generator:', response.statusText)
-    } catch (err) {
-      console.warn('[RAG] External LLM network issue, falling back to built-in generator:', err)
+      await response.body?.cancel().catch(() => {})
+      clearTimeout(timer)
+      console.warn('[RAG] External LLM unavailable; using local generator. HTTP', response.status)
+    } catch {
+      clearTimeout(timer)
+      signal?.throwIfAborted()
+      console.warn('[RAG] External LLM connection failed; using local generator')
     }
   }
 
-  // 2. Built-in Deterministic RAG Response Generator (100% Offline / Zero-Key Fallback)
-  let generatedAnswer = ''
-
-  if (isJdMatch || userMessage.toLowerCase().includes('jd') || userMessage.includes('岗位') || userMessage.includes('招聘') || userMessage.includes('要求')) {
-    const matchedSkills = retrievalResults
-      .flatMap((r) => r.chunk.keywords)
-      .filter((k) => userMessage.toLowerCase().includes(k.toLowerCase()))
-
-    const uniqueMatches = Array.from(new Set(matchedSkills))
-    const matchingContext = uniqueMatches.length > 0 ? `（匹配到技术关键词：${uniqueMatches.join('、')}）` : ''
-
-    generatedAnswer = `从你发来的岗位需求与技术方向来看 ${matchingContext}，我的技术背景主要聚焦在 **Web 全栈开发** 与 **AI 应用落地**。结合我真实的实习与项目经历，向你实事求是地介绍我的情况：
-
-### 1. 我的技术栈与核心交付
-- **前端与全栈工程**：我的主力开发技术栈是 **React 19、TypeScript、Vue 3 与 Next.js**，注重强类型规范、组件化与自动化测试；在后端与数据层熟悉 **Go 接口联调、PostgreSQL 与 Supabase**；
-- **企业实战经历（广东润喵云科技）**：在润喵云实习期间，我参与了算力管理后台与大屏监控模块的前端交互实现与组件封装，配合 Go 后端微服务完成高并发接口联调与状态防抖处理；
-- **独立完整产品交付**：我独立设计并上线了 **Todo Memo PWA**（支持离线缓存与云端同步）、**锐历简历**（中文化排版优化开源项目）。
-
-### 2. 学习能力与工程素养
-- **学业与竞赛**：我目前就读于深圳职业技术大学大数据技术专业（GPA 3.67 前 5%），曾获得 **国家级二等奖** 与 **省级一等奖**；
-- **工程协同流**：日常深度使用 Git Worktree、Cursor、CI/CD 自动化构建提升交付效率，学习吸收新技术快，具备很强的自驱力。
-
-### 3. 到岗时间与交流
-我目前常驻深圳，随时可以线下到岗实习或工作。如果你需要查看项目源码、在线体验 Demo 或安排面试，随时欢迎加我的微信 **15347640609**，或发送邮件至 **1822103245@qq.com**！`
-  } else {
-    const topChunk = retrievalResults[0]?.chunk
-    const topContent = topChunk?.content || ''
-
-    if (topChunk) {
-      generatedAnswer = `关于【${topChunk.title}】的真实情况与技术实现：
-
-${topContent}
-
-我在开发该模块时，始终坚持“以真实场景痛点为导向、以工程可维护性为底线”，代码与架构均经过严格测试。如果你想深入了解我的实现细节或在线体验 Demo，欢迎随时提问，或直接加我的微信 **15347640609** 交流！`
-    } else {
-      generatedAnswer = `你好！我是张锦鹏 (Jaxson) 的 AI 数字分身。
-
-我目前就读于**深圳职业技术大学**大数据技术专业（GPA 3.67 前 5%），主修前端全栈与 AI 应用开发。
-
-你可以向我了解我在 **广东润喵云的实习经历**、**核心交付项目（Todo Memo、锐历简历）**、**竞赛荣誉**，或者直接把贵司的岗位 JD 需求发给我，我来帮你做针对性契合度分析！`
-    }
-  }
+  // 2. Local fallback: only summarize retrieved facts. It must stay current with CMS edits.
+  const generatedAnswer = buildLocalRAGAnswer(userMessage, retrievalResults, isJdMatch)
 
   // Create a ReadableStream delivering standard SSE formatted tokens
+  let locallyCancelled = false
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       // 1. Send Evidence Event
       const evidenceTags = retrievalResults.map((r) => r.chunk.evidenceTag)
-      const initialMeta = `event: meta\ndata: ${JSON.stringify({ evidence: evidenceTags, isJdMatch })}\n\n`
+      const initialMeta = `event: meta\ndata: ${JSON.stringify({ evidence: evidenceTags, isJdMatch, generator: 'local' })}\n\n`
       controller.enqueue(encoder.encode(initialMeta))
 
       // 2. Chunk and stream text with signal.aborted interruption check
-      const chunkSize = 6
+      const chunkSize = 28
       for (let i = 0; i < generatedAnswer.length; i += chunkSize) {
-        if (signal?.aborted) {
-          controller.close()
+        if (signal?.aborted || locallyCancelled) {
+          if (!locallyCancelled) controller.close()
           return
         }
         const textChunk = generatedAnswer.slice(i, i + chunkSize)
         const sseEvent = `event: text\ndata: ${JSON.stringify({ text: textChunk })}\n\n`
         controller.enqueue(encoder.encode(sseEvent))
-        await new Promise((resolve) => setTimeout(resolve, 20))
+        await new Promise((resolve) => setTimeout(resolve, 8))
       }
 
-      if (signal?.aborted) {
-        controller.close()
+      if (signal?.aborted || locallyCancelled) {
+        if (!locallyCancelled) controller.close()
         return
       }
 
@@ -189,7 +179,40 @@ ${topContent}
       controller.enqueue(encoder.encode('event: done\ndata: {}\n\n'))
       controller.close()
     },
+    cancel() { locallyCancelled = true },
   })
 
   return stream
+}
+
+export function buildLocalRAGAnswer(
+  userMessage: string,
+  retrievalResults: RetrievalResult[],
+  isJdMatch = false,
+): string {
+  if (retrievalResults.length === 0) {
+    return '这项信息目前没有收录在我的公开资料中。你可以查看作品和简历，或直接联系张锦鹏核实。'
+  }
+
+  const wantsJdMatch = isJdMatch || /\bjd\b|岗位|招聘|职位要求/i.test(userMessage)
+  const wantsProjectList = /项目|作品/.test(userMessage) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(userMessage)
+  const relevantResults = wantsProjectList
+    ? retrievalResults.filter((result) =>
+        result.chunk.category === 'project' &&
+        (!/(?:已经|已)上线|上线的项目/.test(userMessage) || /【状态】[^\n]*已上线/.test(result.chunk.content)),
+      )
+    : retrievalResults
+
+  if (relevantResults.length === 0) {
+    return '这次检索没有找到能够回答该问题的公开项目资料。请查看作品页，或直接联系张锦鹏核实。'
+  }
+
+  const selected = wantsProjectList || wantsJdMatch ? relevantResults : relevantResults.slice(0, 1)
+  const intro = wantsJdMatch
+    ? '根据目前公开的资料，我能提供这些相关经历供你对照岗位要求；资料没有覆盖的要求，我不能直接声称具备：'
+    : wantsProjectList
+      ? '目前检索到的相关公开项目：'
+      : '根据目前公开的资料：'
+  const facts = selected.map(({ chunk }) => `**${chunk.title}**\n${chunk.content}\n来源：${chunk.evidenceTag}`)
+  return `${intro}\n\n${facts.join('\n\n')}\n\n如需更多细节，可以打开对应项目档案或与本人核实。`
 }

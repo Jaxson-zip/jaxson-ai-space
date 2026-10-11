@@ -1,29 +1,14 @@
 import pg from 'pg'
+import { embedIndexText, getIndexEmbeddingConfig } from './lib/index-embedding.mjs'
+import { isLatestIndexTask } from './lib/index-task-state.mjs'
 
 const { Pool } = pg
+const embeddingConfig = getIndexEmbeddingConfig()
 const pool = new Pool({
   connectionString: process.env.DATABASE_URI,
   max: 2,
   idleTimeoutMillis: 5000,
 })
-
-function generate1536Vector(text) {
-  const dimensions = 1536
-  const vector = new Array(dimensions).fill(0)
-  const normalized = String(text).toLowerCase().trim()
-  if (!normalized) {
-    vector[0] = 1
-    return vector
-  }
-  for (let i = 0; i < normalized.length; i += 1) {
-    const code = normalized.charCodeAt(i)
-    vector[(code * 31 + i * 17) % dimensions] += 1
-    vector[(code * 59 + i * 37 + (normalized.charCodeAt(i + 1) || 0) * 13) % dimensions] += 0.75
-    vector[(code * 97 + i * 79 + (normalized.charCodeAt(i - 1) || 0) * 23) % dimensions] += 0.5
-  }
-  const norm = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0)) || 1
-  return vector.map((value) => Number((value / norm).toFixed(6)))
-}
 
 function chunkText(content, maxLength = 300) {
   if (content.length <= maxLength) return [content.trim()]
@@ -67,6 +52,11 @@ async function processTask(task) {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    if (!(await isLatestIndexTask(client, task))) {
+      await client.query("UPDATE owner.outbox_events SET status = 'completed', completed_at = NOW(), last_error = NULL WHERE id = $1", [task.id])
+      await client.query('COMMIT')
+      return
+    }
     await client.query(
       `UPDATE public_read.knowledge_embeddings
        SET is_active = FALSE, updated_at = NOW()
@@ -77,7 +67,8 @@ async function processTask(task) {
       const chunks = chunkText(task.content)
       for (let index = 0; index < chunks.length; index += 1) {
         const content = chunks[index]
-        const vector = `[${generate1536Vector(`${task.title} ${content}`).join(',')}]`
+        const embedding = await embedIndexText(`${task.title} ${content}`, embeddingConfig)
+        const vector = `[${embedding.vector.join(',')}]`
         await client.query(
           `INSERT INTO public_read.knowledge_embeddings
              (chunk_id, category, title, content, evidence_tag, embedding, metadata, generation_id, is_active)
@@ -89,7 +80,7 @@ async function processTask(task) {
           [
             `${task.entity_id}_chunk_${index}`, task.category,
             `${task.title} (段落 ${index + 1})`, content, task.evidence_tag, vector,
-            JSON.stringify({ entityId: task.entity_id, eventType: task.event_type, chunkIndex: index, totalChunks: chunks.length }),
+            JSON.stringify({ entityId: task.entity_id, eventType: task.event_type, chunkIndex: index, totalChunks: chunks.length, embeddingModel: embedding.modelKey }),
             String(task.id),
           ],
         )

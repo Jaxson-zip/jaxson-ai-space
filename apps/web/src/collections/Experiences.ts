@@ -5,7 +5,7 @@ export const Experiences: CollectionConfig = {
   slug: 'experiences',
   labels: {
     singular: '经历记录',
-    plural: '💼 工作与实践经历',
+    plural: '💼 实习、教育与校园经历',
   },
   admin: {
     useAsTitle: 'organization',

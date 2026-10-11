@@ -17,6 +17,11 @@ export const Reflections: CollectionConfig = {
     defaultColumns: ['title', 'type', 'date', 'extractionStatus', 'createdAt'],
   },
   fields: [
+    // A nullable unique receipt key makes retries safe across gateway/server restarts.
+    { name: 'inboxKey', type: 'text', unique: true, admin: { hidden: true } },
+    { name: 'inboxDigest', type: 'text', admin: { hidden: true } },
+    { name: 'inboxReply', type: 'textarea', admin: { hidden: true } },
+    { name: 'inboxCount', type: 'number', admin: { hidden: true } },
     {
       name: 'title',
       label: '复盘主题',

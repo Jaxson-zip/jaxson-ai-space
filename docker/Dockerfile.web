@@ -33,9 +33,11 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=2048 --no-deprecation"
-ENV PAYLOAD_SECRET=build-time-placeholder-secret-32-chars-long
-ENV USE_POSTGRES=false
-RUN pnpm --filter @jaxson/web build
+ARG NEXT_PUBLIC_PORTFOLIO_URL
+ARG NEXT_PUBLIC_SERVER_URL
+ENV NEXT_PUBLIC_PORTFOLIO_URL=${NEXT_PUBLIC_PORTFOLIO_URL}
+ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
+RUN cd apps/web && PAYLOAD_SECRET=build-time-placeholder-secret-32-chars-long USE_POSTGRES=false node node_modules/next/dist/bin/next build
 
 # Stage 3: Runner (Production Image)
 FROM node:24-alpine AS runner
@@ -46,7 +48,8 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 nextjs && \
+    mkdir -p /app/media && chown nextjs:nodejs /app/media
 
 COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next ./apps/web/.next
@@ -54,6 +57,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/package.json ./apps/web/package.json
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/run-index-worker.mjs ./apps/web/scripts/run-index-worker.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/lib ./apps/web/scripts/lib
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/reindex-knowledge.mjs ./apps/web/scripts/reindex-knowledge.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/cms-content.mjs ./apps/web/scripts/cms-content.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/check-smtp.mjs ./apps/web/scripts/check-smtp.mjs
 
 USER nextjs
 EXPOSE 3000

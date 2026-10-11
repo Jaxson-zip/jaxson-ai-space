@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useLayoutEffect, useCallback } from 'react'
+import React, { useState, useRef, useLayoutEffect, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Sparkles,
@@ -12,30 +12,22 @@ import {
   ShieldCheck,
   CheckCircle2,
   FileCheck2,
-  Briefcase,
   Layers,
-  GraduationCap,
-  Award,
   ChevronDown,
 } from 'lucide-react'
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  isJdMatch?: boolean
-  evidence?: readonly string[]
-}
+import './ai-cinematic.css'
+import { buildChatHistory, CHAT_LIMITS, type ConversationMessage as Message } from '@/features/ai/chat-history'
+import { consumeChatStream } from '@/features/ai/chat-stream'
 
 const INITIAL_MESSAGES: Message[] = [
   {
     id: '1',
     role: 'assistant',
-    content: `你好！我是张锦鹏 (Jaxson) 的 AI 数字分身，你可以直接把我当成我本人来沟通！
+    content: `你好！我会依据后台已公开的项目和知识条目回答问题，并在回答中列出资料来源。
 
-我完整同步了我在**广东润喵云科技的实习实战（Vue 3 + Go 算力平台大屏与接口联调）**、**精选核心交付项目（Todo Memo PWA / 锐历简历开源工作台）**以及我的求职意向与技术栈。
+你可以先问我**有哪些公开项目**，再进一步了解某个项目的背景、工作与结果。
 
-你可以直接向我提问，或者**把贵司的岗位要求/JD 直接发给我**，我来为你分析我的背景契合度！`,
+你也可以粘贴岗位要求，让我仅根据现有资料做对照；未收录的信息我会明确说明。`,
   },
 ]
 
@@ -127,16 +119,42 @@ function FormattedContent({ text, isUser }: { text: string; isUser?: boolean }) 
 }
 
 export default function AIPage() {
+  const portfolioUrl = process.env.NEXT_PUBLIC_PORTFOLIO_URL || '/'
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false)
+  const [inputError, setInputError] = useState('')
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const backLinkRef = useRef<HTMLAnchorElement>(null)
   const isAutoScrollEnabled = useRef(true)
+  const activeRequestRef = useRef<AbortController | null>(null)
+  const requestGenerationRef = useRef(0)
+
+  useEffect(() => () => {
+    activeRequestRef.current?.abort()
+    activeRequestRef.current = null
+    requestGenerationRef.current++
+  }, [])
+
+  useEffect(() => {
+    const from = new URLSearchParams(window.location.search).get('from')
+    if (!from) return
+    try {
+      const url = new URL(from)
+      const portfolioOrigin = new URL(portfolioUrl, window.location.origin).origin
+      if ((url.origin === window.location.origin || url.origin === portfolioOrigin) && backLinkRef.current) {
+        backLinkRef.current.href = url.href
+      }
+    } catch {
+      // Invalid return URL: keep the configured portfolio link.
+    }
+  }, [portfolioUrl])
 
   // Guarantee continuous auto-follow scroll to bottom on every DOM update
   useLayoutEffect(() => {
+    if (messages.length === INITIAL_MESSAGES.length && !isLoading) return
     if (isAutoScrollEnabled.current && scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
     }
@@ -164,19 +182,28 @@ export default function AIPage() {
     setShowScrollBottomBtn(isUserFarFromBottom)
   }
 
-  const handleSendMessage = async (queryText?: string) => {
-    const textToSend = queryText || input
-    if (!textToSend.trim() || isLoading) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: textToSend,
+  const handleSendMessage = async (queryText?: string, retryUserId?: string) => {
+    if (activeRequestRef.current) return
+    const textToSend = (queryText ?? input).trim()
+    if (!textToSend) return
+    if (textToSend.length > CHAT_LIMITS.messageChars) {
+      setInputError(`单次问题最多 ${CHAT_LIMITS.messageChars} 字，请缩短后再发送。`)
+      return
     }
-
-    const updatedMessages = [...messages, userMessage]
-    setMessages(updatedMessages)
+    const retryIndex = retryUserId ? messages.findIndex((message) => message.id === retryUserId && message.role === 'user') : -1
+    if (retryUserId && retryIndex < 0) return
+    const userMessage: Message = retryIndex >= 0 ? messages[retryIndex] : {
+      id: crypto.randomUUID(), role: 'user', content: textToSend,
+    }
+    const requestHistory = buildChatHistory(retryIndex >= 0 ? messages.slice(0, retryIndex) : messages, userMessage)
+    const previousAnswer = retryUserId ? messages.find((message) => message.replyTo === retryUserId) : undefined
+    const assistantMsgId = previousAnswer?.id ?? crypto.randomUUID()
+    const request = new AbortController()
+    activeRequestRef.current = request
+    const generation = ++requestGenerationRef.current
+    const isActive = () => requestGenerationRef.current === generation && !request.signal.aborted
     setInput('')
+    setInputError('')
     setIsLoading(true)
     isAutoScrollEnabled.current = true
 
@@ -187,97 +214,48 @@ export default function AIPage() {
       textToSend.includes('要求') ||
       textToSend.includes('任职')
 
-    const assistantMsgId = (Date.now() + 1).toString()
-    let currentEvidence: string[] = []
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: assistantMsgId,
-        role: 'assistant',
-        content: '',
-        isJdMatch,
-        evidence: [],
-      },
-    ])
+    const answer: Message = {
+      id: assistantMsgId, role: 'assistant', replyTo: userMessage.id,
+      content: '', status: 'streaming', isJdMatch, evidence: [],
+    }
+    setMessages((prev) => previousAnswer
+      ? prev.map((message) => message.id === assistantMsgId ? answer : message)
+      : [...prev, ...(retryUserId ? [] : [userMessage]), answer])
+    let accumulatedText = ''
+    const updateAnswer = (update: Partial<Message>) => {
+      if (!isActive()) return
+      setMessages((prev) => isActive() ? prev.map((message) => message.id === assistantMsgId ? { ...message, ...update } : message) : prev)
+    }
 
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: updatedMessages,
+          messages: requestHistory,
           isJdMatch,
         }),
+        signal: request.signal,
       })
 
       if (!response.ok || !response.body) {
         throw new Error('网络请求失败')
       }
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let accumulatedText = ''
-      let sseBuffer = ''
-
-      while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
-
-        sseBuffer += decoder.decode(value, { stream: true })
-        const events = sseBuffer.split('\n\n')
-        sseBuffer = events.pop() || '' // Keep incomplete trailing chunk in buffer
-
-        for (const evt of events) {
-          if (!evt.trim()) continue
-
-          const lines = evt.split('\n')
-          const eventLine = lines.find((l) => l.startsWith('event: '))
-          const dataLine = lines.find((l) => l.startsWith('data: '))
-
-          const eventType = eventLine ? eventLine.replace('event: ', '').trim() : 'text'
-          const rawData = dataLine ? dataLine.replace('data: ', '').trim() : '{}'
-
-          try {
-            const data = JSON.parse(rawData)
-
-            if (eventType === 'meta') {
-              if (data.evidence && Array.isArray(data.evidence)) {
-                currentEvidence = data.evidence
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMsgId ? { ...msg, evidence: currentEvidence } : msg
-                  )
-                )
-              }
-            } else if (eventType === 'text') {
-              if (data.text) {
-                accumulatedText += data.text
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMsgId ? { ...msg, content: accumulatedText } : msg
-                  )
-                )
-              }
-            }
-          } catch {
-            // Ignore incomplete partial JSON
-          }
+      await consumeChatStream(response.body, (event) => {
+        if (event.type === 'text') {
+          accumulatedText += event.text
+          updateAnswer({ content: accumulatedText })
+        } else {
+          updateAnswer({ evidence: event.evidence, generator: event.generator })
         }
-      }
-    } catch (_err) {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMsgId
-            ? {
-                ...msg,
-                content:
-                  '非常抱歉，网络或检索服务出现短暂波动。请稍后重试，或直接添加锦鹏微信：15347640609 联系本人！',
-              }
-            : msg
-        )
-      )
+      }, request.signal)
+      updateAnswer({ status: 'completed' })
+    } catch {
+      updateAnswer({ status: accumulatedText ? 'interrupted' : 'error' })
     } finally {
+      if (activeRequestRef.current !== request) return
+      activeRequestRef.current = null
       setIsLoading(false)
       // Final guarantee scroll
       if (isAutoScrollEnabled.current && scrollContainerRef.current) {
@@ -291,9 +269,15 @@ export default function AIPage() {
   }
 
   const handleResetChat = () => {
+    activeRequestRef.current?.abort()
+    activeRequestRef.current = null
+    requestGenerationRef.current++
+    setIsLoading(false)
+    isAutoScrollEnabled.current = false
     setMessages(INITIAL_MESSAGES)
     setInput('')
-    isAutoScrollEnabled.current = true
+    setInputError('')
+    setShowScrollBottomBtn(false)
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0
     }
@@ -310,9 +294,9 @@ export default function AIPage() {
         <div className="ai-content-centered">
           {/* Top Bar */}
           <div className="ai-page-top-bar">
-            <Link href="/" className="ai-back-link">
+            <Link ref={backLinkRef} href={portfolioUrl} className="ai-back-link">
               <ArrowLeft size={14} />
-              <span>返回主页</span>
+              <span>返回作品集</span>
             </Link>
             <button type="button" className="ai-reset-btn" onClick={handleResetChat} title="清空对话">
               <RotateCcw size={13} />
@@ -324,11 +308,12 @@ export default function AIPage() {
           <div className="ai-page-header">
             <div className="ai-privacy-badge">
               <ShieldCheck size={13} />
-              <span>RAG 向量混合检索与防幻觉护栏已激活</span>
+              <span>仅依据已公开的后台资料回答</span>
             </div>
-            <h1 className="ai-page-title">张锦鹏 · AI 岗位匹配分身</h1>
+            <p className="ai-page-kicker">JAXSON / ASK ME ANYTHING</p>
+            <h1 className="ai-page-title">有问题，直接问我<span>的 AI 分身</span>。</h1>
             <p className="ai-page-subtitle">
-              基于 Payload CMS 动态知识库实时推理，提供精准的事实溯源与岗位契合度分析。
+              想了解项目细节或岗位契合点？从一个问题开始。回答会标明来源，未收录的事实会明确说明。
             </p>
           </div>
 
@@ -340,15 +325,15 @@ export default function AIPage() {
               onClick={() => handlePresetClick('📋 请帮我做一下针对前端/全栈开发岗位的 JD 匹配分析')}
             >
               <FileCheck2 size={13} />
-              <span>📋 测测岗位 JD 匹配度</span>
+              <span>岗位 JD 匹配</span>
             </button>
             <button
               type="button"
               className="prompt-chip-btn"
-              onClick={() => handlePresetClick('🏢 请详细介绍一下你在广东润喵云科技的实习工作与产出')}
+              onClick={() => handlePresetClick('你有哪些公开项目？')}
             >
-              <Briefcase size={13} />
-              <span>🏢 介绍润喵云实习经历</span>
+              <Layers size={13} />
+              <span>全部公开项目</span>
             </button>
             <button
               type="button"
@@ -356,23 +341,23 @@ export default function AIPage() {
               onClick={() => handlePresetClick('📱 介绍一下 Todo Memo PWA 项目的核心架构与交付状态')}
             >
               <Layers size={13} />
-              <span>📱 了解 Todo Memo 项目</span>
+              <span>Todo Memo 项目</span>
             </button>
             <button
               type="button"
               className="prompt-chip-btn"
-              onClick={() => handlePresetClick('🎓 介绍一下你的教育背景、GPA 以及在校领导经历')}
+              onClick={() => handlePresetClick('锐历简历项目做了什么？')}
             >
-              <GraduationCap size={13} />
-              <span>🎓 教育背景与绩点</span>
+              <FileCheck2 size={13} />
+              <span>锐历简历工作台</span>
             </button>
             <button
               type="button"
               className="prompt-chip-btn"
-              onClick={() => handlePresetClick('🏆 你获得过哪些国家级与省级竞赛荣誉？')}
+              onClick={() => handlePresetClick('Nutrinet 个性化膳食营养系统项目做了什么？')}
             >
-              <Award size={13} />
-              <span>🏆 竞赛荣誉奖项</span>
+              <Layers size={13} />
+              <span>Nutrinet 项目</span>
             </button>
           </div>
 
@@ -399,8 +384,8 @@ export default function AIPage() {
                             marginLeft: '4px',
                             fontSize: '0.72rem',
                             padding: '1px 6px',
-                            background: 'rgba(56, 189, 248, 0.1)',
-                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            background: 'rgba(183, 199, 171, 0.1)',
+                            border: '1px solid rgba(183, 199, 171, 0.3)',
                             borderRadius: '4px',
                             color: 'var(--accent-blue)',
                           }}
@@ -415,23 +400,36 @@ export default function AIPage() {
                 <div className="bubble-body">
                   {msg.content ? (
                     <FormattedContent text={msg.content} isUser={msg.role === 'user'} />
-                  ) : (
+                  ) : msg.status === 'streaming' ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
                       <Sparkles size={14} className="db-pulse" />
-                      <span>正在检索知识库并生成思考...</span>
+                      <span>正在查找公开资料并生成回答…</span>
                     </div>
+                  ) : null}
+
+                  {(msg.status === 'interrupted' || msg.status === 'error') && (
+                    <div className="chat-response-status" role="status">
+                      <span>{msg.status === 'interrupted' ? '回答中断，已收到的内容保留在上方。' : '暂时未能生成回答，请重试。'}</span>
+                      <button type="button" disabled={isLoading} onClick={() => {
+                        const question = messages.find((message) => message.id === msg.replyTo)
+                        if (question) void handleSendMessage(question.content, question.id)
+                      }}>重试回答</button>
+                    </div>
+                  )}
+                  {msg.generator === 'local' && msg.status === 'completed' && (
+                    <p className="chat-response-status">此回答由公开资料直接整理。</p>
                   )}
 
                   {msg.evidence && msg.evidence.length > 0 && (
                     <div className="bubble-evidence-box">
                       <div className="evidence-title">
                         <CheckCircle2 size={12} />
-                        <span>事实证据溯源切片：</span>
+                        <span>资料来源</span>
                       </div>
                       <div className="evidence-tags-row">
                         {msg.evidence.map((tag, i) => (
                           <span key={i} className="evidence-tag">
-                            📌 {tag}
+                            {tag}
                           </span>
                         ))}
                       </div>
@@ -462,6 +460,7 @@ export default function AIPage() {
       {/* Fixed Bottom Dock Composer */}
       <div className="ai-bottom-dock">
         <div className="ai-composer-container">
+          {inputError && <p className="chat-input-error" role="alert">{inputError}</p>}
           <form
             className="composer-form"
             onSubmit={(e) => {

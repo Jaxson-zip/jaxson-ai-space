@@ -35,6 +35,11 @@ export const AIKnowledge: CollectionConfig = {
   },
   fields: [
     {
+      name: 'privateMemoryKey', type: 'text', unique: true,
+      admin: { hidden: true },
+      access: { read: ({ req }) => Boolean(req.user), create: () => false, update: () => false },
+    },
+    {
       name: 'title',
       label: '知识条目 / 问答主题',
       type: 'text',
@@ -63,7 +68,7 @@ export const AIKnowledge: CollectionConfig = {
       name: 'isPublic',
       label: '是否对公开 AI 分身可见',
       type: 'checkbox',
-      defaultValue: true,
+      defaultValue: false,
     },
     {
       name: 'evidenceTag',

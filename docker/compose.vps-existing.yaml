@@ -1,0 +1,69 @@
+# Existing VPS: preserve PostgreSQL and its external network/volume.
+# Copy this file and Caddyfile into a private release directory with production.env.
+# docker compose -p jaxson-release -f compose.yaml up -d
+x-runtime: &runtime
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+  networks: [existing_database]
+
+services:
+  web:
+    <<: *runtime
+    image: jaxson-web-release:20261007
+    env_file: [production.env]
+    mem_limit: 1200m
+    ports: ["127.0.0.1:3000:3000"]
+    volumes: ["./media:/app/media"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/showcase-projects').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 60s
+  worker:
+    <<: *runtime
+    image: jaxson-web-release:20261007
+    env_file: [production.env]
+    command: ["node", "apps/web/scripts/run-index-worker.mjs"]
+    mem_limit: 192m
+    read_only: true
+    depends_on:
+      web: { condition: service_healthy }
+  portfolio:
+    <<: *runtime
+    image: jaxson-portfolio-release:20261007-perf2
+    environment:
+      PORTFOLIO_UPSTREAM_ORIGIN: http://web:3000
+    mem_limit: 128m
+    read_only: true
+    ports: ["127.0.0.1:39000:3000"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 4
+  caddy:
+    <<: *runtime
+    image: caddy:2-alpine
+    mem_limit: 128m
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_DOMAIN: jaxson.bond
+      API_DOMAIN: api.jaxson.bond
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: { condition: service_healthy }
+      portfolio: { condition: service_healthy }
+volumes:
+  caddy_data:
+  caddy_config:
+networks:
+  existing_database:
+    external: true
+    name: docker_jaxson_prod_net

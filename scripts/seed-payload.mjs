@@ -6,9 +6,8 @@ import crypto from 'crypto'
 
 const { Pool } = pg
 
-const databaseUri =
-  process.env.DATABASE_URI ||
-  'postgresql://owner_app:f507d423018cb7864a5074d1@127.0.0.1:5432/jaxson_space'
+const databaseUri = process.env.DATABASE_URI
+if (!databaseUri) throw new Error('Set DATABASE_URI explicitly before seeding')
 
 const pool = new Pool({
   connectionString: databaseUri,

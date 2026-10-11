@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadKnowledgeChunks } from '@/features/ai/rag/knowledge-loader'
-import { hybridRetrieve } from '@/features/ai/rag/retriever'
+import { groundedRetrieve } from '@/features/ai/rag/retriever'
 import { createRAGStream } from '@/features/ai/rag/llm-stream'
 
 import { z } from 'zod'
@@ -47,6 +47,8 @@ const chatRequestSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  let stage = 'validation'
+  const started = performance.now()
   try {
     // 0. Extract Client IP and verify Rate Limit
     const forwardedHeader = req.headers.get('forwarded')
@@ -97,15 +99,27 @@ export async function POST(req: NextRequest) {
     }
 
     const latestMsg = messages[messages.length - 1]
+    if (latestMsg.role !== 'user' || !latestMsg.content.trim()) {
+      return NextResponse.json({ error: 'The last message must be a user question' }, { status: 400 })
+    }
     const latestQuery = latestMsg.content.trim()
 
     // 1. Load dynamic knowledge chunks from Payload CMS & portfolio content
+    stage = 'knowledge'
+    const knowledgeStarted = performance.now()
     const allChunks = await loadKnowledgeChunks(latestQuery)
+    const knowledgeMs = performance.now() - knowledgeStarted
+    req.signal.throwIfAborted()
 
     // 2. Perform hybrid retrieval (Vector Cosine Similarity + BM25)
-    const retrievalResults = hybridRetrieve(latestQuery, allChunks, 3)
+    stage = 'retrieval'
+    const retrievalStarted = performance.now()
+    const retrievalResults = groundedRetrieve(latestQuery, allChunks, 5)
+    const retrievalMs = performance.now() - retrievalStarted
 
     // 3. Create real-time streaming response with AbortSignal
+    stage = 'provider'
+    const providerStarted = performance.now()
     const stream = await createRAGStream({
       messages: messages.map((m, idx) => ({
         id: `msg-${idx}`,
@@ -123,11 +137,13 @@ export async function POST(req: NextRequest) {
         'Cache-Control': 'no-cache, no-transform',
         Connection: 'keep-alive',
         'x-rag-engine': 'hybrid-in-memory-v1',
+        'Server-Timing': `knowledge;dur=${knowledgeMs.toFixed(1)}, retrieval;dur=${retrievalMs.toFixed(1)}, provider;dur=${(performance.now() - providerStarted).toFixed(1)}, setup;dur=${(performance.now() - started).toFixed(1)}`,
       },
     })
-  } catch (error: unknown) {
+  } catch {
+    if (req.signal.aborted) return new Response(null, { status: 499 })
     const requestId = `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`
-    console.error(`[API /api/chat][${requestId}] Error handling chat request:`, error)
+    console.error('[API /api/chat] Request failed', { requestId, stage })
     return NextResponse.json(
       { error: 'Internal server error in RAG engine', requestId },
       { status: 500 }

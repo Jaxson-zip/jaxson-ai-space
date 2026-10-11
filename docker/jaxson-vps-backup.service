@@ -1,0 +1,12 @@
+[Unit]
+Description=Back up Jaxson release on existing VPS
+Requires=docker.service
+After=docker.service
+OnFailure=jaxson-vps-backup-notify@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/jaxson-releases/current
+ExecStart=/bin/sh /opt/jaxson-release-tools/current/backup-vps-existing.sh
+UMask=0077
+TimeoutStartSec=300

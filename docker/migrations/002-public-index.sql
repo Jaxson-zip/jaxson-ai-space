@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS owner.outbox_events (
 
 CREATE INDEX IF NOT EXISTS outbox_events_pending_idx
     ON owner.outbox_events (status, available_at, created_at);
+CREATE INDEX IF NOT EXISTS outbox_events_entity_latest_idx
+    ON owner.outbox_events (entity_id, created_at DESC, id DESC);
 
 ALTER TABLE owner.outbox_events
     ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;
@@ -59,5 +61,8 @@ ALTER TABLE owner.outbox_events
 GRANT ALL PRIVILEGES ON TABLE public_read.knowledge_embeddings TO owner_app;
 GRANT ALL PRIVILEGES ON TABLE owner.outbox_events TO owner_app;
 GRANT SELECT ON ALL TABLES IN SCHEMA public_read TO public_agent;
+-- Resolve pgvector types/operators without granting schema or table writes.
+GRANT USAGE ON SCHEMA public TO public_agent;
+ALTER ROLE public_agent SET search_path TO public_read, public;
 
 COMMIT;

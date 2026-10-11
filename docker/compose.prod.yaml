@@ -1,35 +1,50 @@
-# =========================================================================
-# Jaxson AI Space Production Docker Compose Configuration
-# Services: Caddy (Gateway) + Web (Next.js + Payload) + PostgreSQL 17 (pgvector)
-# Optimized for 2-Core 4GB Cloud VPS (Tencent Cloud / Alibaba Cloud / AWS)
-# =========================================================================
+x-embedding-environment: &embedding-environment
+  EMBEDDING_MODE: ${EMBEDDING_MODE:-local}
+  EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+  EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-https://api.openai.com/v1}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+  EMBEDDING_TIMEOUT_MS: ${EMBEDDING_TIMEOUT_MS:-5000}
 
 services:
   caddy:
     image: caddy:2-alpine
-    container_name: jaxson-caddy-prod
     restart: unless-stopped
     ports:
-      - "${CADDY_BIND_IP:-127.0.0.1}:80:80"
-      - "${CADDY_BIND_IP:-127.0.0.1}:443:443"
+      - "${CADDY_BIND_IP:-0.0.0.0}:80:80"
+      - "${CADDY_BIND_IP:-0.0.0.0}:443:443"
     environment:
-      - SITE_DOMAIN=${SITE_DOMAIN:-localhost}
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set the public portfolio hostname}
+      API_DOMAIN: ${API_DOMAIN:?Set the CMS and AI hostname}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - web
+      portfolio:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - jaxson_prod_net
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: jaxson-cloudflared-prod
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run
+  portfolio:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.portfolio
+      args:
+        PORTFOLIO_API_ORIGIN: https://${API_DOMAIN:?Set the CMS and AI hostname}
+    image: jaxson-portfolio-prod:latest
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-dummy_tunnel_token}
+      PORTFOLIO_UPSTREAM_ORIGIN: http://web:3000
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     networks:
       - jaxson_prod_net
 
@@ -37,26 +52,48 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_PORTFOLIO_URL: https://${SITE_DOMAIN:?Set the public portfolio hostname}
+        NEXT_PUBLIC_SERVER_URL: https://${API_DOMAIN:?Set the CMS and AI hostname}
     image: jaxson-web-prod:latest
-    container_name: jaxson-web-prod
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DATABASE_URI=postgresql://owner_app:${OWNER_APP_PASSWORD:-jaxson_owner_pass}@postgres:5432/jaxson_space
-      - PUBLIC_AGENT_DATABASE_URI=postgresql://public_agent:${PUBLIC_AGENT_PASSWORD:-jaxson_agent_pass}@postgres:5432/jaxson_space
-      - USE_POSTGRES=true
-      - PAYLOAD_SECRET=${PAYLOAD_SECRET:-default_payload_secret_at_least_32_chars}
-      - STUDIO_SECRET_KEY=${STUDIO_SECRET_KEY:-default_studio_secret_key}
-      - STUDIO_INBOX_SECRET=${STUDIO_INBOX_SECRET:-${STUDIO_SECRET_KEY:-default_studio_secret_key}}
-      - OWNER_EMAIL=${OWNER_EMAIL:-admin@example.com}
-      - ENFORCE_STUDIO_AUTH=${ENFORCE_STUDIO_AUTH:-false}
-      - CLOUDFLARE_ACCESS_TEAM_NAME=${CLOUDFLARE_ACCESS_TEAM_NAME:-jaxson-space}
-      - CLOUDFLARE_ACCESS_AUD=${CLOUDFLARE_ACCESS_AUD:-dummy_access_aud}
-      - CLOUDFLARE_ACCESS_SECRET=${CLOUDFLARE_ACCESS_SECRET:-}
-    deploy:
-      resources:
-        limits:
-          memory: 1536M
+      <<: *embedding-environment
+      NODE_ENV: production
+      DATABASE_URI: postgresql://owner_app:${OWNER_APP_PASSWORD:?Set OWNER_APP_PASSWORD}@postgres:5432/jaxson_space
+      PUBLIC_AGENT_DATABASE_URI: postgresql://public_agent:${PUBLIC_AGENT_PASSWORD:?Set PUBLIC_AGENT_PASSWORD}@postgres:5432/jaxson_space
+      USE_POSTGRES: "true"
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET (at least 32 characters)}
+      STUDIO_SECRET_KEY: ${STUDIO_SECRET_KEY:?Set STUDIO_SECRET_KEY}
+      STUDIO_INBOX_SECRET: ${STUDIO_INBOX_SECRET:?Set STUDIO_INBOX_SECRET}
+      STUDIO_INBOX_ALLOWED_IDENTITIES: ${STUDIO_INBOX_ALLOWED_IDENTITIES:-[]}
+      OWNER_EMAIL: ${OWNER_EMAIL:?Set OWNER_EMAIL}
+      NEXT_PUBLIC_PORTFOLIO_URL: https://${SITE_DOMAIN:?Set the public portfolio hostname}
+      NEXT_PUBLIC_SERVER_URL: https://${API_DOMAIN:?Set the CMS and AI hostname}
+      MEDIA_DIR: /app/media
+      CLOUDFLARE_ACCESS_TEAM_NAME: ${CLOUDFLARE_ACCESS_TEAM_NAME:-}
+      CLOUDFLARE_ACCESS_AUD: ${CLOUDFLARE_ACCESS_AUD:-}
+      CLOUDFLARE_ACCESS_REQUIRED: ${CLOUDFLARE_ACCESS_REQUIRED:-false}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Jaxson}
+    volumes:
+      - media_prod_data:/app/media
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/showcase-projects').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,30 +102,47 @@ services:
 
   worker:
     image: jaxson-web-prod:latest
-    container_name: jaxson-index-worker-prod
     restart: unless-stopped
     command: ["node", "apps/web/scripts/run-index-worker.mjs"]
     environment:
-      - NODE_ENV=production
-      - DATABASE_URI=postgresql://owner_app:${OWNER_APP_PASSWORD:?OWNER_APP_PASSWORD is required}@postgres:5432/jaxson_space
+      <<: *embedding-environment
+      NODE_ENV: production
+      DATABASE_URI: postgresql://owner_app:${OWNER_APP_PASSWORD:?Set OWNER_APP_PASSWORD}@postgres:5432/jaxson_space
     depends_on:
       postgres:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - jaxson_prod_net
+
+  maintenance:
+    profiles: ["maintenance"]
+    image: jaxson-web-prod:latest
+    command: ["node", "apps/web/scripts/reindex-knowledge.mjs"]
+    environment:
+      <<: *embedding-environment
+      DATABASE_URI: postgresql://owner_app:${OWNER_APP_PASSWORD:?Set OWNER_APP_PASSWORD}@postgres:5432/jaxson_space
+      API_ORIGIN: http://web:3000
+      OWNER_EMAIL: ${OWNER_EMAIL:?Set OWNER_EMAIL}
+      OWNER_INITIAL_PASSWORD: ${OWNER_INITIAL_PASSWORD:?Set OWNER_INITIAL_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      web:
         condition: service_healthy
     networks:
       - jaxson_prod_net
 
   postgres:
     image: pgvector/pgvector:pg17
-    container_name: jaxson-postgres-prod
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: jaxson_admin
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jaxson_secure_password_2026}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       POSTGRES_DB: jaxson_space
-      OWNER_APP_PASSWORD: ${OWNER_APP_PASSWORD:-jaxson_owner_password_2026}
-      PUBLIC_AGENT_PASSWORD: ${PUBLIC_AGENT_PASSWORD:-jaxson_agent_password_2026}
+      OWNER_APP_PASSWORD: ${OWNER_APP_PASSWORD:?Set OWNER_APP_PASSWORD}
+      PUBLIC_AGENT_PASSWORD: ${PUBLIC_AGENT_PASSWORD:?Set PUBLIC_AGENT_PASSWORD}
     volumes:
       - postgres_prod_data:/var/lib/postgresql/data
       - ./init-schemas.sh:/docker-entrypoint-initdb.d/01-init-schemas.sh:ro
@@ -96,21 +150,46 @@ services:
       test: ["CMD-SHELL", "pg_isready -U jaxson_admin -d jaxson_space"]
       interval: 10s
       timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+      retries: 12
+    networks:
+      - jaxson_prod_net
+
+  cloudflared:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      portfolio:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - jaxson_prod_net
+
+  bootstrap:
+    profiles: ["bootstrap"]
+    image: node:24-alpine
+    environment:
+      API_ORIGIN: http://web:3000
+      OWNER_EMAIL: ${OWNER_EMAIL:?Set OWNER_EMAIL}
+      OWNER_INITIAL_PASSWORD: ${OWNER_INITIAL_PASSWORD:?Set OWNER_INITIAL_PASSWORD}
+    volumes:
+      - ./bootstrap-admin.mjs:/bootstrap-admin.mjs:ro
+    command: ["node", "/bootstrap-admin.mjs"]
+    depends_on:
+      web:
+        condition: service_healthy
     networks:
       - jaxson_prod_net
 
 volumes:
   caddy_data:
-    driver: local
   caddy_config:
-    driver: local
   postgres_prod_data:
-    driver: local
+  media_prod_data:
 
 networks:
   jaxson_prod_net:

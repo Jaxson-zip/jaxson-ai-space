@@ -3,11 +3,13 @@
   "private": true,
   "packageManager": "pnpm@11.5.0",
   "scripts": {
-    "dev": "pnpm --filter @jaxson/web dev",
-    "build": "pnpm --filter @jaxson/web build",
-    "start": "pnpm --filter @jaxson/web start",
+    "dev": "pnpm --parallel --filter @jaxson/web --filter @jaxson/portfolio dev",
+    "dev:cms": "pnpm --filter @jaxson/web dev",
+    "dev:portfolio": "pnpm --filter @jaxson/portfolio dev",
+    "build": "pnpm --filter @jaxson/web build && pnpm --filter @jaxson/portfolio build",
+    "start": "pnpm --parallel --filter @jaxson/web --filter @jaxson/portfolio start",
     "lint": "pnpm --filter @jaxson/web lint",
-    "test": "pnpm --filter @jaxson/web test",
+    "test": "pnpm --filter @jaxson/web test && pnpm --filter @jaxson/portfolio test",
     "typecheck": "pnpm --filter @jaxson/web typecheck"
   }
 }

@@ -1,4 +1,4 @@
-export type ChunkCategory = 'internship' | 'project' | 'education' | 'campus' | 'award' | 'skill' | 'intent' | 'general'
+export type ChunkCategory = 'internship' | 'project' | 'education' | 'campus' | 'award' | 'skill' | 'intent' | 'jd_match' | 'general'
 
 export interface KnowledgeChunk {
   id: string
@@ -10,6 +10,7 @@ export interface KnowledgeChunk {
   embedding?: number[]
   /** Similarity calculated by the pgvector query, when loaded from PostgreSQL. */
   vectorScore?: number
+  vectorSource?: 'local' | 'semantic'
 }
 
 export interface RetrievalResult {

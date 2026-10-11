@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Nutrinet 项目档案封面</title>
+  <desc id="desc">以菜品识别和食材映射为主题的文字封面，不代表真实产品界面。</desc>
+  <rect width="1200" height="720" fill="#172219"/>
+  <circle cx="920" cy="350" r="250" fill="#263626" stroke="#bd9c4f" stroke-width="2"/>
+  <circle cx="920" cy="350" r="198" fill="#1a291e" stroke="#58694a" stroke-width="2"/>
+  <path d="M812 420c105-197 234-193 250-85M825 441c64-123 156-134 207-74" fill="none" stroke="#d3bd79" stroke-width="12" stroke-linecap="round" opacity=".7"/>
+  <circle cx="968" cy="277" r="22" fill="#c4a664"/>
+  <circle cx="873" cy="383" r="15" fill="#8fa774"/>
+  <text x="80" y="115" fill="#d3bd79" font-family="Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="6">PROJECT DOSSIER / 04</text>
+  <text x="75" y="330" fill="#f5f4eb" font-family="Arial,sans-serif" font-size="112" font-weight="800" letter-spacing="-5">NUTRINET</text>
+  <text x="81" y="386" fill="#d4d6c8" font-family="Arial,sans-serif" font-size="29">个性化膳食营养系统</text>
+  <path d="M80 472h475" stroke="#8b9a75" stroke-width="2"/>
+  <text x="81" y="528" fill="#f5f4eb" font-family="Arial,sans-serif" font-size="24">食物图像识别  ·  菜品食材映射</text>
+  <text x="81" y="625" fill="#d3bd79" font-family="Arial,sans-serif" font-size="19" letter-spacing="2">TENSORFLOW  /  KERAS  /  100+ 中餐菜品</text>
+</svg>

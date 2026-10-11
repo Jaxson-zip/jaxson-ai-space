@@ -136,6 +136,8 @@ export interface UserAuthOperations {
 export interface Project {
   id: number;
   title: string;
+  shortTitle?: string | null;
+  projectDate?: string | null;
   slug: string;
   role: string;
   category: '工具应用 · 原型落地' | '求职工具 · 开源二次开发' | 'AI 产品 · 私有概念探索' | '全栈工程 · 真实交付';
@@ -152,6 +154,7 @@ export interface Project {
   problem?: string | null;
   approach?: string | null;
   outcome?: string | null;
+  editorialNote?: string | null;
   highlights?:
     | {
         item?: string | null;
@@ -228,6 +231,7 @@ export interface Credential {
  */
 export interface AiKnowledge {
   id: number;
+  privateMemoryKey?: string | null;
   title: string;
   category: 'internship' | 'project' | 'skill' | 'education' | 'jd_match';
   content: string;
@@ -242,6 +246,10 @@ export interface AiKnowledge {
  */
 export interface Reflection {
   id: number;
+  inboxKey?: string | null;
+  inboxDigest?: string | null;
+  inboxReply?: string | null;
+  inboxCount?: number | null;
   title: string;
   type: 'daily' | 'weekly' | 'interview' | 'technical';
   date: string;
@@ -409,6 +417,8 @@ export interface PayloadMigration {
  */
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
+  shortTitle?: T;
+  projectDate?: T;
   slug?: T;
   role?: T;
   category?: T;
@@ -425,6 +435,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   problem?: T;
   approach?: T;
   outcome?: T;
+  editorialNote?: T;
   highlights?:
     | T
     | {
@@ -479,6 +490,7 @@ export interface CredentialsSelect<T extends boolean = true> {
  * via the `definition` "ai-knowledge_select".
  */
 export interface AiKnowledgeSelect<T extends boolean = true> {
+  privateMemoryKey?: T;
   title?: T;
   category?: T;
   content?: T;
@@ -492,6 +504,10 @@ export interface AiKnowledgeSelect<T extends boolean = true> {
  * via the `definition` "reflections_select".
  */
 export interface ReflectionsSelect<T extends boolean = true> {
+  inboxKey?: T;
+  inboxDigest?: T;
+  inboxReply?: T;
+  inboxCount?: T;
   title?: T;
   type?: T;
   date?: T;

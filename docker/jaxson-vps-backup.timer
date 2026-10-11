@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily backup of Jaxson release database, media and private configuration
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Asia/Shanghai
+RandomizedDelaySec=900
+Persistent=true
+
+[Install]
+WantedBy=timers.target

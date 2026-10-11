@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { s3Storage } from '@payloadcms/storage-s3'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { getSmtpOptions } from './features/cms/email-config'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -18,6 +20,7 @@ import { Credentials } from './collections/Credentials'
 import { AIKnowledge } from './collections/AIKnowledge'
 import { Reflections } from './collections/Reflections'
 import { Memories } from './collections/Memories'
+import { migrations } from './migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -29,10 +32,24 @@ const isPostgres = Boolean(
     process.env.USE_POSTGRES === 'true'
 )
 
+const payloadSecret = process.env.PAYLOAD_SECRET?.trim()
+const smtpOptions = getSmtpOptions()
+if (process.env.NODE_ENV === 'production' && (!payloadSecret || payloadSecret.length < 32)) {
+  throw new Error('PAYLOAD_SECRET must be set to at least 32 characters in production')
+}
+if (process.env.NODE_ENV === 'production' && process.env.USE_POSTGRES === 'true' && !isPostgres) {
+  throw new Error('USE_POSTGRES=true requires a valid PostgreSQL DATABASE_URI')
+}
+
 export default buildConfig({
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || undefined,
+  ...(smtpOptions ? { email: nodemailerAdapter(smtpOptions) } : {}),
   admin: {
     user: Users.slug,
     theme: 'all',
+    components: {
+      beforeDashboard: ['/components/admin/dashboard-shortcuts'],
+    },
     importMap: {
       baseDir: path.resolve(dirname),
     },
@@ -55,7 +72,7 @@ export default buildConfig({
     Users,
   ],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || 'jaxson-space-payload-secret-key-32-chars-long-2026',
+  secret: payloadSecret || 'jaxson-space-local-development-secret-2026',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
@@ -65,8 +82,10 @@ export default buildConfig({
           connectionString: process.env.DATABASE_URI || '',
         },
         schemaName: 'owner',
+        prodMigrations: migrations,
       })
     : sqliteAdapter({
+        transactionOptions: { behavior: 'immediate' },
         client: {
           url: 'file:./payload-local.db',
         },

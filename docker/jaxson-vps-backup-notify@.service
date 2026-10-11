@@ -1,0 +1,10 @@
+[Unit]
+Description=Notify owner about failed Jaxson backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/jaxson-release-tools/current/notify-vps-failure.sh %i
+UMask=0077
+TimeoutStartSec=55

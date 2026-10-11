@@ -4,12 +4,8 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Sparkles,
-  Layers,
-  FolderGit2,
   Cpu,
-  ArrowUpRight,
   ShieldCheck,
-  Zap,
   Activity,
   ExternalLink,
   PlusCircle,
@@ -26,8 +22,7 @@ import {
   FileCheck,
   AlertTriangle,
 } from 'lucide-react'
-import { projects, experiences, awards, skillGroups } from '@/features/portfolio/content'
-import { generateYearlyActivityData, getRecruiterTopicInsights } from '@/features/studio/analytics'
+import { generateYearlyActivityData } from '@/features/studio/analytics'
 
 interface ReflectionItem {
   id?: string
@@ -54,37 +49,10 @@ interface CandidateMemoryItem {
 }
 
 const TEMPLATES = [
-  {
-    name: '📅 每日研发攻坚复盘',
-    title: '优化 Vue3 监控组件防抖与并发状态',
-    type: 'daily',
-    content: '今日跟进润喵云算力平台订单模块与资源监控页面开发，完成了多实例指标展示。',
-    challenges: '高频轮询导致前端渲染轻微卡顿，且快速切换 Tab 时存在竞态不同步风险。',
-    solution: '引入 useRequest 竞态取消机制与 300ms 动态防抖策略，组件重渲染频次降低 50%。',
-    takeaways: '复杂异步场景下，必须在组件卸载或前序请求未完成时主动 AbortController。',
-    nextSteps: '深入学习 pgvector 索引性能调优与 Cloudflare Access 鉴权规则。',
-  },
-  {
-    name: '💼 面试与技术沟通复盘',
-    title: '前端全栈岗位技术一面复盘',
-    type: 'interview',
-    content: '面试官重点考察了 Next.js App Router 渲染机制、SSE 流式打字机实现及 RAG 防幻觉设计。',
-    challenges: '对 pgvector HNSW 与 IVFFlat 索引的内存与召回率差异回答略显粗糙。',
-    solution: '后续准备专门的对比测试 Demo，并结合实际 1536 维 Embedding 数据进行压力测试。',
-    takeaways: '面试中多结合具体线上落地数据（如首屏秒开率、内存优化比例）进行量化表达。',
-    nextSteps: '完善 GitHub 作品集的架构图白皮书与本地离线演示脚本。',
-  },
-  {
-    name: '🚀 架构与长远思考',
-    title: '双面智能体架构物理隔离认知',
-    type: 'technical',
-    content: '确立了公开端 (public_read) 与私人端 (owner) 在 PostgreSQL 数据库层面的物理权限隔离。',
-    challenges: '如何确保公开端 AI 即使发生 Prompt Injection 也绝对无法越权读取私人记忆。',
-    solution: '通过数据库用户角色授予严格的只读快照视图，从根本上杜绝任何 SQL/ORM 越权。',
-    takeaways: '安全边界永远应该建在最底层的物理层与数据库权限层，而不是只靠 Prompt 约束。',
-    nextSteps: '编写 Docker Compose 生产环境自动化构建与 Caddy 反向代理脚本。',
-  },
-]
+  { name: '每日复盘', type: 'daily' },
+  { name: '面试复盘', type: 'interview' },
+  { name: '技术复盘', type: 'technical' },
+].map((template) => ({ ...template, title: '', content: '', challenges: '', solution: '', takeaways: '', nextSteps: '' }))
 
 export default function StudioPage() {
   const [activeTab, setActiveTab] = useState<'reflection' | 'candidates' | 'approved_memories' | 'goals' | 'overview'>('reflection')
@@ -106,6 +74,30 @@ export default function StudioPage() {
   const [approvedMemories, setApprovedMemories] = useState<CandidateMemoryItem[]>([])
   const [reflectionsHistory, setReflectionsHistory] = useState<ReflectionItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [dataError, setDataError] = useState<string | null>(null)
+  const [draftLinks, setDraftLinks] = useState<Record<string, string>>({})
+  const [draftPending, setDraftPending] = useState<string | null>(null)
+  const activityDates = reflectionsHistory.reduce<Record<string, number>>((dates, item) => {
+    const date = item.date?.slice(0, 10)
+    if (date) dates[date] = (dates[date] || 0) + 1
+    return dates
+  }, {})
+  const activity = generateYearlyActivityData(activityDates)
+  const createKnowledgeDraft = async (item: CandidateMemoryItem) => {
+    setDraftPending(String(item.id))
+    setDataError(null)
+    try {
+      const res = await fetch('/api/studio/memory', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'create_knowledge_draft', memoryId: String(item.id) }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || '知识草稿创建失败')
+      setDraftLinks((links) => ({ ...links, [item.id]: data.editUrl }))
+    } catch (error) {
+      setDataError(error instanceof Error ? error.message : '知识草稿创建失败，请重试。')
+    } finally { setDraftPending(null) }
+  }
 
   // Editing modal state
   const [editingItem, setEditingItem] = useState<CandidateMemoryItem | null>(null)
@@ -142,13 +134,15 @@ export default function StudioPage() {
     try {
       const res = await fetch('/api/studio/memory')
       const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || '工作台读取失败')
+      setDataError(null)
       if (data.success) {
         setCandidates(data.candidateMemories || [])
         setApprovedMemories(data.approvedMemories || [])
         setReflectionsHistory(data.reflections || [])
       }
     } catch (e) {
-      console.warn('Failed to load studio data:', e)
+      setDataError(e instanceof Error ? e.message : '工作台读取失败，请刷新重试。')
     } finally {
       setLoading(false)
     }
@@ -160,13 +154,14 @@ export default function StudioPage() {
       try {
         const res = await fetch('/api/studio/memory')
         const data = await res.json()
+        if (!res.ok || !data.success) throw new Error(data.error || '工作台读取失败')
         if (!ignore && data.success) {
           setCandidates(data.candidateMemories || [])
           setApprovedMemories(data.approvedMemories || [])
           setReflectionsHistory(data.reflections || [])
         }
       } catch (e) {
-        console.warn('Failed to load studio data:', e)
+        setDataError(e instanceof Error ? e.message : '工作台读取失败，请刷新重试。')
       } finally {
         if (!ignore) setLoading(false)
       }
@@ -220,7 +215,7 @@ export default function StudioPage() {
 
       const result = await res.json()
       if (result.success) {
-        setSubmitFeedback({ msg: result.message || '复盘提交成功！已智能提炼出候选记忆。' })
+        setSubmitFeedback({ msg: result.message || '复盘已保存，规则提炼出的候选记忆等待人工核对。' })
         // Clear form
         setRefTitle('')
         setRefContent('')
@@ -366,7 +361,7 @@ export default function StudioPage() {
             </div>
             <h1 className="studio-main-title">长期复盘与智能记忆审批工作台</h1>
             <p className="studio-sub-title">
-              拒绝 AI 自动污染长期记忆库。日常复盘 ➔ 结构化提炼 ➔ 人工确认审批 ➔ 入库持久化。
+              复盘记录与确认记忆均保持私有。需要对外展示时，再整理为知识草稿并在 CMS 审核公开。
             </p>
           </div>
 
@@ -397,6 +392,8 @@ export default function StudioPage() {
           </div>
         </div>
 
+        {dataError && <div role="alert" className="empty-board-box">{dataError}</div>}
+
         {/* Tab Navigation */}
         <div className="studio-tabs-bar">
           <button
@@ -426,7 +423,7 @@ export default function StudioPage() {
             onClick={() => setActiveTab('approved_memories')}
           >
             <ShieldCheck size={16} />
-            <span>正式长期记忆库 ({approvedMemories.length})</span>
+            <span>私人已确认记忆 ({approvedMemories.length})</span>
           </button>
 
           <button
@@ -635,7 +632,7 @@ export default function StudioPage() {
                   <div>
                     <h3>待确认候选记忆看板 ({candidates.length})</h3>
                     <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                      以下由复盘提炼出的条目<strong>尚未写入正式知识库</strong>。请审查、修改或点击确认入库。
+                      以下条目由规则提炼，<strong>尚未人工确认</strong>。请核对真实情况；确认后仍只在私人工作台保存。
                     </p>
                   </div>
                 </div>
@@ -656,7 +653,7 @@ export default function StudioPage() {
                           <span className="cand-dot"></span>
                           <span>{cand.category}</span>
                         </div>
-                        <div className="cand-conf">置信度: {(cand.confidence * 100).toFixed(0)}%</div>
+                        <div className="cand-conf">规则提炼 · 待人工核对</div>
                       </div>
 
                       <h4 className="cand-title">{cand.title}</h4>
@@ -685,7 +682,7 @@ export default function StudioPage() {
                           className="btn-cand-approve"
                         >
                           <CheckCircle2 size={14} />
-                          <span>确认入库 (Approve)</span>
+                          <span>确认私人记忆</span>
                         </button>
                         <button
                           type="button"
@@ -722,9 +719,9 @@ export default function StudioPage() {
                 <div className="panel-title-wrap">
                   <ShieldCheck size={18} className="stat-icon-emerald" />
                   <div>
-                    <h3>正式持久化长期记忆库 ({approvedMemories.length})</h3>
+                    <h3>私人已确认记忆 ({approvedMemories.length})</h3>
                     <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                      所有经过人工确认的记忆已自动进入 RAG 知识检索向量库，提供精准证据佐证。
+                      这里仅保存私人记忆。创建知识草稿后，在 CMS 审查内容并勾选公开，访客 AI 才能读取。
                     </p>
                   </div>
                 </div>
@@ -777,6 +774,13 @@ export default function StudioPage() {
                         </div>
                       )}
                       <div className="app-card-foot">
+                        {draftLinks[m.id] ? (
+                          <a href={draftLinks[m.id]} target="_blank" rel="noreferrer">在 CMS 审核知识草稿 ↗</a>
+                        ) : (
+                          <button type="button" className="btn-app-action" disabled={draftPending !== null} onClick={() => createKnowledgeDraft(m)}>
+                            {draftPending === String(m.id) ? '正在创建…' : '创建 AI 知识草稿'}
+                          </button>
+                        )}
                         <span>{m.evidenceTag}</span>
                       </div>
                     </div>
@@ -791,250 +795,41 @@ export default function StudioPage() {
         {/* Tab 4: Goals & Milestones */}
         {/* ======================================================== */}
         {activeTab === 'goals' && (
-          <div className="studio-view-content">
-            <div className="studio-two-col">
-              <div className="studio-panel">
-                <div className="panel-head">
-                  <div className="panel-title-wrap">
-                    <Target size={18} className="stat-icon-indigo" />
-                    <h3>🎯 2026 秋招投递目标与进度</h3>
-                  </div>
-                </div>
-                <div className="goals-progress-list">
-                  <div className="goal-item">
-                    <div className="goal-head">
-                      <strong>AI 应用开发 / 全栈开发 (深圳)</strong>
-                      <span className="goal-percent">80% 准备度</span>
-                    </div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: '80%' }}></div>
-                    </div>
-                    <div className="goal-sub">目标公司：大厂 AI Lab / 头部 AI 出海独角兽 / 算力基础设施</div>
-                  </div>
-
-                  <div className="goal-item">
-                    <div className="goal-head">
-                      <strong>核心作品集与架构白皮书</strong>
-                      <span className="goal-percent">95% 完成</span>
-                    </div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: '95%' }}></div>
-                    </div>
-                    <div className="goal-sub">Todo Memo + 锐历简历 + OPC Agent + 润喵云实习经历</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="studio-panel">
-                <div className="panel-head">
-                  <div className="panel-title-wrap">
-                    <Zap size={18} className="stat-icon-amber" />
-                    <h3>待补足技术缺口与攻坚项</h3>
-                  </div>
-                </div>
-                <div className="skills-todo-list">
-                  <div className="todo-row done">
-                    <CheckCircle2 size={16} />
-                    <span>Next.js 16 App Router + Payload CMS 3.x 嵌入架构</span>
-                  </div>
-                  <div className="todo-row done">
-                    <CheckCircle2 size={16} />
-                    <span>TypeScript 纯原生余弦相似度 + BM25 混合检索</span>
-                  </div>
-                  <div className="todo-row done">
-                    <CheckCircle2 size={16} />
-                    <span>私人复盘 ➔ 候选记忆 ➔ 人工确认审批闭环系统</span>
-                  </div>
-                  <div className="todo-row pending">
-                    <Clock size={16} />
-                    <span>PostgreSQL + pgvector 双 Schema 物理隔离与生产部署</span>
-                  </div>
-                  <div className="todo-row pending">
-                    <Clock size={16} />
-                    <span>Cloudflare Zero Trust 针对 `/studio` 的邮箱拦截配置</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="studio-panel">
+            <h3>已记录的技能与行动目标</h3>
+            <p>来自你已确认的目标类记忆，不预设完成百分比。</p>
+            {approvedMemories.filter((item) => item.category === 'skill_gap_goal').length === 0 ? (
+              <p>尚未记录目标。可在复盘的“后续行动”中写下计划，再到候选看板确认。</p>
+            ) : approvedMemories.filter((item) => item.category === 'skill_gap_goal').map((item) => (
+              <article key={item.id}><h4>{item.title}</h4><p>{item.content}</p></article>
+            ))}
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* Tab 5: Overview (Projects & Base Data) */}
-        {/* ======================================================== */}
         {activeTab === 'overview' && (
           <div className="studio-view-content">
-            {/* Stat Cards Grid */}
             <div className="studio-stats-grid">
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <span>精选作品</span>
-                  <FolderGit2 size={16} className="stat-icon-blue" />
-                </div>
-                <div className="stat-value">{projects.length} <small>个</small></div>
-                <div className="stat-desc">2 个已公开上线 / 1 个私有探索</div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <span>企业与学术经历</span>
-                  <Layers size={16} className="stat-icon-indigo" />
-                </div>
-                <div className="stat-value">{experiences.length} <small>段</small></div>
-                <div className="stat-desc">广东润喵云实习 + 深职大大数据</div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <span>竞赛荣誉与认证</span>
-                  <Zap size={16} className="stat-icon-amber" />
-                </div>
-                <div className="stat-value">{awards.length} <small>项</small></div>
-                <div className="stat-desc">国家级二等奖 · 省级一等奖</div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <span>已沉淀正式记忆</span>
-                  <ShieldCheck size={16} className="stat-icon-emerald" />
-                </div>
-                <div className="stat-value">{approvedMemories.length} <small>条</small></div>
-                <div className="stat-desc">已与 RAG 向量库实时联动</div>
-              </div>
+              <div className="stat-card"><div className="stat-card-header">复盘记录</div><div className="stat-value">{reflectionsHistory.length}</div></div>
+              <div className="stat-card"><div className="stat-card-header">待确认记忆</div><div className="stat-value">{candidates.length}</div></div>
+              <div className="stat-card"><div className="stat-card-header">私人已确认记忆</div><div className="stat-value">{approvedMemories.length}</div></div>
             </div>
-
-            {/* Quick Management Center */}
-            <div className="studio-two-col">
-              <div className="studio-panel">
-                <div className="panel-head">
-                  <div className="panel-title-wrap">
-                    <FolderGit2 size={16} />
-                    <h3>核心作品快速入口</h3>
-                  </div>
-                  <a href="/admin/collections/projects" className="panel-tip" target="_blank" rel="noreferrer">
-                    在 CMS 中编辑 ↗
-                  </a>
-                </div>
-
-                <div className="project-list-compact">
-                  {projects.map((p) => (
-                    <div key={p.slug} className="project-row-item">
-                      <div className="row-left">
-                        <span className={`status-dot-mini ${p.sourceVisibility === 'public' ? 'live' : 'private'}`}></span>
-                        <div>
-                          <strong>{p.title}</strong>
-                          <div className="row-sub">{p.category} · {p.status}</div>
-                        </div>
-                      </div>
-                      <div className="row-right">
-                        {p.links.map((l) => (
-                          <a key={l.href} href={l.href} target="_blank" rel="noreferrer" className="row-ext-btn">
-                            <span>{l.label}</span>
-                            <ArrowUpRight size={11} />
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="studio-panel">
+              <h3>内容管理</h3>
+              <p>作品、项目经历与公开 AI 知识以 CMS 中保存的数据为准。</p>
+              <div className="app-card-actions">
+                <Link href="/admin/collections/projects">管理项目 ↗</Link>
+                <Link href="/admin/collections/experiences">管理经历 ↗</Link>
+                <Link href="/admin/collections/ai-knowledge">审核 AI 知识 ↗</Link>
               </div>
-
-              <div className="studio-panel">
-                <div className="panel-head">
-                  <div className="panel-title-wrap">
-                    <Sparkles size={16} />
-                    <h3>AI 知识库与岗位匹配看板</h3>
-                  </div>
-                  <Link href="/ai" className="panel-tip">
-                    打开 AI 对话室 ➔
-                  </Link>
-                </div>
-
-                <div className="ai-knowledge-preview">
-                  <div className="knowledge-chip-row">
-                    <span className="k-badge">🏢 广东润喵云科技 (Vue 3 + Go 算力平台)</span>
-                    <span className="k-badge">📱 待办备忘 (React + Supabase + PWA)</span>
-                    <span className="k-badge">📄 锐历简历 (中文化排版优化开源)</span>
-                    <span className="k-badge">🤖 OPC Agent Company (多智能体协同)</span>
-                    <span className="k-badge">🎓 深圳职业技术大学 (GPA 3.67 前 5%)</span>
-                  </div>
-
-                  <div className="ai-status-box">
-                    <div className="ai-status-head">
-                      <Clock size={13} />
-                      <span>RAG 向量上下文注入就绪</span>
-                    </div>
-                    <p>访客在 `/ai` 页面提问或粘贴招聘岗位 JD 时，系统将基于上述事实自动匹配契合度与事实证据。</p>
-                  </div>
-                </div>
-              </div>
+              <p>招聘方提问统计尚未接入。</p>
             </div>
-
-            {/* 365-Day Reflection & Growth Heatmap */}
             <div className="studio-heatmap-wrap">
-              <div className="heatmap-head">
-                <div className="heatmap-title-group">
-                  <Flame size={18} className="stat-icon-emerald" />
-                  <h3>365 天复盘与工程沉淀打卡热力图</h3>
-                </div>
-                <div className="heatmap-meta">
-                  <span>过去一年活跃 <strong>{generateYearlyActivityData().totalActiveDays}</strong> 天</span>
-                  <span>累计复盘与提交 <strong>{generateYearlyActivityData().totalCount}</strong> 次</span>
-                </div>
-              </div>
-
-              <div className="heatmap-scroll-area">
-                <div className="heatmap-weeks-row">
-                  {generateYearlyActivityData().weeks.map((week, wIdx) => (
-                    <div key={wIdx} className="heatmap-week-col">
-                      {week.map((day) => (
-                        <div
-                          key={day.date}
-                          className={`heatmap-cell level-${day.level}`}
-                          title={`${day.date}：${day.count > 0 ? `${day.count} 次复盘与技术沉淀` : '暂无提交'}`}
-                        />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="heatmap-legend">
-                <span>少</span>
-                <div className="legend-cells">
-                  <div className="heatmap-cell level-0" />
-                  <div className="heatmap-cell level-1" />
-                  <div className="heatmap-cell level-2" />
-                  <div className="heatmap-cell level-3" />
-                  <div className="heatmap-cell level-4" />
-                </div>
-                <span>多</span>
-              </div>
-            </div>
-
-            {/* Recruiter Insights & Search Trends */}
-            <div className="studio-panel" style={{ marginTop: '1.5rem' }}>
-              <div className="panel-head">
-                <div className="panel-title-wrap">
-                  <Activity size={18} className="stat-icon-blue" />
-                  <h3>招聘方与面试官提问热词洞察</h3>
-                </div>
-                <span className="panel-tip">基于 /ai 分身对话室实时检索热度聚合</span>
-              </div>
-
-              <div className="recruiter-analytics-wrap">
-                {getRecruiterTopicInsights().map((item) => (
-                  <div key={item.keyword} className="insight-stat-card">
-                    <div className="insight-info">
-                      <span className="insight-keyword">{item.keyword}</span>
-                      <span className="insight-cat-tag">分类：{item.category}</span>
-                    </div>
-                    <span className="insight-count-badge">
-                      🔥 {item.count} 次检索
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <div className="heatmap-head"><h3>过去一年复盘记录</h3><span>{activity.totalActiveDays} 天 · {activity.totalCount} 条</span></div>
+              <div className="heatmap-scroll-area"><div className="heatmap-weeks-row">
+                {activity.weeks.map((week, index) => <div key={index} className="heatmap-week-col">
+                  {week.map((day) => <div key={day.date} className={`heatmap-cell level-${day.level}`} title={`${day.date}：${day.count} 条复盘`} />)}
+                </div>)}
+              </div></div>
             </div>
           </div>
         )}
@@ -1159,7 +954,7 @@ export default function StudioPage() {
                   onClick={handleSaveEdit}
                   className="btn-studio-submit"
                 >
-                  保存并确认入库 ➔
+                  保存并确认私人记忆 ➔
                 </button>
               </div>
             </div>

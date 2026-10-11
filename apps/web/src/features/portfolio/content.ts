@@ -31,7 +31,7 @@ export const experiences = [
     organization: '深圳职业技术大学',
     role: '大数据技术专业 · 大专在读',
     period: '2024 — 2027 (2027 届)',
-    summary: 'GPA 3.85 / 4.0 (专业前 2%)，扎实掌握现代软件工程、大数据处理架构与 Web 全栈开发。',
+    summary: 'GPA 3.85 / 4.0 (专业前 3%)，扎实掌握现代软件工程、大数据处理架构与 Web 全栈开发。',
     bullets: [
       '主修课程：数据结构与算法、Web 全栈工程、分布式计算、数据库系统原理、机器学习导论。',
       '担任院学信委人工智能学院副主席、班级学习委员、甲骨文社团社长。',
@@ -133,6 +133,6 @@ export const awards = [
     id: 'award-scholarship-first',
     period: '2024 — 2025',
     title: '校级综合学业一等奖学金',
-    level: '校级一等 (GPA 3.85 专业前 2%)',
+    level: '校级一等 (GPA 3.85 专业前 3%)',
   },
 ] as const satisfies readonly Award[]

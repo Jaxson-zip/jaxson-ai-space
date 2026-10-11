@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, ExternalLink, ShieldAlert } from 'lucide-react'
 import { GithubIcon } from '@/components/public-site/icons'
@@ -11,16 +10,12 @@ interface ProjectPageProps {
   }>
 }
 
-export async function generateStaticParams() {
-  const { projects } = await getHydratedPortfolioData()
-  return projects.map((p) => ({
-    slug: p.slug,
-  }))
-}
+export const dynamic = 'force-dynamic'
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
+  const portfolioUrl = process.env.NEXT_PUBLIC_PORTFOLIO_URL || '/'
   const { slug } = await params
-  const { projects } = await getHydratedPortfolioData()
+  const { projects } = await getHydratedPortfolioData({ allowStaticFallback: false, projectSlug: slug })
   const project = projects.find((p) => p.slug === slug)
 
   if (!project) {
@@ -31,10 +26,10 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
   return (
     <main className="subpage-container shell">
-      <Link href="/#projects" className="back-link">
+      <a href={`${portfolioUrl}#works`} className="back-link">
         <ArrowLeft size={16} />
         <span>返回首页精选项目</span>
-      </Link>
+      </a>
 
       <div className="detail-header">
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center' }}>
@@ -53,6 +48,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border-subtle)', marginBottom: '1rem' }}>
               <Image
                 src={project.image}
+                unoptimized
                 alt={`${project.title} 界面截图`}
                 width={1200}
                 height={675}

@@ -1,15 +1,12 @@
-# =========================================================================
-# Cloudflare Tunnel Configuration Template (cloudflared)
-# Enables 0-Port Public Ingress without exposing VPS Ports
-# =========================================================================
+# Optional named-tunnel ingress example. Set these hostnames to SITE_DOMAIN and API_DOMAIN.
+# The token-based Compose profile uses routes configured in Cloudflare instead of this file.
 
 tunnel: <YOUR-TUNNEL-UUID>
 credentials-file: /etc/cloudflared/<YOUR-TUNNEL-UUID>.json
 
 ingress:
-  # 1. Custom Domain routes to local Caddy reverse proxy
-  - hostname: jaxson.space
-    service: http://localhost:80
-
-  # 2. Catch-all rule (returns 404 for unmatched hostnames)
+  - hostname: <PUBLIC-PORTFOLIO-HOSTNAME>
+    service: http://portfolio:3000
+  - hostname: <CMS-AI-HOSTNAME>
+    service: http://web:3000
   - service: http_status:404

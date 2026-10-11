@@ -1,0 +1,3 @@
+# Versions verified on the current Windows backup computer.
+cryptography==46.0.3
+paramiko==5.0.0

@@ -120,3 +120,28 @@ export function hybridRetrieve(
 
   return results.slice(0, topK)
 }
+
+/** The local hash projection is not semantic evidence by itself. */
+export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5): RetrievalResult[] {
+  const wantsProjectList = /项目|作品/.test(query) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(query)
+  if (wantsProjectList) {
+    const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
+    return hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length))
+  }
+
+  const queryTokens = new Set(tokenize(query))
+  const minimumMatches = queryTokens.size >= 3 ? 2 : 1
+  return hybridRetrieve(query, chunks, topK).filter((result) => {
+    if (result.chunk.vectorSource === 'semantic' && result.vectorScore >= 0.8) return true
+    if (result.bm25Score <= 0) return false
+    const evidenceTokens = new Set(tokenize(
+      `${result.chunk.title} ${result.chunk.content} ${result.chunk.keywords.join(' ')}`,
+    ))
+    let matches = 0
+    for (const token of queryTokens) {
+      if (evidenceTokens.has(token)) matches += 1
+      if (matches >= minimumMatches) return true
+    }
+    return false
+  })
+}

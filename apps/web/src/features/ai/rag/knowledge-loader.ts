@@ -1,12 +1,14 @@
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
-import { awards, experiences, profile, projects, skillGroups } from '@/features/portfolio/content'
-import { generate1536Vector } from '@/features/worker/sync-worker'
+import { getHydratedPortfolioData } from '@/features/portfolio/data'
+import { embedIndexText, getIndexEmbeddingConfig, LOCAL_MODEL_KEY } from '../../../../scripts/lib/index-embedding.mjs'
 import { getPgPool } from './db-pool'
 import type { ChunkCategory, KnowledgeChunk } from './types'
 
 export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChunk[]> {
   const chunks: KnowledgeChunk[] = []
+  const indexedScores = new Map<string, number>()
+  let indexedSource: 'local' | 'semantic' = 'local'
 
   // 1. Try querying PostgreSQL public_read.knowledge_embeddings snapshot (Strict Least Privilege)
   const isProd = process.env.NODE_ENV === 'production'
@@ -15,7 +17,11 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
   if (process.env.USE_POSTGRES === 'true' && pgConnStr) {
     try {
       const pool = getPgPool(pgConnStr)
-      const queryVector = query?.trim() ? `[${generate1536Vector(query).join(',')}]` : null
+      const embeddingConfig = getIndexEmbeddingConfig()
+      indexedSource = embeddingConfig.mode
+      const queryVector = query?.trim()
+        ? `[${(await embedIndexText(query, embeddingConfig)).vector.join(',')}]`
+        : null
       const res = await pool.query(`
           SELECT chunk_id, category, title, content, evidence_tag, metadata,
                  CASE WHEN embedding IS NULL THEN NULL
@@ -23,71 +29,71 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
                  END AS vector_score
           FROM public_read.knowledge_embeddings 
           WHERE is_active = TRUE
+            AND COALESCE(metadata->>'embeddingModel', $3) = $2
           ORDER BY embedding <=> COALESCE($1::vector, embedding) NULLS LAST, updated_at DESC
           LIMIT 100
-        `, [queryVector])
-      if (res.rows.length > 0) {
-        for (const row of res.rows) {
-          chunks.push({
-            id: row.chunk_id,
-            title: row.title,
-            category: (row.category || 'general') as ChunkCategory,
-            content: row.content,
-            evidenceTag: row.evidence_tag,
-            keywords: [row.title, row.category, row.evidence_tag].filter(Boolean),
-            vectorScore: typeof row.vector_score === 'number' ? Math.max(0, Math.min(1, row.vector_score)) : undefined,
-          })
+        `, [queryVector, embeddingConfig.modelKey, LOCAL_MODEL_KEY])
+      for (const row of res.rows) {
+        const entityId = row.metadata?.entityId
+        const score = Number(row.vector_score)
+        if (typeof entityId === 'string' && row.vector_score != null && Number.isFinite(score)) {
+          indexedScores.set(entityId, Math.max(indexedScores.get(entityId) ?? 0, Math.max(0, Math.min(1, score))))
         }
       }
-    } catch (pgErr) {
-      console.warn('[RAG] Unable to query public_read pgvector knowledge directly, trying CMS collections:', pgErr)
+    } catch {
+      console.warn('[RAG] Public vector lookup unavailable; using current public CMS records')
     }
   }
 
-  // 2. Try to load public Q&A / knowledge entries from Payload CMS
-  if (chunks.length === 0) {
-    try {
-      const payload = await getPayload({ config: configPromise })
-      const aiKnowledgeDocs = await payload.find({
-        collection: 'ai-knowledge',
-        limit: 100,
-        where: {
-          isPublic: {
-            equals: true,
-          },
+  // Public CMS records are the source of truth. The index only supplies relevance scores.
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const aiKnowledgeDocs = await payload.find({
+      collection: 'ai-knowledge',
+      pagination: false,
+      where: {
+        isPublic: {
+          equals: true,
         },
-      })
+      },
+    })
 
-      if (aiKnowledgeDocs.totalDocs > 0) {
-        for (const doc of aiKnowledgeDocs.docs as any[]) {
-          chunks.push({
-            id: `cms-${doc.id}`,
-            title: doc.title,
-            category: doc.category || 'general',
-            content: doc.content,
-            evidenceTag: doc.evidenceTag || `知识库条目：${doc.title}`,
-            keywords: [doc.title, doc.category, doc.evidenceTag].filter(Boolean),
-          })
-        }
-      }
-    } catch (err) {
-      console.warn('[RAG] Unable to query CMS public collections, using core static facts:', err)
+    for (const doc of aiKnowledgeDocs.docs) {
+      chunks.push({
+        id: `cms-${doc.id}`,
+        title: doc.title,
+        category: doc.category as ChunkCategory,
+        content: doc.content,
+        evidenceTag: doc.evidenceTag || `知识库条目：${doc.title}`,
+        keywords: [doc.title, doc.category, doc.evidenceTag || ''].filter(Boolean),
+        vectorScore: indexedScores.get(`knowledge-${doc.id}`),
+        vectorSource: indexedScores.has(`knowledge-${doc.id}`) ? indexedSource : 'local',
+      })
     }
+  } catch {
+    console.warn('[RAG] Public CMS knowledge lookup unavailable')
   }
 
-  // 2. Add Project Chunks (Strictly filter public projects only)
+  // Chat may only cite live CMS records. The portfolio's static display fallback is not evidence.
+  const { projects, experiences, awards, skillGroups } = await getHydratedPortfolioData({
+    allowStaticFallback: false,
+  })
+
+  // 3. Add Project Chunks (Strictly filter public projects only)
   for (const p of projects.filter((proj) => proj.sourceVisibility === 'public')) {
     chunks.push({
       id: `project-${p.slug}`,
       title: `项目：${p.title}`,
       category: 'project',
-      content: `【项目背景】${p.problem}\n【技术方案】${p.approach}\n【交付结果】${p.outcome}\n【技术栈】${p.technologies.join('、')}\n【状态】${p.status}（公开开源）`,
-      evidenceTag: `${p.title} 核心项目`,
+      content: `【项目背景】${p.problem}\n【技术方案】${p.approach}\n【交付结果】${p.outcome}\n【技术栈】${p.technologies.join('、')}\n【状态】${p.status}${p.links.some((link) => link.kind === 'source') ? '（有公开源码）' : ''}`,
+      evidenceTag: `项目档案：${p.title}`,
       keywords: [p.title, p.slug, p.category, ...p.technologies, p.status],
+      vectorScore: indexedScores.get(`proj-${p.slug}`),
+      vectorSource: indexedScores.has(`proj-${p.slug}`) ? indexedSource : 'local',
     })
   }
 
-  // 3. Add Experience Chunks (Properly distinguish internship, education, campus)
+  // 4. Add Experience Chunks (Properly distinguish internship, education, campus)
   for (const exp of experiences) {
     const expKind = String(exp.kind)
     const expCategory: ChunkCategory =
@@ -105,39 +111,33 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
     })
   }
 
-  // 4. Add Awards & Honor Chunks
-  chunks.push({
-    id: 'awards-summary',
-    title: '竞赛荣誉与学业奖项',
-    category: 'award',
-    content: awards
-      .map((a) => `- ${a.title}（${a.level}，${a.period}）`)
-      .join('\n'),
-    evidenceTag: '国家级/省级竞赛荣誉记录',
-    keywords: ['竞赛', '荣誉', '奖项', '国赛', '省赛', ...awards.map((a) => a.title)],
-  })
+  // 5. Add Awards & Honor Chunks
+  if (awards.length > 0) {
+    chunks.push({
+      id: 'awards-summary',
+      title: '竞赛荣誉与学业奖项',
+      category: 'award',
+      content: awards
+        .map((a) => `- ${a.title}（${a.level}，${a.period}）`)
+        .join('\n'),
+      evidenceTag: 'CMS 竞赛与学业奖项',
+      keywords: ['竞赛', '荣誉', '奖项', '国赛', '省赛', ...awards.map((a) => a.title)],
+    })
+  }
 
-  // 5. Add Skill Set Chunks
-  chunks.push({
-    id: 'skills-summary',
-    title: '技术栈与能力图谱',
-    category: 'skill',
-    content: skillGroups
-      .map((g) => `【${g.title}】${g.items.join('、')}`)
-      .join('\n'),
-    evidenceTag: '技术栈能力清单',
-    keywords: ['技能', '技术栈', 'React', 'Vue', 'Go', 'TypeScript', 'Node.js', 'Python', 'RAG'],
-  })
-
-  // 6. Add Personal Background & Job Intent Chunks
-  chunks.push({
-    id: 'profile-intent',
-    title: '个人基本信息与求职意向',
-    category: 'intent',
-    content: `【姓名】${profile.name} (Jaxson)\n【毕业年份】2027 届（深圳职业技术大学 大数据技术专业 · 大专在读，GPA 3.85/4.0 前 2%）\n【期望岗位】AI 应用开发 / Web 全栈开发 / 前端开发工程师\n【工作地点】深圳（可线下到岗/实习）\n【联系方式】电话/微信：${profile.phone}，邮箱：${profile.email}，GitHub：${profile.github}`,
-    evidenceTag: '张锦鹏个人履历与联系方式',
-    keywords: ['张锦鹏', 'Jaxson', '求职', '意向', '电话', '微信', '邮箱', '深职大', 'GPA', '深圳'],
-  })
+  // 6. Add Skill Set Chunks
+  if (skillGroups.length > 0) {
+    chunks.push({
+      id: 'skills-summary',
+      title: '技术栈与能力图谱',
+      category: 'skill',
+      content: skillGroups
+        .map((g) => `【${g.title}】${g.items.join('、')}`)
+        .join('\n'),
+      evidenceTag: 'CMS 技术栈与技能记录',
+      keywords: ['技能', '技术栈', ...skillGroups.flatMap((g) => [g.title, ...g.items])],
+    })
+  }
 
   return chunks
 }
