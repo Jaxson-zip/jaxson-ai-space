@@ -28,15 +28,14 @@ candidate="$release_root/$commit"
 backup=$(JAXSON_RELEASE_DIR="$release" sh "$release_tools/backup-vps-existing.sh")
 python3 "$validator" verify "$backup" --database "$db" --release "$release" --max-age 300 >&2
 docker load -i "$bundle/images.tar" >/dev/null
-for image in "$web_image" "$portfolio_image"; do
-  [ "$(docker image inspect --format '{{.Id}}' "$image")" = "$image" ] || die 'Loaded image differs from artifact metadata'
-done
+web_runtime=$(python3 "$release_tools/lib/release_images.py" "jaxson-web:$commit" "$web_image")
+portfolio_runtime=$(python3 "$release_tools/lib/release_images.py" "jaxson-portfolio:$commit" "$portfolio_image")
 mkdir -m 700 "$candidate"
 cp -- "$release/production.env" "$candidate/production.env"
 cp -- "$release/Caddyfile" "$candidate/Caddyfile"
 chmod 600 "$candidate/production.env" "$candidate/Caddyfile"
 compose config --no-env-resolution --format json > "$candidate/base-compose.json"
-python3 "$release_tools/lib/release_candidate.py" "$release" "$candidate" "$bundle" "$candidate/base-compose.json"
+python3 "$release_tools/lib/release_candidate.py" "$release" "$candidate" "$bundle" "$candidate/base-compose.json" "$web_runtime" "$portfolio_runtime"
 rm -f -- "$candidate/base-compose.json"
 cp -- "$bundle/artifact.json" "$candidate/artifact.json"
 compose_at "$candidate" config --quiet
