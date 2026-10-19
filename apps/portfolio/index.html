@@ -1104,7 +1104,7 @@
       left: 0;
       width: 100%;
       padding: 28px 36px;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 65%, transparent 100%);
+      background: #080c09;
       display: flex;
       gap: 16px;
       justify-content: space-between;
@@ -3010,6 +3010,10 @@
     let viewportWidth = innerWidth;
     let viewportHeight = innerHeight;
     let readingPosition = null;
+    const viewportMeasure = document.createElement('div');
+    viewportMeasure.setAttribute('aria-hidden', 'true');
+    viewportMeasure.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;inset:0 auto auto 0;width:100svw;height:100svh;contain:strict';
+    document.body.append(viewportMeasure);
     function rememberReadingPosition() {
       const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom;
       const id = sceneOrder.find(id => {
@@ -3042,8 +3046,17 @@
     addEventListener('resize', () => {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
-        // Let viewport-unit sizes settle before reading the new chapter bounds.
-        resizeFrame = requestAnimationFrame(() => {
+        let viewportWaitFrames = 0;
+        // Some Chromium versions report innerWidth/Height before viewport-unit
+        // styles update. Wait for the actual CSS viewport, not a fixed delay.
+        resizeFrame = requestAnimationFrame(function restoreAfterReflow() {
+          const measured = viewportMeasure.getBoundingClientRect();
+          if (matchMedia('(pointer: fine)').matches && CSS.supports('height', '100svh') &&
+              CSS.supports('width', '100svw') && viewportWaitFrames++ < 12 &&
+              (Math.abs(measured.width - innerWidth) > 1 || Math.abs(measured.height - innerHeight) > 1)) {
+            resizeFrame = requestAnimationFrame(restoreAfterReflow);
+            return;
+          }
           const onlyMobileHeightChanged = innerWidth === viewportWidth && matchMedia('(pointer: coarse)').matches;
           viewportWidth = innerWidth;
           viewportHeight = innerHeight;
@@ -3261,8 +3274,9 @@
       stepCoverflow(1);
     }, 6000);
     function imageUrl(value) {
-      if (!value) return './project-dossier-cover.svg';
+      if (!value) return './project-dossier-cover.svg?v=clean-caption-2';
       const optimizedCovers = {
+        'project-dossier-cover.svg': './project-dossier-cover.svg?v=clean-caption-2',
         'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
         'portfolio-actual-20260928.png': './optimized/portfolio-actual-20260928-1440.a7d8b0fe934f.webp'
       };

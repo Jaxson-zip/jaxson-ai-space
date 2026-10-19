@@ -2,8 +2,6 @@
   <title id="title">项目档案封面待上传</title>
   <rect width="1200" height="720" fill="#18231a"/>
   <rect x="65" y="65" width="1070" height="590" fill="none" stroke="#617255" stroke-width="2"/>
-  <path d="M90 530h1020" stroke="#617255" stroke-width="2"/>
   <text x="94" y="157" fill="#d4b66c" font-family="Arial,sans-serif" font-size="24" font-weight="700" letter-spacing="7">JAXSON / PROJECT ARCHIVE</text>
   <text x="90" y="355" fill="#f2f3e9" font-family="Arial,sans-serif" font-size="91" font-weight="800">PROJECT FILE</text>
-  <text x="94" y="605" fill="#bbc7b3" font-family="Arial,sans-serif" font-size="27">项目档案 · 封面可在 CMS 上传</text>
 </svg>
