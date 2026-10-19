@@ -70,6 +70,21 @@ jobs:
       - name: Test Public Portfolio
         run: pnpm --filter @jaxson/portfolio test
 
+      - name: Install Chromium for portfolio reflow checks
+        run: pnpm --filter @jaxson/web exec playwright install --with-deps chromium
+
+      - name: Test portfolio paging and zoom reflow in Chromium
+        run: pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.config.ts
+
+      - name: Retain failed portfolio browser traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-reflow-failure
+          path: scratch/playwright-portfolio
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Validate Production Compose Template
         run: |
           docker compose --env-file docker/.env.example -f docker/compose.prod.yaml --profile bootstrap --profile tunnel --profile maintenance config --quiet
