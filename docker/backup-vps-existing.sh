@@ -14,7 +14,9 @@ resume() {
   status=$?
   trap - EXIT
   if [ "$paused" = 1 ]; then
-    if ! compose start --wait --wait-timeout 90 web worker >/dev/null; then
+    # The CMS health check includes a 60s start period and repeated 30s probes.
+    # Keep a bounded recovery wait that covers cold route/database initialization.
+    if ! compose start --wait --wait-timeout 300 web worker >/dev/null; then
       printf '%s\n' 'Backup service recovery failed; check web/worker health' >&2
       status=1
     fi
