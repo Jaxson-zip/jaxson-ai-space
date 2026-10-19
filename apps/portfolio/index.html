@@ -3015,6 +3015,20 @@
     }
     if (location.hash === '#folder') { history.replaceState(null, '', '#works'); document.getElementById('works').scrollIntoView(); }
     let sceneSyncFrame = 0;
+    let resizeFrame = 0;
+    let viewportWidth = innerWidth;
+    let viewportHeight = innerHeight;
+    let readingPosition = null;
+    function rememberReadingPosition() {
+      const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom;
+      const id = sceneOrder.find(id => {
+        const box = document.getElementById(id).getBoundingClientRect();
+        return box.top <= headerBottom + 1 && box.bottom > headerBottom + 1;
+      });
+      if (!id) return;
+      const box = document.getElementById(id).getBoundingClientRect();
+      readingPosition = { id, progress: Math.max(0, (headerBottom - box.top) / box.height) };
+    }
     function syncSceneFromViewport() {
       const focusY = innerHeight * .43;
       const visible = sceneOrder.find(id => {
@@ -3022,12 +3036,35 @@
         return box.top <= focusY && box.bottom > focusY;
       });
       if (visible) activateScene(visible);
+      rememberReadingPosition();
     }
     addEventListener('scroll', () => {
       if (sceneSyncFrame) return;
       sceneSyncFrame = requestAnimationFrame(() => {
         sceneSyncFrame = 0;
+        // A resize can also emit scroll before its resize event. Keep the last
+        // reading position until the new layout has been placed below the header.
+        if (resizeFrame || innerWidth !== viewportWidth || innerHeight !== viewportHeight) return;
         syncSceneFromViewport();
+      });
+    }, { passive: true });
+    addEventListener('resize', () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        // Let viewport-unit sizes settle before reading the new chapter bounds.
+        resizeFrame = requestAnimationFrame(() => {
+          const onlyMobileHeightChanged = innerWidth === viewportWidth && matchMedia('(pointer: coarse)').matches;
+          viewportWidth = innerWidth;
+          viewportHeight = innerHeight;
+          if (readingPosition && !onlyMobileHeightChanged) {
+            const section = document.getElementById(readingPosition.id);
+            const box = section.getBoundingClientRect();
+            const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom;
+            scrollTo({ top: scrollY + box.top - headerBottom + readingPosition.progress * box.height, behavior: 'instant' });
+          }
+          resizeFrame = 0;
+          syncSceneFromViewport();
+        });
       });
     }, { passive: true });
     syncSceneFromViewport();
