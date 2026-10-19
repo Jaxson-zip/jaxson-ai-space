@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>张锦鹏 Jaxson · AI Product Builder 作品集</title>
-  
+
   <!-- Local fonts: first paint does not wait on a third-party stylesheet. -->
   <link rel="preload" href="./fonts/anton-400.423ff52b4714.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./optimized/jaxson_studio_wall_plate_v2-1672.b889d9664779.webp" as="image" media="(min-width: 801px)">
@@ -1038,20 +1038,6 @@
     /* =========================================
        SECTION 04: SELECTED WORKS (Coverflow + Work Detail Modal)
        ========================================= */
-    section.works-section {
-      width: 100%;
-      padding: 120px 0 100px;
-      overflow: hidden;
-      position: relative;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .works-header {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 0 64px;
-      margin-bottom: 40px;
-    }
 
     .works-nav-tabs {
       display: flex;
@@ -1091,26 +1077,6 @@
     }
 
     /* 3D Coverflow Stage */
-    .coverflow-viewport {
-      width: 100%;
-      height: 520px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 1200px;
-      position: relative;
-      user-select: none;
-    }
-
-    .coverflow-track {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transform-style: preserve-3d;
-    }
 
     .coverflow-slide {
       position: absolute;
@@ -1214,14 +1180,6 @@
     }
 
     /* Coverflow Dedicated Bottom Rationale Banner */
-    .coverflow-bottom-banner {
-      max-width: 1440px;
-      margin: 36px auto 0;
-      padding: 0 64px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
 
     .coverflow-bottom-left {
       max-width: 600px;
@@ -1250,12 +1208,6 @@
       color: var(--text-muted);
     }
 
-    .coverflow-controls {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
     .coverflow-arrow-btn {
       width: 48px;
       height: 48px;
@@ -1275,14 +1227,6 @@
       background: #ffffff;
       color: #111410;
       transform: scale(1.08);
-    }
-
-    .coverflow-counter-box {
-      font-family: var(--font-mono);
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      padding: 0 8px;
     }
 
     /* FULLSCREEN WORK DETAIL MODAL (Matching 表哥's sec_550.jpg Mercedes Popout) */
@@ -1847,8 +1791,7 @@
     .folder-side-visual { position: relative; width: 100%; max-width: 620px; height: 520px; border: 0; border-radius: 0; overflow: visible; box-shadow: none; -webkit-mask-image: none; mask-image: none; }
     .folder-side-visual img { position: absolute; width: 1000px; max-width: none; height: auto; right: -120px; bottom: 0; object-fit: initial; -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 74%,transparent 100%); mask-image: linear-gradient(to bottom,#000 0%,#000 74%,transparent 100%); }
     .folder-interactive-wrap:focus-visible .folder-hint-tag, .works-tab-btn:focus-visible, .hero-cta-btn:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 4px; }
-    section.works-section { background: linear-gradient(to bottom,rgba(21,28,20,0) 0%,rgba(21,28,20,.48) 22%,rgba(21,28,20,.62) 52%,rgba(21,28,20,.48) 78%,rgba(21,28,20,0) 100%); padding-top: 110px; }
-    .works-intro { color: rgba(245,247,242,.72); font-size: 14px; line-height: 1.6; }
+
     .works-nav-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 26px; }
     .works-tab-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; min-height: 106px; padding: 16px 18px; border-radius: 6px; text-align: left; background: rgba(255,255,255,.045); color: #f5f7f2; box-shadow: none; }
     .works-tab-btn:hover, .works-tab-btn.active { background: rgba(248,192,69,.1); border-color: rgba(248,192,69,.74); box-shadow: none; color: #fff; }
@@ -1878,19 +1821,16 @@
       .folder-card-outer { width: min(37vw,520px); height: min(46svh,410px); aspect-ratio: auto; }
       .folder-side-visual { height: min(47svh,420px); }
       .folder-side-visual img { width: 860px; right: -80px; }
-      section.works-section { display: grid; grid-template-columns: minmax(0,430px) minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); gap: 0 clamp(20px,3vw,52px); align-items: stretch; padding: 52px max(4.5vw,36px) 32px; }
-      .works-header { grid-column: 1; grid-row: 1; width: 100%; padding: 0; margin: 0; }
-      .works-header .section-mega-title { font-size: clamp(46px,3.3vw,62px); line-height: 1.08; }
-      .works-intro { margin-top: 8px; }
+
       .works-nav-tabs { grid-template-columns: 1fr; gap: 8px; margin-top: 18px; }
       .works-tab-btn { min-height: 66px; padding: 9px 14px; gap: 2px; }
       .works-tab-btn strong { font-size: 15px; }
       .works-tab-btn small { font-size: 11px; }
-      .coverflow-viewport { grid-column: 2; grid-row: 1 / 3; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+
       .coverflow-slide { width: min(42vw,620px); height: min(44svh,390px); }
       .coverflow-slide[data-pos="-1"] { transform: translateX(-300px) scale(.8) rotateY(32deg) translateZ(-130px); }
       .coverflow-slide[data-pos="1"] { transform: translateX(300px) scale(.8) rotateY(-32deg) translateZ(-130px); }
-      .coverflow-bottom-banner { grid-column: 1; grid-row: 2; width: 100%; padding: 0; margin: 22px 0 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 18px; }
+
       .coverflow-active-heading { font-size: 20px; }
       .coverflow-active-desc { font-size: 12px; }
       section.beyond-section { max-width: none; padding: 54px max(5vw,36px); }
@@ -1931,17 +1871,16 @@
       .folder-stage { grid-template-columns: 1fr; gap: 0; }
       .folder-side-visual { display: none; }
       .folder-card-outer { width: 100%; }
-      section.works-section { padding-top: 86px; }
+
       .works-header, .coverflow-bottom-banner { padding-inline: 6vw; }
       .works-nav-tabs { grid-template-columns: 1fr; }
       .works-tab-btn { min-height: 0; padding: 12px 14px; }
-      .coverflow-viewport { height: 390px; }
+
       .coverflow-slide { width: min(86vw,520px); height: 330px; }
       .coverflow-slide-info { padding: 22px; }
       .coverflow-slide-info h4 { font-size: 16px; }
       .coverflow-slide-info p, .coverflow-view-link { font-size: 11px; }
-      .coverflow-bottom-banner { display: block; }
-      .coverflow-controls { margin-top: 24px; }
+
       .folder-modal { overflow-y: auto; justify-content: flex-start; padding-block: 110px 40px; }
       .folder-modal-header { align-items: flex-start; gap: 12px; }
       .folder-modal-header h3 { font-size: 22px; }
@@ -1959,12 +1898,12 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
-  
+
     /* Content hierarchy for the four-scene portfolio. */
     .bio-summary-list li { font-size: 14px; line-height: 1.65; color: rgba(249,250,245,.9); }
     .milestone-step-btn { color: rgba(247,248,242,.82); }
     .milestone-paragraph { color: rgba(247,248,242,.82); line-height: 1.7; }
-    .works-intro { max-width: 400px; }
+
     .work-case { width: 100%; padding: 0 0 0 17px; border-left: 2px solid var(--accent-yellow); }
     .work-case__eyebrow { margin-bottom: 11px; color: var(--accent-yellow); font: 700 11px/1.3 var(--font-mono); letter-spacing: .08em; }
     .work-case__row { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 11px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.14); }
@@ -1977,10 +1916,7 @@
     @media (min-width: 1200px) and (min-height: 760px) {
       .works-tab-btn { min-height: 54px; padding: 7px 13px; }
       .works-tab-btn small { display: none; }
-      .coverflow-bottom-banner { justify-content: flex-start; margin-top: 20px; }
-    }
-    @media (max-width: 1199px) {
-      .coverflow-bottom-banner { padding-inline: 6vw; }
+
     }
     @media (max-width: 800px) {
       .work-case__row { grid-template-columns: 56px minmax(0,1fr); }
@@ -1994,7 +1930,7 @@
     .milestone-highlights { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255,255,255,.16); }
     .milestone-highlights li { position: relative; padding: 8px 0 0 17px; color: #f1f2eb; font: 500 12px/1.5 var(--font-body); }
     .milestone-highlights li::before { content: '↳'; position: absolute; left: 0; color: var(--accent-yellow); }
-    .coverflow-viewport { touch-action: pan-y; }
+
     .work-detail-visual { flex: .92; }
     .work-detail-dossier { flex: 1.08; padding: 25px 30px; justify-content: flex-start; }
     .work-dossier-title { margin-bottom: 6px; font-size: 29px; }
@@ -2052,7 +1988,7 @@
     }
 
     .works-section .coverflow-track { transform-style: flat; }
-    .works-section .coverflow-slide { background: #10171b; }
+
     .works-section .coverflow-slide img { object-fit: contain; }
     .works-section .coverflow-slide[data-index="1"] { background: radial-gradient(circle at 22% 44%,rgba(248,192,69,.12),transparent 47%), linear-gradient(130deg,#1a2824,#111b1b); }
     .works-section .coverflow-slide,
@@ -2075,12 +2011,9 @@
       z-index: 2;
       transition: opacity .18s ease, transform .24s cubic-bezier(.2,.8,.2,1), visibility 0s;
     }
-    .work-case-open { display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; min-width: 265px; padding: 12px 16px; border: 1px solid var(--accent-yellow); border-radius: 4px; background: var(--accent-yellow); color: #162015; font: 800 13px/1.3 var(--font-body); cursor: pointer; transition: transform .25s ease, box-shadow .25s ease; }
-    .work-case-open:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.25); }
-    .work-case-open:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-    .work-case-open span { font: 700 20px/1 var(--font-mono); }
+
     @media (min-width: 1200px) and (min-height: 760px) {
-      .works-section .coverflow-slide { width: min(100%,700px); height: min(52svh,450px); border-radius: 12px; }
+
       .works-section .coverflow-bottom-banner { gap: 14px; }
     }
     @media (max-width: 800px) {
@@ -2089,13 +2022,13 @@
       .works-tab-btn strong { font-size: 12px; line-height: 1.35; }
       .works-tab-btn .work-index { font-size: 9px; }
       .works-tab-btn small { display: none; }
-      .work-case-open { margin: 18px 0 0; width: 100%; }
+
     }
 
     @media (min-width: 1200px) and (min-height: 760px) {
-      section.works-section { overflow: visible; }
+
       .works-nav-tabs { height: auto; max-height: none; }
-      .coverflow-viewport { position: sticky; top: 90px; align-self: start; height: calc(100svh - 110px); }
+
     }
 
     html { scroll-behavior: auto; }
@@ -2104,20 +2037,16 @@
       main.page-content > section { scroll-snap-align: start; scroll-snap-stop: normal; }
       section.works-section.works-long { scroll-snap-align: none; }
       section.bio-section { padding: 36px max(4.5vw,36px) 24px; }
-      section.works-section { padding: 36px max(4.5vw,36px) 24px; }
-      .works-header .section-mega-title { font-size: clamp(39px,2.6vw,50px); white-space: nowrap; }
-      .works-intro { margin-top: 4px; font-size: 13px; line-height: 1.45; }
+
       .works-nav-tabs { gap: 5px; margin-top: 12px; }
       .works-tab-btn { min-height: 50px; padding: 6px 11px; }
       .works-tab-btn strong { font-size: 14px; }
-      .coverflow-bottom-banner { margin-top: 12px; gap: 8px; }
+
       .work-case__eyebrow { margin-bottom: 6px; }
       .work-case__row { padding: 5px 0; }
-      .work-case-open { padding: 9px 14px; min-width: 240px; }
+
       .coverflow-arrow-btn { width: 40px; height: 40px; }
-      .coverflow-controls { gap: 12px; }
-      .coverflow-viewport { top: 78px; height: calc(100svh - 132px); }
-      .works-section .coverflow-slide { width: min(100%,clamp(700px,45vw,900px)); height: min(55svh,500px); }
+
     }
 
     .works-tab-btn[hidden], .works-project-index[hidden] { display: none !important; }
@@ -2216,7 +2145,7 @@
     .works-archive-item__body > span { color: rgba(245,247,242,.62); font: 500 12px/1.5 var(--font-body); }
     .works-archive-item__arrow { margin-left: auto; color: var(--accent-yellow); }
     .works-archive-empty { grid-column: 1/-1; color: rgba(245,247,242,.7); font: 500 14px/1.5 var(--font-body); }
-    @media (min-width: 1200px) and (min-height: 760px) { .works-section .coverflow-bottom-banner { justify-content: flex-start; margin-top: 30px; } }
+
     @media (max-width: 650px) { .works-archive-list { grid-template-columns: 1fr; } .works-archive-item { padding: 13px; } }
     /* Keep scrolling on composited transforms; avoid re-blurring the moving scene. */
     header.site-header, .chapter-next, .milestone-active-card,
@@ -2238,6 +2167,145 @@
     .works-section .coverflow-slide[data-pos="0"] { will-change: transform, opacity; }
     @media (max-width: 800px) {
       .global-backdrop { background-image: linear-gradient(90deg,rgba(15,20,14,.46),rgba(15,20,14,.08) 46%,rgba(15,20,14,.4)),url('./optimized/jaxson_studio_wall_plate_v2-840.971bcf265697.webp'); }
+    }
+
+    /* One width-driven works layout. Short windows retain the same composition;
+       content may grow instead of switching to the legacy horizontal banner. */
+    section.works-section {
+      display: grid;
+      grid-template-columns: minmax(320px,min(36vw,480px)) minmax(0,1fr);
+      grid-template-rows: auto 1fr;
+      gap: 20px clamp(24px,4vw,64px);
+      width: 100%;
+      min-height: calc(100svh - 72px);
+      padding: clamp(24px,3svh,40px) max(4.5vw,calc((100vw - 1680px)/2)) 84px;
+      position: relative;
+      overflow: clip;
+      border-top: 0;
+    }
+    .works-header {
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .works-header .section-mega-title {
+      font-size: clamp(32px,2.7vw,50px);
+      line-height: 1.1;
+      white-space: normal;
+    }
+    .works-intro {
+      max-width: 42ch;
+      margin-top: 10px;
+      color: rgba(245,247,242,.72);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .coverflow-viewport {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      align-self: start;
+      position: sticky;
+      top: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-width: 0;
+      height: clamp(220px,calc(100svh - 200px),680px);
+      overflow: clip;
+      user-select: none;
+      touch-action: pan-y;
+    }
+    .coverflow-track {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    .works-section .coverflow-slide {
+      width: min(100%,calc((100svh - 200px)*1.6),960px);
+      height: auto;
+      max-height: 100%;
+      aspect-ratio: 16 / 10;
+      border-radius: 12px;
+      background: #10171b;
+    }
+    .coverflow-bottom-banner {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 16px;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .work-case { min-width: 0; }
+    .work-case__headline, .work-case__detail p { overflow-wrap: anywhere; }
+    .work-case-open {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      width: min(100%,300px);
+      min-height: 44px;
+      padding: 11px 16px;
+      border: 1px solid var(--accent-yellow);
+      border-radius: 4px;
+      background: var(--accent-yellow);
+      color: #162015;
+      font: 800 13px/1.4 var(--font-body);
+      text-align: left;
+      cursor: pointer;
+      transition: transform .2s ease;
+    }
+    .work-case-open:hover { transform: translateY(-2px); }
+    .work-case-open:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    .work-case-open span { flex: none; font: 700 20px/1 var(--font-mono); }
+    .coverflow-controls { display: flex; align-items: center; gap: 16px; }
+    .coverflow-arrow-btn { flex: none; min-width: 44px; min-height: 44px; }
+    .coverflow-counter-box {
+      flex: none;
+      white-space: nowrap;
+      color: var(--accent-yellow);
+      font: 700 14px/1.4 var(--font-mono);
+    }
+    @media (max-width: 1099px) {
+      section.works-section {
+        grid-template-columns: minmax(0,1fr);
+        grid-template-rows: auto auto auto;
+        gap: 24px;
+        padding: 32px 6vw 56px;
+      }
+      .works-header { grid-column: 1; grid-row: 1; }
+      .coverflow-viewport {
+        grid-column: 1;
+        grid-row: 2;
+        position: relative;
+        top: auto;
+        height: auto;
+        aspect-ratio: 16 / 10;
+        max-height: 520px;
+      }
+      .works-section .coverflow-slide { width: min(100%,832px); height: 100%; }
+      .coverflow-bottom-banner { grid-column: 1; grid-row: 3; }
+      .work-case-open { width: 100%; }
+    }
+    @media (max-width: 800px) {
+      section.works-section { min-height: calc(100svh - 96px); }
+      .works-header .section-mega-title { font-size: clamp(30px,7vw,44px); }
+      .works-section .coverflow-slide-info { padding: 16px; }
+      .works-section .coverflow-slide-info p { display: none; }
     }
   </style>
 <script src="./config.js"></script>
@@ -2290,10 +2358,10 @@
       <div class="hero-col-left">
         <div class="hero-eyebrow">JAXSON / AI PRODUCT BUILDER</div>
         <h1 class="hero-mega-title">IDEAS.<br/>INTO<br/>PRODUCTS.</h1>
-        
+
         <div class="hero-greeting">嗨，我是张锦鹏。把想法做成可用产品，把体验带到真实用户面前。</div>
         <div class="hero-credentials">深圳职业技术大学大数据技术专业专科在读，2027 届，GPA 3.85 / 4.0，专业前 3%。现于广东润喵云科技有限公司担任开发实习生，可在深圳线下到岗。</div>
-        
+
         <div class="hero-cta-btn" onclick="scrollToSection('works')">
           <span>直接看我的作品</span>
           <div class="icon-circle">↗</div>
@@ -2532,7 +2600,7 @@
 
     <div class="player-right">
       <button class="player-pause-btn" id="pauseInteractiveBtn" onclick="togglePauseInteractive()">暂停互动</button>
-      
+
       <div class="audio-synth-toggle" id="audioToggle" onclick="toggleAudio()">
         <div class="audio-wave-bars">
           <div class="wave-bar"></div>
@@ -2981,6 +3049,12 @@
       });
       return Math.max(0, sceneOrder.indexOf(current || activeSceneId || 'hero'));
     }
+    // Zoomed or short windows may need normal scrolling within a chapter.
+    function chapterFitsViewport() {
+      const section = document.getElementById(sceneOrder[chapterAtViewport()]);
+      const headerHeight = document.querySelector('.site-header').getBoundingClientRect().height;
+      return section.getBoundingClientRect().height <= innerHeight - headerHeight + 4;
+    }
     function goAdjacentChapter(direction) {
       const target = Math.max(0, Math.min(sceneOrder.length - 1, chapterAtViewport() + direction));
       chapterTransitionUntil = performance.now() + 850;
@@ -2988,7 +3062,7 @@
       scrollToSection(sceneOrder[target]);
     }
     addEventListener('wheel', event => {
-      if (!chapterPaging.matches || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
+      if (!chapterPaging.matches || !chapterFitsViewport() || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
           event.ctrlKey || event.metaKey || event.altKey ||
           event.target.closest('select,textarea,input,[contenteditable]')) return;
       const distance = Math.abs(event.deltaY) * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1);
@@ -3020,7 +3094,7 @@
       goAdjacentChapter(direction);
     }, { passive: false });
     addEventListener('keydown', event => {
-      if (!chapterPaging.matches || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
+      if (!chapterPaging.matches || !chapterFitsViewport() || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
           event.ctrlKey || event.metaKey || event.altKey ||
           event.target.closest('button,a,select,textarea,input,[contenteditable]')) return;
       if (event.key !== 'PageDown' && event.key !== 'PageUp' && event.key !== ' ') return;
