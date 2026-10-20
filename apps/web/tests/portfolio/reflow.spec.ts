@@ -36,6 +36,28 @@ test('navigation has space between its brand and links after zoom reflow', async
   expect(boxes.navRight).toBeLessThanOrEqual(boxes.width)
 })
 
+test('the desktop finale keeps its contacts and footer on the first screen', async ({ page }) => {
+  for (const viewport of [{ width: 1920, height: 900 }, { width: 1440, height: 700 }, { width: 1280, height: 600 },
+    { width: 960, height: 540 }, { width: 1780, height: 572 }, { width: 2048, height: 600 }]) {
+    await page.setViewportSize(viewport)
+    await openScene(page, 'beyond')
+    const boxes = await page.evaluate(() => {
+      const header = document.querySelector('.site-header')!.getBoundingClientRect()
+      const section = document.querySelector('#beyond')!.getBoundingClientRect()
+      const info = document.querySelector('.beyond-info-col')!.getBoundingClientRect()
+      const footer = document.querySelector('.beyond-footnote')!.getBoundingClientRect()
+      return { headerBottom: header.bottom, sectionTop: section.top, sectionHeight: section.height,
+        infoTop: info.top, footerBottom: footer.bottom, height: innerHeight }
+    })
+    expect(Math.abs(boxes.sectionTop - boxes.headerBottom), JSON.stringify(viewport)).toBeLessThan(2)
+    expect(boxes.sectionHeight).toBeLessThanOrEqual(boxes.height - boxes.headerBottom + 1)
+    expect(boxes.infoTop).toBeGreaterThanOrEqual(boxes.headerBottom + 16)
+    expect(boxes.footerBottom).toBeLessThanOrEqual(boxes.height - 16)
+    await expect(page.getByRole('link', { name: /发邮件至/ })).toBeInViewport({ ratio: 1 })
+    await expect(page.locator('.beyond-secondary')).toBeInViewport({ ratio: 1 })
+  }
+})
+
 test('the portrait stays alongside the introduction at the tablet-width zoom breakpoint', async ({ page }) => {
   await page.setViewportSize({ width: 960, height: 540 })
   await openScene(page, 'hero')
@@ -210,9 +232,11 @@ test('native End navigation cannot reuse an interrupted chapter origin on PageUp
   await page.mouse.wheel(0, 60)
   await page.waitForTimeout(160)
   await page.keyboard.press('End')
-  await page.waitForFunction(() => Math.abs(scrollY - (document.documentElement.scrollHeight - innerHeight)) < 2, null, { polling: 'raf' })
+  await page.waitForFunction(() => scrollY === document.documentElement.scrollHeight - innerHeight, null, { polling: 'raf' })
   await page.keyboard.press('PageUp')
-  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#beyond')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+  // The finale now fits one screen: End is already at its start, so PageUp
+  // returns to Works rather than spending another page on finale whitespace.
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#works')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
 })
 
 test('native Home navigation releases the interrupted wheel target', async ({ page }) => {
