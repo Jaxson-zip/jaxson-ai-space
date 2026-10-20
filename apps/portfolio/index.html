@@ -1816,7 +1816,6 @@
       .coverflow-active-heading { font-size: 20px; }
       .coverflow-active-desc { font-size: 12px; }
       section.beyond-section { max-width: none; padding: 54px max(5vw,36px); }
-      .beyond-stage-card { height: min(70svh,620px); }
     }
     @media (max-width: 1199px) {
       header.site-header { padding-inline: 32px; }
@@ -2077,12 +2076,27 @@
     .beyond-footnote { display: flex; flex-wrap: wrap; gap: 25px; margin-top: 23px; color: rgba(246,248,239,.55); font: 600 11px/1.5 var(--font-mono); }
     .beyond-footnote a { color: rgba(246,248,239,.8); text-decoration: underline; text-underline-offset: 4px; }
     .beyond-footnote a:hover { color: var(--accent-yellow); }
-    .beyond-stage-card { flex: 0 0 clamp(400px,32vw,700px); width: clamp(400px,32vw,700px); max-width: 700px; height: min(86svh,980px); }
+    .beyond-stage-card { flex: 0 0 clamp(400px,32vw,700px); width: clamp(400px,32vw,700px); max-width: 700px; }
     .beyond-stage-card img { object-fit: contain; object-position: center bottom; }
+    @media (min-width: 801px) {
+      /* Share one height budget with the fixed header and the section insets.
+         The portrait must not add another page to an otherwise fitting finale. */
+      section.beyond-section {
+        --finale-inset: clamp(16px,3svh,40px);
+        max-width: none;
+        min-height: calc(100svh - 72px);
+        padding: var(--finale-inset) max(5vw,36px);
+      }
+      .beyond-info-col .section-mega-title { font-size: clamp(44px,min(3.8vw,8svh),88px); }
+      .beyond-stage-card { height: min(760px,calc(100svh - 72px - 2 * var(--finale-inset))); }
+      .beyond-process { margin-top: clamp(18px,3svh,32px); }
+      .beyond-actions { margin-top: clamp(20px,3svh,34px); }
+      .beyond-footnote { margin-top: clamp(14px,2svh,23px); }
+    }
     @media (min-width: 801px) and (max-width: 1199px) {
       section.beyond-section { gap: 36px; }
       .beyond-info-col { flex: 1 1 auto; width: auto; }
-      .beyond-stage-card { flex: 0 1 43%; width: 43%; height: min(64svh,550px); }
+      .beyond-stage-card { flex: 0 1 43%; width: 43%; }
     }
     @media (max-width: 800px) {
       section.beyond-section { gap: 22px; }
