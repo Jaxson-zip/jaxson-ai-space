@@ -2611,10 +2611,23 @@
     function scrollToSection(id) {
       const el = document.getElementById(id);
       if (el) {
-        el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-        if (location.hash !== `#${id}`) history.replaceState(null, '', `#${id}`);
+        resetChapterGesture();
+        // Cancel an in-flight native animation before choosing the new target.
+        scrollTo({ top: scrollY, behavior: 'instant' });
+        const headerHeight = document.querySelector('.site-header').getBoundingClientRect().height;
+        beginChapterScroll(Math.max(0, scrollY + el.getBoundingClientRect().top - headerHeight), sceneOrder.indexOf(id));
       }
     }
+    document.querySelectorAll('header a[href^="#"]').forEach(link => {
+      link.addEventListener('click', event => {
+        if (event.button || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+        const id = link.getAttribute('href').slice(1);
+        if (!document.getElementById(id)) return;
+        event.preventDefault();
+        if (location.hash !== `#${id}`) history.pushState(null, '', `#${id}`);
+        scrollToSection(id);
+      });
+    });
 
     // =========================================
     // Hero response: a small transform only. The page works equally well without pointer movement.
@@ -3044,6 +3057,7 @@
       });
     }, { passive: true });
     addEventListener('resize', () => {
+      resetChapterGesture();
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
         let viewportWaitFrames = 0;
@@ -3080,8 +3094,25 @@
     let wheelDirection = 0;
     let wheelDistance = 0;
     let wheelGestureHandled = false;
-    let chapterTransitionUntil = 0;
+    let chapterTransition = null;
     let waitForWheelRelease = false;
+    function resetChapterGesture() {
+      chapterTransition = null;
+      lastWheelEventAt = -Infinity;
+      wheelDirection = 0;
+      wheelDistance = 0;
+      wheelGestureHandled = false;
+      waitForWheelRelease = false;
+    }
+    addEventListener('hashchange', resetChapterGesture);
+    function chapterIsMoving() {
+      if (chapterTransition && Math.abs(scrollY - chapterTransition.top) > 2 &&
+          scrollY >= Math.min(chapterTransition.originTop, chapterTransition.top) - 2 &&
+          scrollY <= Math.max(chapterTransition.originTop, chapterTransition.top) + 2 &&
+          performance.now() - chapterTransition.startedAt < 1500) return true;
+      chapterTransition = null;
+      return false;
+    }
     function chapterAtViewport() {
       const focus = scrollY + document.querySelector('.site-header').getBoundingClientRect().height + 1;
       const current = sceneOrder.find(id => {
@@ -3102,7 +3133,19 @@
       }).map(child => child.getBoundingClientRect().bottom + scrollY));
       return { start, end: Math.max(start, Math.min(section.offsetTop + section.offsetHeight, contentBottom) - innerHeight) };
     }
+    function beginChapterScroll(top, target, originTop = scrollY, origin = chapterAtViewport()) {
+      chapterTransition = { top, target, originTop, origin, direction: Math.sign(top - scrollY), startedAt: performance.now() };
+      waitForWheelRelease = true;
+      scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      if (location.hash !== `#${sceneOrder[target]}`) history.replaceState(null, '', `#${sceneOrder[target]}`);
+    }
     function goAdjacentChapter(direction) {
+      if (chapterIsMoving()) {
+        if (direction === chapterTransition.direction) return;
+        const previous = chapterTransition;
+        beginChapterScroll(previous.originTop, previous.origin, previous.top, previous.target);
+        return;
+      }
       const current = chapterAtViewport();
       const bounds = chapterReadingBounds(current);
       const pageHeight = innerHeight - document.querySelector('.site-header').getBoundingClientRect().height;
@@ -3116,10 +3159,7 @@
         const adjacent = chapterReadingBounds(target);
         top = direction > 0 ? adjacent.start : adjacent.end;
       }
-      chapterTransitionUntil = performance.now() + 850;
-      waitForWheelRelease = true;
-      scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-      if (location.hash !== `#${sceneOrder[target]}`) history.replaceState(null, '', `#${sceneOrder[target]}`);
+      beginChapterScroll(top, target);
     }
     addEventListener('wheel', event => {
       if (!chapterPaging.matches || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
@@ -3127,12 +3167,19 @@
           Math.abs(event.deltaX) > Math.abs(event.deltaY) ||
           event.target.closest('select,textarea,input,[contenteditable]')) return;
       const distance = Math.abs(event.deltaY) * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1);
-      if (distance < 2) return;
+      if (!distance) return;
       event.preventDefault();
       const now = performance.now();
-      if (now < chapterTransitionUntil) {
+      const direction = Math.sign(event.deltaY);
+      const changedDirection = direction !== wheelDirection;
+      if (chapterIsMoving() && !changedDirection) {
         lastWheelEventAt = now;
         return;
+      }
+      if (changedDirection) {
+        waitForWheelRelease = false;
+        wheelGestureHandled = false;
+        wheelDistance = 0;
       }
       if (waitForWheelRelease) {
         if (now - lastWheelEventAt < 260) {
@@ -3141,7 +3188,6 @@
         }
         waitForWheelRelease = false;
       }
-      const direction = Math.sign(event.deltaY);
       if (now - lastWheelEventAt > 180 || direction !== wheelDirection) {
         wheelDistance = 0;
         wheelGestureHandled = false;
@@ -3155,12 +3201,16 @@
       goAdjacentChapter(direction);
     }, { passive: false });
     addEventListener('keydown', event => {
+      if (['Home', 'End', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
+          !event.target.closest('select,textarea,input,[contenteditable]')) {
+        resetChapterGesture();
+        return;
+      }
       if (!chapterPaging.matches || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
           event.ctrlKey || event.metaKey || event.altKey ||
           event.target.closest('button,a,select,textarea,input,[contenteditable]')) return;
       if (event.key !== 'PageDown' && event.key !== 'PageUp' && event.key !== ' ') return;
       event.preventDefault();
-      if (performance.now() < chapterTransitionUntil) return;
       goAdjacentChapter(event.key === 'PageUp' || (event.key === ' ' && event.shiftKey) ? -1 : 1);
     });
     if (matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
