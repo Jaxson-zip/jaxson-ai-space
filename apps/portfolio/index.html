@@ -3107,6 +3107,8 @@
     addEventListener('hashchange', resetChapterGesture);
     function chapterIsMoving() {
       if (chapterTransition && Math.abs(scrollY - chapterTransition.top) > 2 &&
+          scrollY >= Math.min(chapterTransition.originTop, chapterTransition.top) - 2 &&
+          scrollY <= Math.max(chapterTransition.originTop, chapterTransition.top) + 2 &&
           performance.now() - chapterTransition.startedAt < 1500) return true;
       chapterTransition = null;
       return false;
@@ -3199,6 +3201,11 @@
       goAdjacentChapter(direction);
     }, { passive: false });
     addEventListener('keydown', event => {
+      if (['Home', 'End', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
+          !event.target.closest('select,textarea,input,[contenteditable]')) {
+        resetChapterGesture();
+        return;
+      }
       if (!chapterPaging.matches || (document.body.classList.contains('modal-open') || document.getElementById('worksArchive')?.open) ||
           event.ctrlKey || event.metaKey || event.altKey ||
           event.target.closest('button,a,select,textarea,input,[contenteditable]')) return;

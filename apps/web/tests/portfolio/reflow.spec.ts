@@ -202,3 +202,27 @@ test('resizing during a transition does not leave the previous wheel target lock
   // Verify the new gesture is handled rather than requiring an arbitrary jump.
   await expect.poll(() => page.evaluate(y => Math.abs(scrollY - y), before)).toBeGreaterThan(2)
 })
+
+test('native End navigation cannot reuse an interrupted chapter origin on PageUp', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await page.waitForTimeout(160)
+  await page.keyboard.press('End')
+  await page.waitForFunction(() => Math.abs(scrollY - (document.documentElement.scrollHeight - innerHeight)) < 2, null, { polling: 'raf' })
+  await page.keyboard.press('PageUp')
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#beyond')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+})
+
+test('native Home navigation releases the interrupted wheel target', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await page.waitForTimeout(160)
+  await page.keyboard.press('Home')
+  await page.waitForFunction(() => scrollY === 0, null, { polling: 'raf' })
+  await page.mouse.wheel(0, 60)
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#bio')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+})
