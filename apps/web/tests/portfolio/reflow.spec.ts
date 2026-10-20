@@ -121,3 +121,84 @@ test('continuous resize retains the current chapter after paging changes', async
     await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#works')!.getBoundingClientRect().top - document.querySelector('.site-header')!.getBoundingClientRect().bottom))).toBeLessThan(2)
   }
 })
+
+test('a fresh wheel gesture is accepted as soon as the previous page arrives', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  const gestureStarted = Date.now()
+  await page.mouse.wheel(0, 60)
+  await page.waitForFunction(() => Math.abs(document.querySelector('#bio')!.getBoundingClientRect().top - 72) < 2, null, { polling: 'raf' })
+  // Separate gestures, including with instant reduced motion. Do not wait out
+  // the old 850ms lock or poll slowly enough to conceal its dead time.
+  await page.waitForTimeout(Math.max(0, 300 - (Date.now() - gestureStarted)))
+  await page.mouse.wheel(0, 60)
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#works')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+})
+
+test('reversing the wheel can return to the previous page during a transition', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await page.waitForTimeout(160)
+  await page.mouse.wheel(0, -60)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+})
+
+test('small trackpad tail events cannot nudge a settled chapter out of alignment', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await page.waitForFunction(() => Math.abs(document.querySelector('#bio')!.getBoundingClientRect().top - 72) < 2, null, { polling: 'raf' })
+  for (let tail = 0; tail < 12; tail++) {
+    await page.mouse.wheel(0, 1)
+    await page.waitForTimeout(20)
+  }
+  await settle(page)
+  expect(await page.evaluate(() => Math.abs(document.querySelector('#bio')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+})
+
+test('navigation cancels the previous wheel transition before the next gesture', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await page.waitForTimeout(160)
+  await page.locator('nav a[href="#works"]').click()
+  await page.waitForFunction(() => Math.abs(document.querySelector('#works')!.getBoundingClientRect().top - 72) < 2, null, { polling: 'raf' })
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#beyond')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+})
+
+test('one continuous wheel gesture stays on one page and releases for the next gesture', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  for (let tick = 0; tick < 24; tick++) {
+    await page.mouse.wheel(0, 25)
+    await page.waitForTimeout(30)
+  }
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#bio')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+  await page.waitForTimeout(300)
+  await page.mouse.wheel(0, 60)
+  await expect.poll(() => page.evaluate(() => Math.abs(document.querySelector('#works')!.getBoundingClientRect().top - 72))).toBeLessThan(2)
+})
+
+test('resizing during a transition does not leave the previous wheel target locked', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openScene(page, 'hero')
+  await page.mouse.move(10, 300)
+  await page.mouse.wheel(0, 60)
+  await page.waitForTimeout(160)
+  await page.setViewportSize({ width: 960, height: 540 })
+  await settle(page)
+  await page.waitForTimeout(300)
+  const before = await page.evaluate(() => scrollY)
+  await page.mouse.wheel(0, 60)
+  // The last reading step of a long chapter can be shorter than a viewport.
+  // Verify the new gesture is handled rather than requiring an arbitrary jump.
+  await expect.poll(() => page.evaluate(y => Math.abs(scrollY - y), before)).toBeGreaterThan(2)
+})
