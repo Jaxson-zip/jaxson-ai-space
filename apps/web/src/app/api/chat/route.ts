@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loadKnowledgeChunks } from '@/features/ai/rag/knowledge-loader'
 import { groundedRetrieve } from '@/features/ai/rag/retriever'
 import { createRAGStream } from '@/features/ai/rag/llm-stream'
+import { clientIpFrom } from '@/features/ai/client-ip'
 
 import { z } from 'zod'
 
@@ -51,21 +52,7 @@ export async function POST(req: NextRequest) {
   const started = performance.now()
   try {
     // 0. Extract Client IP and verify Rate Limit
-    const forwardedHeader = req.headers.get('forwarded')
-    let forwardedFor = ''
-    if (forwardedHeader) {
-      const match = forwardedHeader.match(/for="?([^";,]+)/i)
-      if (match) forwardedFor = match[1].trim()
-    }
-
-    const clientIp =
-      req.headers.get('cf-connecting-ip') ||
-      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-      req.headers.get('x-real-ip') ||
-      forwardedFor ||
-      '127.0.0.1'
-
-    if (!checkRateLimit(clientIp)) {
+    if (!checkRateLimit(clientIpFrom(req.headers))) {
       return NextResponse.json(
         { error: 'Too Many Requests: Chat rate limit exceeded. Please wait a minute.' },
         {
