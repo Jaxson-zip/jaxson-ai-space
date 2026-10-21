@@ -115,6 +115,27 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(groundedRetrieve('量子计算经验', [relatedButNotRelevant])).toEqual([])
   })
 
+  it('answers basic experience questions whose wording shares only the topic word with the record', () => {
+    const award: KnowledgeChunk = {
+      id: 'awards-summary',
+      title: '竞赛荣誉与学业奖项',
+      category: 'award',
+      content: '- 中国大学生计算机设计大赛（国家级二等奖，2024 — 2025）',
+      evidenceTag: 'CMS 竞赛与学业奖项',
+      keywords: ['竞赛', '荣誉', '奖项'],
+    }
+    const chunks = [...MOCK_CHUNKS, award]
+
+    const internship = groundedRetrieve('你现在在哪里实习？', chunks)
+    expect(internship.map((result) => result.chunk.id)).toEqual(['exp-runmiaoyun'])
+    expect(groundedRetrieve('你在哪所学校读书？', chunks).map((result) => result.chunk.id)).toContain('profile-szpu')
+    expect(groundedRetrieve('你拿过什么奖吗？', chunks).map((result) => result.chunk.id)).toContain('awards-summary')
+  })
+
+  it('does not let a topic word pull in records from an unasked category', () => {
+    expect(groundedRetrieve('量子计算实习经验', [MOCK_CHUNKS[1]])).toEqual([])
+  })
+
   it('finds all published project facts for a general project-list question', () => {
     const secondProject: KnowledgeChunk = {
       ...MOCK_CHUNKS[1],

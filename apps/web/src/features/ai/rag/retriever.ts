@@ -1,5 +1,16 @@
 import { generateLocalEmbedding, tokenize } from './embedder'
-import type { KnowledgeChunk, RetrievalResult } from './types'
+import type { ChunkCategory, KnowledgeChunk, RetrievalResult } from './types'
+
+// Short questions such as "你现在在哪里实习？" share only the topic word with the
+// record. Experience and award records are not in the semantic index, so the
+// topic itself must be enough to consider records of that category.
+const TOPIC_CATEGORIES: [RegExp, ChunkCategory[]][] = [
+  [/实习|工作经历|任职/, ['internship']],
+  [/学校|学历|专业|毕业|gpa|绩点|成绩|读书|教育/i, ['education']],
+  [/竞赛|获奖|奖项|荣誉|拿过.*奖|什么奖/, ['award']],
+  [/技能|技术栈|擅长/, ['skill']],
+  [/校园|社团|学生会|学信委/, ['campus']],
+]
 
 /**
  * Compute Cosine Similarity between two normalized vectors
@@ -129,9 +140,14 @@ export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK =
     return hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length))
   }
 
+  const topics = new Set(TOPIC_CATEGORIES.flatMap(([pattern, categories]) => pattern.test(query) ? categories : []))
+  const topicResults = topics.size > 0
+    ? hybridRetrieve(query, chunks.filter((chunk) => topics.has(chunk.category)), topK)
+    : []
+
   const queryTokens = new Set(tokenize(query))
   const minimumMatches = queryTokens.size >= 3 ? 2 : 1
-  return hybridRetrieve(query, chunks, topK).filter((result) => {
+  const evidenceResults = hybridRetrieve(query, chunks, topK).filter((result) => {
     if (result.chunk.vectorSource === 'semantic' && result.vectorScore >= 0.8) return true
     if (result.bm25Score <= 0) return false
     const evidenceTokens = new Set(tokenize(
@@ -144,4 +160,7 @@ export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK =
     }
     return false
   })
+
+  const topicIds = new Set(topicResults.map((result) => result.chunk.id))
+  return [...topicResults, ...evidenceResults.filter((result) => !topicIds.has(result.chunk.id))].slice(0, topK)
 }
