@@ -36,6 +36,21 @@ test('navigation has space between its brand and links after zoom reflow', async
   expect(boxes.navRight).toBeLessThanOrEqual(boxes.width)
 })
 
+test('the AI entry stays fully visible in the phone header', async ({ page }) => {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport)
+    await openScene(page, 'hero')
+    const ai = page.locator('.site-header .nav-ai-link')
+    await expect(ai, JSON.stringify(viewport)).toBeInViewport({ ratio: 1 })
+    const covered = await ai.evaluate(link => {
+      const box = link.getBoundingClientRect()
+      return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)?.closest('.nav-ai-link') !== link
+    })
+    expect(covered, JSON.stringify(viewport)).toBe(false)
+    expect((await ai.boundingBox())!.height, JSON.stringify(viewport)).toBeGreaterThanOrEqual(24)
+  }
+})
+
 test('the desktop finale keeps its contacts and footer on the first screen', async ({ page }) => {
   for (const viewport of [{ width: 1920, height: 900 }, { width: 1440, height: 700 }, { width: 1280, height: 600 },
     { width: 960, height: 540 }, { width: 1780, height: 572 }, { width: 2048, height: 600 }]) {

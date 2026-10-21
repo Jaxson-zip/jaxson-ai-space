@@ -1838,6 +1838,8 @@
       .brand-sub, .header-aside { display: none; }
       nav.nav-links { width: 100%; order: 3; display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
       nav.nav-links a { flex: none; font-size: 11px; }
+      /* The chapter row scrolls sideways; keep the AI entry beside the brand. */
+      nav.nav-links a.nav-ai-link { position: absolute; top: 8px; right: 20px; height: 40px; display: flex; align-items: center; font-size: 13px; }
       main.page-content { padding-top: 96px; }
       section.hero-section { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 42px 6vw 0; min-height: 0; }
       .hero-col-left, .hero-col-right { max-width: 100%; text-align: left; width: 100%; }
