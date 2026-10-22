@@ -18,6 +18,7 @@ import {
 import './ai-cinematic.css'
 import { buildChatHistory, CHAT_LIMITS, type ConversationMessage as Message } from '@/features/ai/chat-history'
 import { consumeChatStream } from '@/features/ai/chat-stream'
+import { buildSuggestions, type Suggestion } from '@/features/ai/suggestions'
 
 const INITIAL_MESSAGES: Message[] = [
   {
@@ -125,6 +126,19 @@ export default function AIPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false)
   const [inputError, setInputError] = useState('')
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(() => buildSuggestions([]))
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/showcase-projects', { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.projects)) setSuggestions(buildSuggestions(data.projects))
+      })
+      // Without the list, the general questions remain.
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const backLinkRef = useRef<HTMLAnchorElement>(null)
@@ -317,48 +331,19 @@ export default function AIPage() {
             </p>
           </div>
 
-          {/* Prompt Chips */}
+          {/* Prompt Chips: project questions follow the published list. */}
           <div className="ai-preset-chips-wrap">
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('📋 请帮我做一下针对前端/全栈开发岗位的 JD 匹配分析')}
-            >
-              <FileCheck2 size={13} />
-              <span>岗位 JD 匹配</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('你有哪些公开项目？')}
-            >
-              <Layers size={13} />
-              <span>全部公开项目</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('📱 介绍一下 Todo Memo PWA 项目的核心架构与交付状态')}
-            >
-              <Layers size={13} />
-              <span>Todo Memo 项目</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('锐历简历项目做了什么？')}
-            >
-              <FileCheck2 size={13} />
-              <span>锐历简历工作台</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('Nutrinet 个性化膳食营养系统项目做了什么？')}
-            >
-              <Layers size={13} />
-              <span>Nutrinet 项目</span>
-            </button>
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion.prompt}
+                type="button"
+                className="prompt-chip-btn"
+                onClick={() => handlePresetClick(suggestion.prompt)}
+              >
+                {suggestion.label === '岗位 JD 匹配' ? <FileCheck2 size={13} /> : <Layers size={13} />}
+                <span>{suggestion.label}</span>
+              </button>
+            ))}
           </div>
 
           {/* Chat Stream */}
