@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import fallbackProjects from '@/features/portfolio/cinematic-projects.json'
 import { safeExternalUrl } from '@/features/portfolio/urls'
+import { orderProjects } from '@/features/portfolio/project-order'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +42,10 @@ export async function GET(request: Request) {
       where: { visibility: { equals: 'public' } },
     })
 
-    const projects = result.docs.map((doc) => {
+    // Sorted here rather than in the query because SQLite and PostgreSQL place empty values differently.
+    const ordered = orderProjects(result.docs)
+
+    const projects = ordered.map((doc) => {
       const uploadedImage =
         typeof doc.coverImage === 'object' && doc.coverImage?.url
           ? new URL(doc.coverImage.url, request.url).href
@@ -50,6 +54,7 @@ export async function GET(request: Request) {
         slug: doc.slug,
         title: doc.title,
         shortTitle: doc.shortTitle || doc.title,
+        featured: doc.featured === true,
         category: doc.category,
         role: doc.role,
         date: doc.projectDate || '',
