@@ -27,6 +27,20 @@
       "bytes": 100200
     }
   ],
+  "jaxson_character_navy_v1": [
+    {
+      "src": "./optimized/jaxson_character_navy_v1-512.92f74e2ade4d.webp",
+      "width": 512,
+      "height": 768,
+      "bytes": 37058
+    },
+    {
+      "src": "./optimized/jaxson_character_navy_v1-1024.7282bb81ed17.webp",
+      "width": 1024,
+      "height": 1536,
+      "bytes": 87168
+    }
+  ],
   "jaxson_bio_gesture_matched_v2": [
     {
       "src": "./optimized/jaxson_bio_gesture_matched_v2-960.b5753eed604b.webp",
@@ -61,6 +75,20 @@
       "width": 900,
       "height": 1000,
       "bytes": 48264
+    }
+  ],
+  "jaxson-ai-space-home-20261022": [
+    {
+      "src": "./optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp",
+      "width": 900,
+      "height": 562,
+      "bytes": 60748
+    },
+    {
+      "src": "./optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp",
+      "width": 1440,
+      "height": 900,
+      "bytes": 118036
     }
   ]
 }

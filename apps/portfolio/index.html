@@ -3,3371 +3,665 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>张锦鹏 Jaxson · AI Product Builder 作品集</title>
+  <title>张锦鹏 Jaxson · AI 应用与全栈开发作品集</title>
+  <meta name="description" content="张锦鹏，深圳职业技术大学大数据技术专业 2027 届，求职 AI 应用与全栈开发。可以直接向他的 AI 分身提问，回答都标明出处。" />
 
-  <!-- Local fonts: first paint does not wait on a third-party stylesheet. -->
-  <link rel="preload" href="./fonts/anton-400.423ff52b4714.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="./optimized/jaxson_studio_wall_plate_v2-1672.b889d9664779.webp" as="image" media="(min-width: 801px)">
-  <link rel="preload" href="./optimized/jaxson_studio_wall_plate_v2-840.971bcf265697.webp" as="image" media="(max-width: 800px)">
+  <!-- Local fonts only: first paint never waits on a third-party stylesheet. -->
+  <link rel="preload" href="./fonts/plus-jakarta-sans-700.704be0308e53.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    @font-face { font-family: 'Anton'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/anton-400.423ff52b4714.woff2') format('woff2'); }
-    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/jetbrains-mono-400.4e09d8a5eac4.woff2') format('woff2'); }
-    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/jetbrains-mono-500.0c647dbd8727.woff2') format('woff2'); }
-    @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/jetbrains-mono-700.a177e629e7b9.woff2') format('woff2'); }
-    @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/plus-jakarta-sans-400.fe50da3fe955.woff2') format('woff2'); }
-    @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/plus-jakarta-sans-500.74911d5e09d6.woff2') format('woff2'); }
-    @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('./fonts/plus-jakarta-sans-600.6d5c91ed9433.woff2') format('woff2'); }
-    @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/plus-jakarta-sans-700.704be0308e53.woff2') format('woff2'); }
-    @font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 800; font-display: swap; src: url('./fonts/plus-jakarta-sans-800.ca987f604ad6.woff2') format('woff2'); }
-    @font-face { font-family: 'Noto Sans SC'; font-style: normal; font-weight: 400 900; font-display: swap; src: url('./fonts/noto-sans-sc-subset.9eae0eccd570.woff2') format('woff2'); unicode-range: U+3001,U+3002,U+4E00,U+4E0A,U+4E0B,U+4E0E,U+4E13,U+4E1A,U+4E1C,U+4E2A,U+4E2D,U+4E34,U+4E3A,U+4E3B,U+4E45,U+4E60,U+4E71,U+4E8C,U+4E8E,U+4E91,U+4E92,U+4EA4,U+4EA7,U+4EB2,U+4EBA,U+4ECA,U+4ECB,U+4ECE,U+4ED3,U+4ED8,U+4EE3,U+4EE5,U+4EF6,U+4EFB,U+4EFD,U+4F01,U+4F1A,U+4F20,U+4F38,U+4F3C,U+4F4D,U+4F53,U+4F59,U+4F5C,U+4F8B,U+4F9B,U+4FA7,U+4FE1,U+4FEE,U+5019,U+505A,U+505C,U+50CF,U+5148,U+5165,U+5168,U+516C,U+5171,U+5173,U+5177,U+5185,U+51FA,U+51FB,U+5206,U+5207,U+521D,U+5230,U+5237,U+523B,U+524D,U+526F,U+529B,U+529E,U+529F,U+52A0,U+52A1,U+52A8,U+5316,U+5339,U+5355,U+5373,U+5386,U+539F,U+53C2,U+53CA,U+53CC,U+53CD,U+53D1,U+53D8,U+53E3,U+53EF,U+53F0,U+53F3,U+53F8,U+5408,U+540C,U+540D,U+540E,U+5411,U+5458,U+548C,U+54C1,U+54E5,U+559C,U+55B5,U+55E8,U+56DE,U+56E2,U+56F4,U+56FD,U+5728,U+5730,U+5733,U+573A,U+5757,U+578B,U+57FA,U+5883,U+5904,U+5907,U+590D,U+5916,U+591A,U+5927,U+5934,U+5939,U+5956,U+59D4,U+5B57,U+5B58,U+5B66,U+5B89,U+5B8C,U+5B9A,U+5B9E,U+5BA1,U+5BB6,U+5BB9,U+5BF9,U+5BFC,U+5C01,U+5C11,U+5C4A,U+5C4F,U+5C55,U+5C65,U+5C97,U+5D4C,U+5DE5,U+5DF2,U+5E02,U+5E08,U+5E26,U+5E2D,U+5E38,U+5E73,U+5E74,U+5E76,U+5E7B,U+5E7F,U+5E93,U+5E94,U+5EA6,U+5EFA,U+5F00,U+5F0F,U+5F20,U+5F26,U+5F52,U+5F53,U+5F55,U+5F80,U+5F85,U+5F97,U+5FD8,U+6001,U+6062,U+606F,U+60C5,U+60F3,U+610F,U+613F,U+6210,U+6211,U+6216,U+6237,U+624B,U+6253,U+627E,U+6280,U+628A,U+62A4,U+62C5,U+62DB,U+62E9,U+6301,U+6309,U+636E,U+6392,U+63A2,U+63A5,U+63D0,U+641C,U+64CD,U+652F,U+6536,U+6548,U+6559,U+6563,U+6570,U+6574,U+6587,U+65B0,U+65B9,U+65E0,U+65E5,U+65F6,U+6613,U+662F,U+666F,U+667A,U+6682,U+66A8,U+6709,U+672C,U+672F,U+673A,U+6743,U+6765,U+6781,U+6784,U+6790,U+679C,U+67B6,U+67E5,U+6807,U+6808,U+6821,U+6848,U+684C,U+6863,U+68B3,U+68C0,U+6A21,U+6B21,U+6B22,U+6B3E,U+6B63,U+6B65,U+6BB5,U+6BEB,U+6C42,U+6CA1,U+6CD5,U+6CE8,U+6D41,U+6D4F,U+6DA6,U+6DF1,U+6E90,U+6ED1,U+6EDA,U+6EE4,U+70B9,U+7247,U+7269,U+72B6,U+72EC,U+73AF,U+73B0,U+73ED,U+7406,U+751F,U+7528,U+7532,U+753B,U+7545,U+754C,U+7559,U+767B,U+7684,U+76D6,U+76EE,U+76F4,U+76F8,U+7701,U+770B,U+771F,U+77E5,U+7801,U+7816,U+788E,U+793A,U+793E,U+79BB,U+79D1,U+79D2,U+79DF,U+79F0,U+79FB,U+7A0B,U+7A0D,U+7A33,U+7A7A,U+7ACB,U+7AD9,U+7ADE,U+7AE0,U+7AEF,U+7B2C,U+7B49,U+7B54,U+7B7E,U+7B80,U+7B97,U+7BA1,U+7C7B,U+7CBE,U+7CCA,U+7CFB,U+7D22,U+7D2F,U+7EA7,U+7EAF,U+7EBF,U+7EC4,U+7EC6,U+7EC7,U+7ECD,U+7ECF,U+7ED3,U+7ED5,U+7EDC,U+7EDF,U+7EE7,U+7EED,U+7EF4,U+7F13,U+7F3A,U+7F51,U+7F72,U+804A,U+804C,U+8054,U+8058,U+8096,U+80B2,U+80CC,U+80FD,U+81EA,U+81F3,U+822A,U+8282,U+83B7,U+843D,U+884C,U+8868,U+88C5,U+8986,U+89C1,U+89C8,U+89C9,U+8BA1,U+8BA2,U+8BB0,U+8BBE,U+8BC1,U+8BC4,U+8BC6,U+8BCD,U+8BD5,U+8BDD,U+8BE6,U+8BF7,U+8BFB,U+8C03,U+8D1F,U+8D23,U+8D41,U+8D44,U+8D5B,U+8D70,U+8D77,U+8DDF,U+8DE8,U+8DEF,U+8DF3,U+8EAB,U+8F6E,U+8F7B,U+8F7D,U+8F93,U+8FBE,U+8FC7,U+8FD0,U+8FDB,U+8FED,U+9009,U+901A,U+901F,U+90AE,U+90E8,U+914D,U+91CF,U+91D1,U+9274,U+9526,U+952E,U+957F,U+95E8,U+95ED,U+95EE,U+95F4,U+9632,U+9636,U+9650,U+9662,U+9694,U+96BE,U+96C6,U+9700,U+9759,U+9762,U+9875,U+9879,U+987A,U+9891,U+9898,U+9988,U+9996,U+9A8C,U+9AA8,U+9AD8,U+9E4F,U+FF08,U+FF09,U+FF0C,U+FF1A,U+FF1B; }
+    @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-display: swap; src: url('./fonts/plus-jakarta-sans-400.fe50da3fe955.woff2') format('woff2'); }
+    @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-display: swap; src: url('./fonts/plus-jakarta-sans-600.6d5c91ed9433.woff2') format('woff2'); }
+    @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-display: swap; src: url('./fonts/plus-jakarta-sans-700.704be0308e53.woff2') format('woff2'); }
+    @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 800; font-display: swap; src: url('./fonts/plus-jakarta-sans-800.ca987f604ad6.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-weight: 500; font-display: swap; src: url('./fonts/jetbrains-mono-500.0c647dbd8727.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-weight: 700; font-display: swap; src: url('./fonts/jetbrains-mono-700.a177e629e7b9.woff2') format('woff2'); }
+
+    /* Cool white and cobalt. Cobalt means "act here" or "the AI"; orange only marks a retrieval hit. */
     :root {
-      --bg-studio: #272c23;
-      --bg-studio-dark: #1a1f17;
-      --bg-card: rgba(26, 32, 24, 0.72);
-      --border-card: rgba(255, 255, 255, 0.12);
-      --text-main: #f5f7f2;
-      --text-muted: #9aa892;
-      --accent-yellow: #f8c045;
-      --accent-orange: #f28b30;
-      --accent-green: #4ade80;
-      --accent-blue: #38bdf8;
-      --font-display: 'Plus Jakarta Sans', -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', 'Consolas', 'Liberation Mono', monospace;
-      --font-body: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    html, body {
-      width: 100%;
-      min-height: 100vh;
-      background-color: var(--bg-studio);
-      color: var(--text-main);
-      font-family: var(--font-body);
-      overflow-x: hidden;
-      scroll-behavior: smooth;
-    }
-
-    /* Fixed Atmospheric Background (Olive Wall) */
-    .global-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-image: 
-        radial-gradient(circle at 50% 40%, rgba(68, 79, 60, 0.4) 0%, rgba(26, 31, 23, 0.95) 75%),
-        url('./optimized/jaxson_studio_wall_plate_v2-1672.b889d9664779.webp');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      z-index: -2;
-      pointer-events: none;
-    }
-
-    .vignette-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: radial-gradient(circle at center, transparent 35%, rgba(15, 18, 14, 0.7) 100%);
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    /* Top Navigation Bar */
-    header.site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 72px;
-      padding: 0 48px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      background: rgba(26, 31, 23, 0.45);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      z-index: 100;
-      transition: background 0.3s ease;
-    }
-
-    .brand-logo {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      text-decoration: none;
-      color: var(--text-main);
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 24px;
-      letter-spacing: -0.5px;
-    }
-
-    .brand-logo .dot {
-      color: var(--accent-yellow);
-      font-size: 28px;
-    }
-
-    .brand-sub {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-left: 8px;
-    }
-
-    nav.nav-links {
-      display: flex;
-      gap: 32px;
-    }
-
-    nav.nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      transition: color 0.25s ease;
-      position: relative;
-      padding: 6px 0;
-      cursor: pointer;
-    }
-
-    nav.nav-links a:hover,
-    nav.nav-links a.active {
-      color: var(--text-main);
-    }
-
-    nav.nav-links a.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--accent-yellow);
-      border-radius: 2px;
-    }
-
-    .header-aside {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .header-credentials {
-      text-align: right;
-    }
-
-    .header-credentials .title {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-main);
-      letter-spacing: 0.5px;
-    }
-
-    .header-credentials .desc {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    /* Page Main Container */
-    main.page-content {
-      width: 100%;
-      position: relative;
-      padding-top: 72px;
-      padding-bottom: 90px;
-      transition: filter 0.5s var(--ease-out), transform 0.5s var(--ease-out);
-    }
-
-    body.modal-open main.page-content {
-      filter: blur(20px) brightness(0.7);
-      transform: scale(0.985);
-      pointer-events: none;
-    }
-
-    /* =========================================
-       SECTION 01: HERO (初次见面) - FULL-BLEED SEAMLESS
-       ========================================= */
-    section.hero-section {
-      position: relative;
-      width: 100%;
-      min-height: calc(100vh - 72px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 40px 64px;
-      overflow: hidden;
-    }
-
-    .hero-col-left {
-      flex: 1;
-      max-width: 440px;
-      z-index: 10;
-    }
-
-    .hero-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .hero-eyebrow::before {
-      content: '';
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background: var(--accent-yellow);
-      border-radius: 50%;
-      box-shadow: 0 0 12px var(--accent-yellow);
-    }
-
-    .hero-mega-title {
-      font-family: var(--font-display);
-      font-size: 64px;
-      line-height: 0.95;
-      font-weight: 900;
-      letter-spacing: -2px;
-      text-transform: uppercase;
-      color: #ffffff;
-      margin-bottom: 24px;
-    }
-
-    .hero-greeting {
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 1.6;
-      color: #e2e8f0;
-      margin-bottom: 12px;
-    }
-
-    .hero-credentials {
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text-muted);
-      margin-bottom: 32px;
-    }
-
-    .hero-cta-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 28px;
-      background: #ffffff;
-      color: #111410;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 700;
-      border-radius: 100px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-      transition: all 0.3s var(--ease-out);
-      cursor: pointer;
-    }
-
-    .hero-cta-btn:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 15px 35px rgba(248, 192, 69, 0.35);
-      background: var(--accent-yellow);
-    }
-
-    .hero-cta-btn .icon-circle {
-      width: 24px;
-      height: 24px;
-      background: #111410;
-      color: #ffffff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      transition: transform 0.3s ease;
-    }
-
-    .hero-cta-btn:hover .icon-circle {
-      transform: rotate(45deg);
-    }
-
-    .hero-footnote {
-      margin-top: 36px;
-      font-size: 12px;
-      line-height: 1.7;
-      color: rgba(154, 168, 146, 0.7);
-      max-width: 360px;
-      border-left: 2px solid rgba(255, 255, 255, 0.15);
-      padding-left: 14px;
-    }
-
-    /* Hero Center: Full-Bleed Character with Liquid Optical Distortion Lens */
-    .hero-col-center {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 720px;
-      height: 820px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      perspective: 1200px;
-      z-index: 5;
-    }
-
-    .hero-fullbleed-stage {
-      position: relative;
-      width: 680px;
-      height: 680px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: crosshair;
-      /* Seamless blend into olive wall: soft radial feathered mask */
-      -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 48%, transparent 74%);
-      mask-image: radial-gradient(ellipse at 50% 50%, black 48%, transparent 74%);
-      transform-style: preserve-3d;
-      will-change: transform;
-    }
-
-    .hero-fullbleed-stage canvas#heroSpriteCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      pointer-events: auto;
-      will-change: transform;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-
-    .hero-fullbleed-stage img.avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 15%;
-      display: block;
-      pointer-events: auto;
-      transform: scale(1.05);
-      transition: filter 0.1s ease-out;
-      will-change: transform, filter;
-    }
-
-    /* Liquid lens refraction ripple class triggered on cursor move */
-    .hero-fullbleed-stage.liquid-active canvas#heroSpriteCanvas,
-    .hero-fullbleed-stage.liquid-active img.avatar-img {
-      filter: url(#liquidFilter) drop-shadow(-2px 0 0 rgba(248, 192, 69, 0.35)) drop-shadow(2px 0 0 rgba(56, 189, 248, 0.35));
-    }
-
-    .hero-scroll-indicator {
-      position: absolute;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      color: rgba(245, 247, 242, 0.85);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      z-index: 12;
-      animation: bounceHint 2s infinite ease-in-out;
-      pointer-events: none;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-    }
-
-    @keyframes bounceHint {
-      0%, 100% { transform: translate(-50%, 0); }
-      50% { transform: translate(-50%, 8px); }
-    }
-
-    .hero-col-right {
-      flex: 1;
-      max-width: 380px;
-      text-align: right;
-      z-index: 10;
-      margin-left: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
-
-    .hero-right-title {
-      font-family: var(--font-display);
-      font-size: 38px;
-      font-weight: 800;
-      line-height: 1.1;
-      color: #ffffff;
-      letter-spacing: -1px;
-      margin-bottom: 20px;
-    }
-
-    .hero-right-desc {
-      font-size: 13px;
-      line-height: 1.8;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-      max-width: 340px;
-    }
-
-    .hero-tag-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-      margin-bottom: 36px;
-    }
-
-    .hero-chip {
-      padding: 6px 14px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 100px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-main);
-    }
-
-    /* Gaze Tracking Pill Badge */
-    .gaze-tracker-card {
-      background: rgba(22, 28, 20, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 14px 18px;
-      backdrop-filter: blur(12px);
-      text-align: right;
-      max-width: 260px;
-    }
-
-    .gaze-header {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 1px;
-      margin-bottom: 4px;
-    }
-
-    .gaze-instruction {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .gaze-status-pill {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      background: rgba(248, 192, 69, 0.15);
-      border: 1px solid rgba(248, 192, 69, 0.35);
-      color: var(--accent-yellow);
-      border-radius: 6px;
-      letter-spacing: 1px;
-    }
-
-    /* =========================================
-       SECTION 02: GUIDED MILESTONE STAGE (个人履历)
-       ========================================= */
-    section.bio-section {
-      width: 100%;
-      min-height: 100vh;
-      padding: 100px 64px 60px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .bio-stage-grid {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1440px;
-      margin: 0 auto;
-      width: 100%;
-      position: relative;
-      z-index: 2;
-      min-height: 600px;
-    }
-
-    /* Left: Overview */
-    .bio-left-col {
-      width: 380px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      z-index: 5;
-    }
-
-    .section-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .section-mega-title {
-      font-family: var(--font-display);
-      font-size: 48px;
-      font-weight: 900;
-      letter-spacing: -1.5px;
-      line-height: 1.05;
-      color: #ffffff;
-      margin-bottom: 20px;
-    }
-
-    .bio-author-title {
-      font-family: var(--font-display);
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 24px;
-    }
-
-    .bio-summary-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-
-    .bio-summary-list li {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-muted);
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .bio-summary-list li::before {
-      content: '■';
-      color: var(--accent-yellow);
-      font-size: 9px;
-      margin-top: 4px;
-    }
-
-    .bio-more-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      text-decoration: none;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-
-    .bio-more-link:hover {
-      transform: translateX(4px);
-    }
-
-    /* Center: Dynamic Milestone Stage with Giant 3D Watermark Year */
-    .bio-center-col {
-      flex: 1;
-      max-width: 500px;
-      margin: 0 30px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 520px;
-      z-index: 5;
-    }
-
-    .bio-watermark-year {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: var(--font-display);
-      font-size: 200px;
-      font-weight: 900;
-      letter-spacing: -6px;
-      color: #ffffff;
-      opacity: 0.055;
-      line-height: 1;
-      pointer-events: none;
-      user-select: none;
-      z-index: 1;
-      transition: all 0.6s var(--ease-out);
-    }
-
-    .milestone-stepper {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-      z-index: 3;
-    }
-
-    .milestone-step-btn {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 100px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .milestone-step-btn:hover,
-    .milestone-step-btn.active {
-      background: var(--accent-yellow);
-      color: #111410;
-      border-color: var(--accent-yellow);
-      box-shadow: 0 0 20px rgba(248, 192, 69, 0.3);
-    }
-
-    .milestone-active-card {
-      position: relative;
-      z-index: 3;
-      width: 100%;
-      max-width: 480px;
-      background: rgba(30, 36, 27, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 28px;
-      padding: 36px 32px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      transition: all 0.4s var(--ease-out);
-    }
-
-    .milestone-badge {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .milestone-year-title {
-      font-family: var(--font-display);
-      font-size: 34px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -1px;
-      margin-bottom: 8px;
-    }
-
-    .milestone-role-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 14px;
-    }
-
-    .milestone-paragraph {
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text-muted);
-    }
-
-    /* Right: Seamless Pointing Character Cutout */
-    .bio-right-col {
-      width: 520px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      z-index: 4;
-    }
-
-    .bio-char-container {
-      position: relative;
-      width: 540px;
-      height: 600px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-mask-image: radial-gradient(ellipse at 54% 50%, black 46%, transparent 74%);
-      mask-image: radial-gradient(ellipse at 54% 50%, black 46%, transparent 74%);
-    }
-
-    .bio-char-container img.bio-pointing-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: 72% 35%;
-      display: block;
-      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
-      transition: transform 0.4s var(--ease-out);
-    }
-
-    .bio-char-container:hover img.bio-pointing-img {
-      transform: scale(1.02) translateY(-4px);
-    }
-
-    .bio-role-badge-bottom {
-      margin-top: 14px;
-      text-align: center;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    /* Bottom Selected Clients Marquee Ticker */
-    .clients-ticker-wrap {
-      width: 100%;
-      max-width: 1440px;
-      margin: 60px auto 0;
-      padding-top: 24px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      overflow: hidden;
-      z-index: 2;
-    }
-
-    .clients-ticker-label {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      white-space: nowrap;
-      letter-spacing: 1px;
-    }
-
-    .ticker-track-outer {
-      flex: 1;
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
-    }
-
-    .ticker-track {
-      display: inline-flex;
-      gap: 40px;
-      animation: tickerScroll 28s linear infinite;
-    }
-
-    .ticker-item {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: rgba(245, 247, 242, 0.7);
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .ticker-item::after {
-      content: '•';
-      color: rgba(255, 255, 255, 0.2);
-    }
-
-    @keyframes tickerScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    /* =========================================
-       SECTION 03: TACTILE FOLDER (作品文件夹)
-       ========================================= */
-    section.folder-section {
-      width: 100%;
-      padding: 120px 64px;
-      max-width: 1440px;
-      margin: 0 auto;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .folder-stage {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 60px;
-      margin-top: 48px;
-    }
-
-    .folder-interactive-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-    }
-
-    .folder-card-outer {
-      position: relative;
-      width: 480px;
-      height: 480px;
-      border-radius: 36px;
-      overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
-      transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
-    }
-
-    .folder-card-outer:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 40px 100px rgba(248, 192, 69, 0.25), 0 0 0 2px var(--accent-yellow);
-    }
-
-    .folder-card-outer img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .folder-hint-tag {
-      margin-top: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 0.5px;
-      background: rgba(248, 192, 69, 0.1);
-      padding: 6px 16px;
-      border-radius: 100px;
-      border: 1px solid rgba(248, 192, 69, 0.25);
-    }
-
-    .folder-side-visual {
-      flex: 1;
-      max-width: 520px;
-      height: 480px;
-      border-radius: 36px;
-      overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
-    }
-
-    .folder-side-visual img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Depth-of-Field Fan-Out Polaroid Modal */
-    .folder-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(14, 18, 13, 0.88);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s var(--ease-out);
-    }
-
-    .folder-modal.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .folder-modal-header {
-      width: 100%;
-      max-width: 1200px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 40px;
-      padding: 0 20px;
-    }
-
-    .folder-modal-header h3 {
-      font-family: var(--font-display);
-      font-size: 32px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -1px;
-    }
-
-    .folder-close-btn {
-      padding: 10px 24px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 100px;
-      color: #ffffff;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    .folder-close-btn:hover {
-      background: var(--accent-yellow);
-      color: #111410;
-      border-color: var(--accent-yellow);
-    }
-
-    .folder-cards-grid {
-      display: flex;
-      gap: 32px;
-      max-width: 1200px;
-      width: 100%;
-      padding: 0 20px;
-      justify-content: center;
-    }
-
-    .polaroid-card {
-      flex: 1;
-      max-width: 360px;
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 16px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-      transform: translateY(60px) scale(0.92);
-      transition: transform 0.5s var(--ease-out), box-shadow 0.3s ease;
-      color: #111410;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-    }
-
-    .folder-modal.active .polaroid-card:nth-child(1) {
-      transform: translateY(0) rotate(-3.5deg) scale(1);
-      transition-delay: 0.1s;
-    }
-    .folder-modal.active .polaroid-card:nth-child(2) {
-      transform: translateY(0) rotate(0deg) scale(1);
-      transition-delay: 0.2s;
-    }
-    .folder-modal.active .polaroid-card:nth-child(3) {
-      transform: translateY(0) rotate(3.5deg) scale(1);
-      transition-delay: 0.3s;
-    }
-
-    .polaroid-card:hover {
-      transform: translateY(-16px) rotate(0deg) scale(1.04) !important;
-      box-shadow: 0 40px 90px rgba(0, 0, 0, 0.85);
-      z-index: 10;
-    }
-
-    .polaroid-img-box {
-      width: 100%;
-      height: 280px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #f1f5f9;
-      margin-bottom: 16px;
-    }
-
-    .polaroid-img-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .polaroid-badge {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: #e2e8f0;
-      color: #334155;
-      margin-bottom: 8px;
-      align-self: flex-start;
-    }
-
-    .polaroid-title {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 6px;
-      color: #0f172a;
-    }
-
-    .polaroid-desc {
-      font-size: 13px;
-      line-height: 1.5;
-      color: #64748b;
-      margin-bottom: 16px;
-      flex: 1;
-    }
-
-    .polaroid-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 12px;
-      border-top: 1px solid #e2e8f0;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    /* =========================================
-       SECTION 04: SELECTED WORKS (Coverflow + Work Detail Modal)
-       ========================================= */
-
-    .works-nav-tabs {
-      display: flex;
-      gap: 10px;
-      margin-top: 24px;
-      flex-wrap: wrap;
-    }
-
-    .works-tab-btn {
-      padding: 9px 20px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 100px;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .works-tab-btn .tab-count {
-      display: inline-block;
-      font-size: 10px;
-      opacity: 0.65;
-    }
-
-    .works-tab-btn:hover,
-    .works-tab-btn.active {
-      background: #ffffff;
-      color: #111410;
-      border-color: #ffffff;
-      box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
-    }
-
-    /* 3D Coverflow Stage */
-
-    .coverflow-slide {
-      position: absolute;
-      width: 700px;
-      height: 450px;
-      border-radius: 28px;
-      overflow: hidden;
-      background: #0f172a;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
-      transition: all 0.5s var(--ease-out);
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
-    .coverflow-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .coverflow-slide-info {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      padding: 28px 36px;
-      background: #080c09;
-      display: flex;
-      gap: 16px;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-
-    .coverflow-slide-info > div { flex: 1; min-width: 0; }
-    .coverflow-slide-info h4, .coverflow-slide-info p { overflow-wrap: anywhere; }
-
-    .coverflow-slide-info h4 {
-      font-size: 22px;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
-
-    .coverflow-slide-info p {
-      font-size: 13px;
-      color: var(--text-muted);
-      max-width: 440px;
-      line-height: 1.5;
-    }
-
-    .coverflow-view-link {
-      flex: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      white-space: nowrap;
-      background: rgba(248, 192, 69, 0.15);
-      border: 1px solid rgba(248, 192, 69, 0.3);
-      padding: 8px 16px;
-      border-radius: 100px;
-      transition: all 0.2s ease;
-    }
-
-    .coverflow-view-link:hover {
-      background: var(--accent-yellow);
-      color: #111410;
-    }
-
-    /* Coverflow 3D Positions */
-    .coverflow-slide[data-pos="0"] {
-      transform: translateX(0) scale(1) translateZ(0);
-      z-index: 10;
-      opacity: 1;
-      border-color: rgba(255, 255, 255, 0.35);
-    }
-
-    .coverflow-slide[data-pos="-1"] {
-      transform: translateX(-400px) scale(0.82) rotateY(34deg) translateZ(-160px);
-      z-index: 5;
-      opacity: 0.65;
-    }
-
-    .coverflow-slide[data-pos="1"] {
-      transform: translateX(400px) scale(0.82) rotateY(-34deg) translateZ(-160px);
-      z-index: 5;
-      opacity: 0.65;
-    }
-
-    .coverflow-slide[data-pos="-2"] {
-      transform: translateX(-720px) scale(0.68) rotateY(48deg) translateZ(-320px);
-      z-index: 1;
-      opacity: 0.3;
-      pointer-events: none;
-    }
-
-    .coverflow-slide[data-pos="2"] {
-      transform: translateX(720px) scale(0.68) rotateY(-48deg) translateZ(-320px);
-      z-index: 1;
-      opacity: 0.3;
-      pointer-events: none;
-    }
-
-    /* Coverflow Dedicated Bottom Rationale Banner */
-
-    .coverflow-bottom-left {
-      max-width: 600px;
-    }
-
-    .coverflow-active-badge {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .coverflow-active-heading {
-      font-size: 24px;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 8px;
-    }
-
-    .coverflow-active-desc {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-muted);
-    }
-
-    .coverflow-arrow-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-      transition: all 0.25s ease;
-    }
-
-    .coverflow-arrow-btn:hover {
-      background: #ffffff;
-      color: #111410;
-      transform: scale(1.08);
-    }
-
-    /* FULLSCREEN WORK DETAIL MODAL (Matching 表哥's sec_550.jpg Mercedes Popout) */
-    .work-detail-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(13, 16, 11, 0.92);
-      backdrop-filter: blur(32px);
-      -webkit-backdrop-filter: blur(32px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s var(--ease-out);
-      padding: 40px;
-    }
-
-    .work-detail-modal.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .work-detail-card-outer {
-      width: 100%;
-      max-width: 1180px;
-      height: 680px;
-      background: rgba(24, 30, 22, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 32px;
-      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transform: translateY(30px) scale(0.96);
-      transition: transform 0.4s var(--ease-out);
-    }
-
-    .work-detail-modal.active .work-detail-card-outer {
-      transform: translateY(0) scale(1);
-    }
-
-    .work-detail-topbar {
-      height: 64px;
-      padding: 0 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .work-detail-topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .work-close-btn {
-      padding: 8px 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 100px;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .work-close-btn:hover {
-      background: var(--accent-yellow);
-      color: #111410;
-    }
-
-    .work-detail-body {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
-
-    .work-detail-visual {
-      flex: 1.35;
-      background: #0b0f0a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .work-detail-visual img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .work-detail-dossier {
-      flex: 1;
-      padding: 44px 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: rgba(28, 34, 25, 0.85);
-      border-left: 1px solid rgba(255, 255, 255, 0.08);
-      overflow-y: auto;
-    }
-
-    .work-dossier-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent-yellow);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .work-dossier-title {
-      font-family: var(--font-display);
-      font-size: 32px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -1px;
-      margin-bottom: 14px;
-    }
-
-    .work-dossier-desc {
-      font-size: 14px;
-      line-height: 1.7;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .work-metrics-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .work-metric-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 12px 14px;
-    }
-
-    .work-metric-val {
-      font-family: var(--font-mono);
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--accent-yellow);
-    }
-
-    .work-metric-lbl {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .work-stack-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-
-    .work-stack-chip {
-      padding: 4px 10px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-main);
-    }
-
-    .work-dossier-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .work-visit-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 24px;
-      background: var(--accent-yellow);
-      color: #111410;
-      border-radius: 100px;
-      font-weight: 700;
-      font-size: 13px;
-      text-decoration: none;
-      transition: transform 0.2s ease;
-    }
-
-    .work-visit-btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .work-nav-arrows {
-      display: flex;
-      gap: 8px;
-    }
-
-    .work-nav-btn {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 100px;
-      color: #ffffff;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .work-nav-btn:hover {
-      background: #ffffff;
-      color: #111410;
-    }
-
-    /* =========================================
-       SECTION 05: BEYOND THE ORDINARY (无限可能)
-       ========================================= */
-    section.beyond-section {
-      width: 100%;
-      padding: 120px 64px;
-      max-width: 1440px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 60px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .beyond-info-col {
-      flex: 1.1;
-    }
-
-    .beyond-stage-card {
-      flex: 1;
-      max-width: 580px;
-      height: 580px;
-      border-radius: 36px;
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.12);
-    }
-
-    .beyond-stage-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .contact-cards-row {
-      display: flex;
-      gap: 16px;
-      margin-top: 36px;
-      flex-wrap: wrap;
-    }
-
-    .contact-pill-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 22px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      text-decoration: none;
-      color: var(--text-main);
-      font-size: 13px;
-      font-weight: 600;
-      transition: all 0.25s ease;
-    }
-
-    .contact-pill-card:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--accent-yellow);
-      transform: translateY(-2px);
-    }
-
-    /* =========================================
-       BOTTOM TIMELINE PLAYER BAR
-       ========================================= */
-    footer.bottom-player-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 64px;
-      background: rgba(18, 22, 16, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 48px;
-      z-index: 90;
-    }
-
-    .player-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .player-timecode {
-      color: #ffffff;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .player-chapter-badge {
-      color: var(--accent-yellow);
-      font-weight: 700;
-    }
-
-    .player-center-track {
-      flex: 1;
-      max-width: 580px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 4px;
-      position: relative;
-      cursor: pointer;
-      margin: 0 32px;
-    }
-
-    .player-progress-fill {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 20%;
-      background: var(--accent-yellow);
-      border-radius: 4px;
-      transition: width 0.15s ease-out;
-    }
-
-    .player-scrubber-dot {
-      position: absolute;
-      top: 50%;
-      right: -6px;
-      transform: translateY(-50%);
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 0 10px var(--accent-yellow);
-    }
-
-    .player-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .player-pause-btn {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 6px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 100px;
-      transition: all 0.2s ease;
-    }
-
-    .player-pause-btn:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .audio-synth-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 6px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 100px;
-      transition: all 0.2s ease;
-    }
-
-    .audio-synth-toggle:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .audio-wave-bars {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      height: 12px;
-    }
-
-    .wave-bar {
-      width: 2px;
-      height: 4px;
-      background: var(--accent-yellow);
-      border-radius: 1px;
-      transition: height 0.15s ease;
-    }
-
-    .audio-synth-toggle.playing .wave-bar:nth-child(1) { animation: waveAnim 0.6s infinite ease-in-out alternate; }
-    .audio-synth-toggle.playing .wave-bar:nth-child(2) { animation: waveAnim 0.8s infinite ease-in-out alternate 0.2s; }
-    .audio-synth-toggle.playing .wave-bar:nth-child(3) { animation: waveAnim 0.5s infinite ease-in-out alternate 0.4s; }
-
-    @keyframes waveAnim {
-      0% { height: 3px; }
-      100% { height: 12px; }
-    }
-
-    /* Responsive */
-    @media (max-width: 1024px) {
-      .bio-stage-grid {
-        grid-template-columns: 1fr;
-        gap: 40px;
-      }
-      .folder-stage {
-        flex-direction: column;
-      }
-      .work-detail-body {
-        flex-direction: column;
-      }
-      .work-detail-card-outer {
-        height: 90vh;
-      }
-    }
-    /* Top Demo Switcher Bar */
-    .demo-switcher-bar {
-      position: fixed;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(18, 22, 16, 0.88);
-      border: 1px solid rgba(248, 192, 69, 0.35);
-      padding: 6px 14px;
-      border-radius: 999px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      z-index: 9999;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .demo-btn {
-      font-size: 11.5px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 999px;
-      color: rgba(245, 247, 242, 0.7);
-      text-decoration: none;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .demo-btn:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .demo-btn.active {
-      background: var(--accent-yellow);
-      color: #121510;
-      font-weight: 700;
-      box-shadow: 0 0 12px rgba(248, 192, 69, 0.4);
-    }
-
-    /* Restart: classic poster grid, Jaxson's own character, natural document scroll. */
-    html { scroll-padding-top: 72px; }
-    .demo-switcher-bar, footer.bottom-player-bar { display: none !important; }
-    header.site-header { gap: 24px; background: #171d15; border-bottom-color: rgba(255,255,255,.08); }
-    .brand-logo, nav.nav-links a { flex-shrink: 0; white-space: nowrap; }
-    .global-backdrop { z-index: 0; background-image: linear-gradient(90deg, rgba(15,20,14,.46), rgba(15,20,14,.08) 46%, rgba(15,20,14,.4)), url('./optimized/jaxson_studio_wall_plate_v2-1672.b889d9664779.webp'); background-position: center; }
-    .vignette-overlay { z-index: 0; }
-    main.page-content { z-index: 1; padding-bottom: 0; }
-    section.bio-section, section.folder-section, section.works-section, section.beyond-section { border-top: 0; }
-    section.hero-section { min-height: calc(100svh - 72px); padding: 56px max(4.5vw,36px); }
-    .hero-col-left { max-width: min(32vw,460px); }
-    .hero-mega-title, .hero-right-title, .bio-section .section-mega-title, .folder-section .section-mega-title { font-family: 'Anton', Impact, sans-serif; font-weight: 400; letter-spacing: .002em; }
-    .hero-mega-title { font-size: clamp(62px,6.25vw,108px); line-height: .95; }
-    .hero-col-center { top: auto; bottom: 0; transform: translateX(-50%); width: min(53vw,780px); height: calc(100svh - 72px); min-height: 600px; }
-    .hero-fullbleed-stage { width: 100%; height: 100%; -webkit-mask-image: none; mask-image: none; cursor: default; transition: transform .35s ease-out; }
-    .hero-fullbleed-stage img.avatar-img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; transform: none; }
-    .hero-fullbleed-stage img.avatar-img { -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 83%,transparent 100%); mask-image: linear-gradient(to bottom,#000 0%,#000 83%,transparent 100%); }
-    .hero-col-right { max-width: 260px; }
-    .hero-right-title { font-size: clamp(30px,2.5vw,42px); }
-    .hero-tag-chips { margin-bottom: 26px; }
-    .hero-scroll-indicator { bottom: 22px; }
-    section.bio-section { min-height: calc(100svh - 72px); padding: 80px max(4.5vw,36px) 52px; }
-    .bio-stage-grid { display: grid; grid-template-columns: minmax(0,340px) minmax(0,440px) minmax(0,1fr); gap: clamp(18px,3vw,48px); min-height: 620px; align-items: center; }
-    .bio-left-col, .bio-center-col, .bio-right-col { width: auto; max-width: none; margin: 0; min-width: 0; }
-    .bio-section .section-mega-title { font-size: clamp(50px,4.1vw,72px); }
-    .bio-summary-list li { color: rgba(245,247,242,.78); }
-    .bio-center-col { min-height: 460px; }
-    .milestone-stepper { width: 100%; flex-wrap: wrap; justify-content: center; }
-    .milestone-step-btn { white-space: nowrap; }
-    .milestone-active-card { padding: 28px 26px; border-radius: 10px; background: rgba(20,27,18,.72); }
-    .bio-right-col { height: 620px; align-items: stretch; justify-content: flex-end; }
-    .bio-char-container { width: 100%; height: 570px; -webkit-mask-image: none; mask-image: none; overflow: visible; }
-    .bio-char-container img.bio-pointing-img { position: absolute; width: 800px; max-width: none; height: auto; right: -120px; bottom: 0; object-fit: contain; -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 84%,transparent 100%); mask-image: linear-gradient(to bottom,#000 0%,#000 84%,transparent 100%); }
-    .bio-role-badge-bottom { margin-top: 0; text-align: right; }
-    section.folder-section { padding: 96px max(4.5vw,36px) 88px; max-width: 1500px; }
-    .folder-section .section-mega-title { font-size: clamp(60px,6vw,104px); }
-    .folder-stage { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: end; gap: 36px; margin-top: 28px; }
-    .folder-interactive-wrap { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; }
-    .folder-card-outer { width: min(100%,600px); height: auto; aspect-ratio: 1.18; border: 0; border-radius: 0; overflow: visible; box-shadow: none; filter: drop-shadow(0 28px 32px rgba(0,0,0,.44)); }
-    .folder-card-outer:hover { box-shadow: none; transform: translateY(-7px) rotate(2deg); }
-    .folder-card-outer img { object-fit: contain; }
-    .folder-card-outer img { transition: transform .22s ease-out; transform-origin: center; }
-    .folder-side-visual { position: relative; width: 100%; max-width: 620px; height: 520px; border: 0; border-radius: 0; overflow: visible; box-shadow: none; -webkit-mask-image: none; mask-image: none; }
-    .folder-side-visual img { position: absolute; width: 1000px; max-width: none; height: auto; right: -120px; bottom: 0; object-fit: initial; -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 74%,transparent 100%); mask-image: linear-gradient(to bottom,#000 0%,#000 74%,transparent 100%); }
-    .folder-interactive-wrap:focus-visible .folder-hint-tag, .works-tab-btn:focus-visible, .hero-cta-btn:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 4px; }
-
-    .works-nav-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 26px; }
-    .works-tab-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; min-height: 106px; padding: 16px 18px; border-radius: 6px; text-align: left; background: rgba(255,255,255,.045); color: #f5f7f2; box-shadow: none; }
-    .works-tab-btn:hover, .works-tab-btn.active { background: rgba(248,192,69,.1); border-color: rgba(248,192,69,.74); box-shadow: none; color: #fff; }
-    .works-tab-btn .work-index { color: var(--accent-yellow); font: 700 10px/1.2 var(--font-mono); }
-    .works-tab-btn strong { font: 700 17px/1.3 var(--font-body); }
-    .works-tab-btn small { color: rgba(245,247,242,.67); font: 500 12px/1.35 var(--font-body); }
-    .coverflow-slide img { object-fit: cover; }
-    .coverflow-slide img { transition: transform .6s cubic-bezier(.2,.8,.2,1); }
-    .coverflow-slide[data-pos="0"]:hover img { transform: scale(1.045); }
-    .polaroid-card { border: 0; text-align: left; font: inherit; }
-    .polaroid-footer span:last-child { color: #bd6b20; }
-    .beyond-stage-card { background: transparent; border-radius: 0; overflow: visible; box-shadow: none; }
-    .beyond-stage-card img { object-fit: cover; object-position: center 0; -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%); mask-image: linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%); }
-    .chapter-next { position: fixed; right: 28px; bottom: 24px; z-index: 80; display: flex; align-items: center; gap: 18px; padding: 11px 12px 11px 20px; border: 1px solid rgba(248,192,69,.55); border-radius: 100px; color: #fff; background: rgba(19,25,18,.82); backdrop-filter: blur(16px); cursor: pointer; box-shadow: 0 14px 40px rgba(0,0,0,.22); transition: background .25s ease, transform .25s ease; }
-    .chapter-next:hover { background: rgba(54,61,42,.95); transform: translateY(-4px); }
-    .chapter-next:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 4px; }
-    /* Over text or controls: fade out and let clicks reach the content. Keyboard focus still shows it. */
-    .chapter-next.is-covering:not(:focus-visible) { opacity: 0; pointer-events: none; }
-    .chapter-next { transition: background .25s ease, transform .25s ease, opacity .2s ease; }
-    .chapter-next__meta { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font: 700 10px/1.3 var(--font-mono); letter-spacing: .1em; color: var(--accent-yellow); }
-    .chapter-next__label { font: 700 13px/1.3 var(--font-body); color: #fff; letter-spacing: 0; }
-    .chapter-next__arrow { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-yellow); color: #172015; font-size: 19px; }
-    @media (min-width: 1200px) and (min-height: 760px) {
-      main.page-content > section { min-height: calc(100svh - 72px); }
-      section.folder-section { display: flex; flex-direction: column; max-width: none; padding: 48px max(4.5vw,36px) 24px; }
-      .folder-section .section-mega-title { font-size: clamp(62px,5vw,88px); line-height: 1.1; }
-      .folder-section > p { margin-top: 4px; }
-      .folder-stage { flex: 1; min-height: 0; width: 100%; max-width: 1450px; margin: 12px auto 0; align-items: end; }
-      .folder-card-outer { width: min(37vw,520px); height: min(46svh,410px); aspect-ratio: auto; }
-      .folder-side-visual { height: min(47svh,420px); }
-      .folder-side-visual img { width: 860px; right: -80px; }
-
-      .works-nav-tabs { grid-template-columns: 1fr; gap: 8px; margin-top: 18px; }
-      .works-tab-btn { min-height: 66px; padding: 9px 14px; gap: 2px; }
-      .works-tab-btn strong { font-size: 15px; }
-      .works-tab-btn small { font-size: 11px; }
-
-      .coverflow-slide { width: min(42vw,620px); height: min(44svh,390px); }
-      .coverflow-slide[data-pos="-1"] { transform: translateX(-300px) scale(.8) rotateY(32deg) translateZ(-130px); }
-      .coverflow-slide[data-pos="1"] { transform: translateX(300px) scale(.8) rotateY(-32deg) translateZ(-130px); }
-
-      .coverflow-active-heading { font-size: 20px; }
-      .coverflow-active-desc { font-size: 12px; }
-      section.beyond-section { max-width: none; padding: 54px max(5vw,36px); }
-    }
-    @media (max-width: 1199px) {
-      header.site-header { padding-inline: 32px; }
-      .brand-sub, .header-aside { display: none; }
-      nav.nav-links { gap: 20px; }
-      section.hero-section { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr); gap: 24px 32px; align-items: start; padding-block: 40px 56px; }
-      .hero-col-left { grid-column: 1; grid-row: 1; width: 100%; max-width: none; min-width: 0; }
-      .hero-mega-title { font-size: clamp(50px,5.6vw,76px); }
-      .hero-col-center { grid-column: 2; grid-row: 1 / 3; position: relative; left: auto; top: auto; bottom: auto; transform: none; width: 100%; height: min(76svh,680px); min-height: 0; margin: 0; }
-      .hero-col-right { grid-column: 1; grid-row: 2; width: 100%; max-width: none; margin: 0; align-items: flex-start; text-align: left; }
-      .hero-tag-chips { justify-content: flex-start; }
-      .hero-scroll-indicator { display: none; }
-      .bio-stage-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 30px; }
-      .bio-right-col { display: none; }
-      .chapter-next { display: none; }
-    }
-    @media (max-width: 800px) {
-      html { scroll-padding-top: 96px; }
-      header.site-header { height: 96px; padding: 8px 20px; flex-wrap: wrap; align-content: space-between; }
-      .brand-sub, .header-aside { display: none; }
-      nav.nav-links { width: 100%; order: 3; display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
-      nav.nav-links a { flex: none; font-size: 11px; }
-      /* The chapter row scrolls sideways; keep the AI entry beside the brand. */
-      nav.nav-links a.nav-ai-link { position: absolute; top: 8px; right: 20px; height: 40px; display: flex; align-items: center; font-size: 13px; }
-      main.page-content { padding-top: 96px; }
-      section.hero-section { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 42px 6vw 0; min-height: 0; }
-      .hero-col-left, .hero-col-right { max-width: 100%; text-align: left; width: 100%; }
-      .hero-mega-title { font-size: clamp(56px,13.5vw,82px); }
-      .hero-col-center { position: relative; left: auto; top: auto; bottom: auto; width: 100%; height: min(112vw,520px); min-height: 0; transform: none; order: 2; }
-      .hero-col-left .hero-footnote { display: none; }
-      .hero-col-right { order: 3; align-items: flex-start; padding-bottom: 40px; }
-      .hero-right-title { font-size: 34px; }
-      .hero-tag-chips { justify-content: flex-start; }
-      .hero-scroll-indicator { display: none; }
-      section.bio-section { padding: 74px 6vw 70px; }
-      .bio-stage-grid { display: flex; flex-direction: column; align-items: stretch; min-height: 0; gap: 32px; }
-      .bio-center-col { min-height: 0; }
-      .bio-watermark-year { font-size: 32vw; }
-      .bio-section .section-mega-title { font-size: clamp(58px,14vw,78px); }
-      .milestone-stepper { justify-content: flex-start; }
-      .milestone-step-btn { font-size: 11px; padding: 9px 10px; }
-      section.folder-section { padding: 74px 6vw 76px; }
-      .folder-stage { grid-template-columns: 1fr; gap: 0; }
-      .folder-side-visual { display: none; }
-      .folder-card-outer { width: 100%; }
-
-      .works-header, .coverflow-bottom-banner { padding-inline: 6vw; }
-      .works-nav-tabs { grid-template-columns: 1fr; }
-      .works-tab-btn { min-height: 0; padding: 12px 14px; }
-
-      .coverflow-slide { width: min(86vw,520px); height: 330px; }
-      .coverflow-slide-info { padding: 22px; }
-      .coverflow-slide-info h4 { font-size: 16px; }
-      .coverflow-slide-info p, .coverflow-view-link { font-size: 11px; }
-
-      .folder-modal { overflow-y: auto; justify-content: flex-start; padding-block: 110px 40px; }
-      .folder-modal-header { align-items: flex-start; gap: 12px; }
-      .folder-modal-header h3 { font-size: 22px; }
-      .folder-cards-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
-      .polaroid-card { max-width: none; transform: none; }
-      .folder-modal.active .polaroid-card { transform: none !important; }
-      .polaroid-img-box { height: 180px; }
-      .work-detail-card-outer { height: 90svh; width: 94vw; }
-      section.beyond-section { display: flex; flex-direction: column; align-items: stretch; gap: 32px; min-height: 0; padding: 76px 6vw 80px; }
-      .beyond-info-col { flex: none; width: 100%; min-width: 0; }
-      .beyond-info-col .section-mega-title { font-size: clamp(34px,9vw,48px); line-height: 1.15; }
-      .beyond-stage-card { flex: none; width: 100%; max-width: none; height: 390px; border-radius: 18px; }
-      .chapter-next { display: none; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
-    }
-
-    /* Content hierarchy for the four-scene portfolio. */
-    .bio-summary-list li { font-size: 14px; line-height: 1.65; color: rgba(249,250,245,.9); }
-    .milestone-step-btn { color: rgba(247,248,242,.82); }
-    .milestone-paragraph { color: rgba(247,248,242,.82); line-height: 1.7; }
-
-    .work-case { width: 100%; padding: 0 0 0 17px; border-left: 2px solid var(--accent-yellow); }
-    .work-case__eyebrow { margin-bottom: 11px; color: var(--accent-yellow); font: 700 11px/1.3 var(--font-mono); letter-spacing: .08em; }
-    .work-case__row { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 11px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.14); }
-    .work-case__row span { color: var(--accent-yellow); font: 700 11px/1.5 var(--font-body); }
-    .work-case__row strong { color: #f7f8f2; font: 500 13px/1.5 var(--font-body); }
-    .beyond-capabilities { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; max-width: 700px; margin: 0 0 24px; }
-    .beyond-capabilities > div { padding: 13px 12px; background: rgba(20,27,18,.49); border-top: 1px solid rgba(248,192,69,.58); }
-    .beyond-capabilities span { display: block; margin-bottom: 7px; color: var(--accent-yellow); font: 700 10px/1.2 var(--font-mono); letter-spacing: .04em; }
-    .beyond-capabilities strong { color: #f7f8f2; font: 600 12px/1.45 var(--font-body); }
-    @media (min-width: 1200px) and (min-height: 760px) {
-      .works-tab-btn { min-height: 54px; padding: 7px 13px; }
-      .works-tab-btn small { display: none; }
-
-    }
-    @media (max-width: 800px) {
-      .work-case__row { grid-template-columns: 56px minmax(0,1fr); }
-      .beyond-capabilities { grid-template-columns: 1fr; }
-    }
-
-    .milestone-active-card { padding: 24px 25px; }
-    .milestone-year-title { font-size: 32px; }
-    .milestone-role-title { font-size: 17px; margin-bottom: 9px; }
-    .milestone-paragraph { margin-bottom: 12px; }
-    .milestone-highlights { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(255,255,255,.16); }
-    .milestone-highlights li { position: relative; padding: 8px 0 0 17px; color: #f1f2eb; font: 500 12px/1.5 var(--font-body); }
-    .milestone-highlights li::before { content: '↳'; position: absolute; left: 0; color: var(--accent-yellow); }
-
-    .work-detail-visual { flex: .92; }
-    .work-detail-dossier { flex: 1.08; padding: 25px 30px; justify-content: flex-start; }
-    .work-dossier-title { margin-bottom: 6px; font-size: 29px; }
-    .work-dossier-facts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 17px; color: var(--accent-yellow); font: 700 11px/1.4 var(--font-mono); }
-    .work-dossier-facts span + span::before { content: '/'; margin-right: 10px; color: rgba(255,255,255,.3); }
-    .work-detail-section { margin-bottom: 16px; }
-    .work-detail-section h4 { margin: 0 0 7px; color: var(--accent-yellow); font: 700 11px/1.3 var(--font-mono); letter-spacing: .06em; }
-    .work-detail-section p { margin: 0; color: #e8ebe3; font: 500 13px/1.58 var(--font-body); }
-    .work-detail-points { margin: 0; padding: 0; list-style: none; }
-    .work-detail-points li { position: relative; margin: 0; padding: 0 0 7px 17px; color: #e8ebe3; font: 500 13px/1.52 var(--font-body); }
-    .work-detail-points li::before { content: '—'; position: absolute; left: 0; color: var(--accent-yellow); }
-    .work-detail-outcome { padding: 10px 13px; border-left: 2px solid var(--accent-yellow); background: rgba(248,192,69,.07); }
-    .work-detail-note:not([hidden]) { margin: -3px 0 15px; color: #d0d4c7; font: 500 12px/1.5 var(--font-body); }
-    .work-stack-chips { margin-bottom: 12px; }
-    .work-dossier-actions { gap: 10px; margin-top: auto; padding-top: 15px; }
-    .work-visit-btn { padding: 10px 16px; white-space: nowrap; }
-    .work-nav-arrows { flex-wrap: wrap; justify-content: flex-end; }
-    @media (max-width: 800px) {
-      .milestone-highlights li { font-size: 13px; }
-      .work-detail-modal { padding: 10px; }
-      .work-detail-card-outer { width: 100%; height: 96svh; border-radius: 18px; }
-      .work-detail-topbar { flex: none; height: 52px; padding: 0 15px; }
-      .work-detail-topbar-left { font-size: 10px; }
-      .work-detail-visual { flex: none; width: 100%; height: 22svh; }
-      .work-detail-dossier { flex: 1; min-height: 0; padding: 19px 20px 24px; }
-      .work-dossier-title { font-size: 24px; }
-      .work-dossier-actions { flex-wrap: wrap; }
-    }
-
-    section.bio-section { padding-block: 32px 84px; }
-    .bio-stage-grid { min-height: 0; }
-    .bio-left-col, .bio-center-col { align-self: center; padding-top: 0; }
-    .bio-center-col { min-height: 0; }
-    .bio-right-col { height: clamp(320px,calc(100svh - 188px),620px); }
-    .bio-char-container { height: 100%; }
-    .bio-role-badge-bottom, .bio-watermark-year { display: none; }
-    .bio-author-title { margin-bottom: 12px; }
-    .bio-intro { max-width: 335px; margin: 0; color: rgba(245,247,242,.84); font: 500 15px/1.72 var(--font-body); }
-    .bio-proof-strip { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0; max-width: 350px; margin: 23px 0 15px; padding: 15px 0; border-top: 1px solid rgba(255,255,255,.25); border-bottom: 1px solid rgba(255,255,255,.18); }
-    .bio-proof-strip > div { min-width: 0; padding: 0 10px; border-right: 1px solid rgba(255,255,255,.16); }
-    .bio-proof-strip > div:first-child { padding-left: 0; }
-    .bio-proof-strip > div:last-child { border-right: 0; }
-    .bio-proof-strip strong { display: block; color: #fff; font: 700 27px/1 var(--font-display); }
-    .bio-proof-strip span { display: block; margin-top: 7px; color: rgba(246,247,238,.68); font: 600 10px/1.45 var(--font-body); }
-    .bio-read-cue { margin: 0; color: var(--accent-yellow); font: 700 11px/1.5 var(--font-mono); letter-spacing: .04em; }
-    .milestone-stepper { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); width: 100%; gap: 0; margin-bottom: 0; border-bottom: 1px solid rgba(255,255,255,.23); }
-    .milestone-step-btn { padding: 13px 5px 14px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; box-shadow: none; white-space: nowrap; font-size: 11px; color: rgba(255,255,255,.72); }
-    .milestone-step-btn.active, .milestone-step-btn:hover { border-color: var(--accent-yellow); background: rgba(248,192,69,.07); box-shadow: none; color: var(--accent-yellow); }
-    .milestone-active-card { max-width: none; min-height: 258px; margin-top: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,.18); border-left: 2px solid var(--accent-yellow); background: #131b14; box-shadow: 0 22px 60px rgba(0,0,0,.27); backdrop-filter: blur(7px); }
-    .bio-step-hint { align-self: flex-start; margin: 12px 0 0; color: rgba(255,255,255,.64); font: 700 10px/1.5 var(--font-mono); letter-spacing: .12em; }
-    @media (max-width: 1199px) { .bio-role-badge-bottom { display: none; } }
-    @media (max-width: 800px) {
-      .bio-intro { max-width: none; }
-      .bio-proof-strip { max-width: none; }
-      .milestone-step-btn { padding: 12px 3px; font-size: 10px; }
-      .milestone-active-card { min-height: 0; }
-    }
-
-    .works-section .coverflow-track { transform-style: flat; }
-
-    .works-section .coverflow-slide img { object-fit: contain; }
-    .works-section .coverflow-slide[data-index="1"] { background: radial-gradient(circle at 22% 44%,rgba(248,192,69,.12),transparent 47%), linear-gradient(130deg,#1a2824,#111b1b); }
-    .works-section .coverflow-slide,
-    .works-section .coverflow-slide[data-pos="-1"],
-    .works-section .coverflow-slide[data-pos="1"],
-    .works-section .coverflow-slide[data-pos="-2"],
-    .works-section .coverflow-slide[data-pos="2"] {
-      transform: translateX(0) scale(.96);
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      z-index: 1;
-      transition: opacity .18s ease, transform .24s cubic-bezier(.2,.8,.2,1), visibility 0s .24s;
-    }
-    .works-section .coverflow-slide[data-pos="0"] {
-      transform: translateX(0) scale(1);
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      z-index: 2;
-      transition: opacity .18s ease, transform .24s cubic-bezier(.2,.8,.2,1), visibility 0s;
-    }
-
-    @media (min-width: 1200px) and (min-height: 760px) {
-
-      .works-section .coverflow-bottom-banner { gap: 14px; }
-    }
-    @media (max-width: 800px) {
-      .works-nav-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
-      .works-tab-btn { min-height: 77px; padding: 9px 8px; justify-content: flex-start; }
-      .works-tab-btn strong { font-size: 12px; line-height: 1.35; }
-      .works-tab-btn .work-index { font-size: 9px; }
-      .works-tab-btn small { display: none; }
-
-    }
-
-    @media (min-width: 1200px) and (min-height: 760px) {
-
-      .works-nav-tabs { height: auto; max-height: none; }
-
-    }
-
-    html { scroll-behavior: auto; }
-    @media (min-width: 1200px) and (min-height: 760px) {
-      section.bio-section { padding: 36px max(4.5vw,36px) 24px; }
-
-      .works-nav-tabs { gap: 5px; margin-top: 12px; }
-      .works-tab-btn { min-height: 50px; padding: 6px 11px; }
-      .works-tab-btn strong { font-size: 14px; }
-
-      .work-case__eyebrow { margin-bottom: 6px; }
-      .work-case__row { padding: 5px 0; }
-
-      .coverflow-arrow-btn { width: 40px; height: 40px; }
-
-    }
-
-    .works-tab-btn[hidden], .works-project-index[hidden] { display: none !important; }
-    .works-project-index { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; color: #e4e8d5; font: 700 11px/1.3 var(--font-body); }
-    .works-project-index select { min-width: 0; flex: 1; padding: 8px 11px; border: 1px solid rgba(248,192,69,.55); border-radius: 5px; background: #202a1e; color: #fff; font: inherit; }
-    .works-project-index select:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 3px; }
-
-    .work-case { padding-left: 17px; }
-    .work-case__eyebrow { margin-bottom: 6px; }
-    .work-case__headline { max-width: 33ch; margin: 0; color: #fff; font: 800 clamp(18px,1.42vw,23px)/1.28 var(--font-body); letter-spacing: -.025em; text-wrap: balance; }
-    .work-case__role { margin: 5px 0 0; color: rgba(245,247,242,.68); font: 600 11px/1.35 var(--font-body); }
-    .work-case__detail { display: grid; grid-template-columns: 68px minmax(0,1fr); gap: 8px; margin-top: 9px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.16); }
-    .work-case__detail span { color: var(--accent-yellow); font: 700 10px/1.45 var(--font-body); }
-    .work-case__detail p { margin: 0; color: #e6e9df; font: 500 12px/1.48 var(--font-body); }
-    .work-case__evidence { display: inline-flex; margin-top: 9px; color: var(--accent-yellow); font: 800 11px/1.3 var(--font-body); text-decoration: none; border-bottom: 1px solid currentColor; }
-    .work-case__evidence:hover { color: #fff; }
-    .work-case__evidence:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 3px; }
-    @media (max-width: 800px) { .work-case__headline { font-size: 21px; } .work-case__detail p { font-size: 13px; } }
-
-    /* Finale: a bounded poster composition at wide viewport sizes. */
-    section.beyond-section { justify-content: flex-start; gap: clamp(48px,5vw,140px); }
-    .beyond-info-col { flex: 0 1 860px; width: min(49vw,860px); max-width: 860px; min-width: 0; }
-    .beyond-info-col .section-mega-title { font-size: clamp(44px,3.8vw,88px); line-height: 1.13; text-wrap: balance; }
-    .beyond-lede { max-width: 650px; margin: 20px 0 0; color: rgba(245,247,242,.78); font: 500 clamp(14px,1vw,18px)/1.75 var(--font-body); }
-    .beyond-process { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; width: fit-content; max-width: 100%; margin-top: 32px; padding-top: 16px; border-top: 1px solid rgba(248,192,69,.65); }
-    .beyond-process > span { color: var(--accent-yellow); font: 700 11px/1.3 var(--font-mono); letter-spacing: .08em; }
-    .beyond-process strong { color: #f7f8f2; font: 600 clamp(13px,1vw,18px)/1.65 var(--font-body); }
-    .beyond-process i { padding-inline: 7px; color: var(--accent-yellow); font-style: normal; }
-    .beyond-actions { gap: 12px; margin-top: 34px; }
-    .beyond-actions .contact-pill-card { min-height: 67px; border-radius: 8px; font-size: clamp(13px,.9vw,17px); }
-    .beyond-actions .contact-pill-card b { margin-left: 16px; font: 600 25px/1 var(--font-body); }
-    .beyond-actions .contact-pill-card small { display: block; margin-top: 3px; font: 500 11px/1.3 var(--font-body); }
-    .beyond-primary { background: var(--accent-yellow); border-color: var(--accent-yellow); color: #1d2518; }
-    .beyond-primary:hover { background: #ffd16b; color: #1d2518; }
-    .beyond-secondary { border-color: rgba(248,192,69,.7); color: var(--accent-yellow); }
-    .beyond-footnote { display: flex; flex-wrap: wrap; gap: 25px; margin-top: 23px; color: rgba(246,248,239,.55); font: 600 11px/1.5 var(--font-mono); }
-    .beyond-footnote a { color: rgba(246,248,239,.8); text-decoration: underline; text-underline-offset: 4px; }
-    .beyond-footnote a:hover { color: var(--accent-yellow); }
-    .beyond-stage-card { flex: 0 0 clamp(400px,32vw,700px); width: clamp(400px,32vw,700px); max-width: 700px; }
-    .beyond-stage-card img { object-fit: contain; object-position: center bottom; }
-    @media (min-width: 801px) {
-      /* Share one height budget with the fixed header and the section insets.
-         The portrait must not add another page to an otherwise fitting finale. */
-      section.beyond-section {
-        --finale-inset: clamp(16px,3svh,40px);
-        max-width: none;
-        min-height: calc(100svh - 72px);
-        padding: var(--finale-inset) max(5vw,36px);
-      }
-      .beyond-info-col .section-mega-title { font-size: clamp(44px,min(3.8vw,8svh),88px); }
-      .beyond-stage-card { height: min(760px,calc(100svh - 72px - 2 * var(--finale-inset))); }
-      .beyond-process { margin-top: clamp(18px,3svh,32px); }
-      .beyond-actions { margin-top: clamp(20px,3svh,34px); }
-      .beyond-footnote { margin-top: clamp(14px,2svh,23px); }
-    }
-    @media (min-width: 801px) and (max-width: 1199px) {
-      section.beyond-section { gap: 36px; }
-      .beyond-info-col { flex: 1 1 auto; width: auto; }
-      .beyond-stage-card { flex: 0 1 43%; width: 43%; }
-    }
-    @media (max-width: 800px) {
-      section.beyond-section { gap: 22px; }
-      .beyond-info-col { flex: none; width: 100%; max-width: none; }
-      .beyond-info-col .section-mega-title { font-size: clamp(38px,9vw,54px); }
-      .beyond-process { margin-top: 25px; }
-      .beyond-actions { margin-top: 26px; }
-      .beyond-actions .contact-pill-card { min-height: 59px; }
-      .beyond-stage-card { flex: none; width: 100%; max-width: none; height: 340px; }
-    }
-
-    nav.nav-links a.nav-ai-link { color: var(--accent-yellow); }
-    nav.nav-links a.nav-ai-link::after { display: none; }
-    nav.nav-links a.nav-resume-link { color: #f7f4e9; }
-    .bio-resume-link { display: inline-flex; align-items: center; gap: 16px; width: fit-content; margin-top: 17px; padding: 11px 15px; border: 1px solid rgba(248,192,69,.7); border-radius: 999px; color: var(--accent-yellow); font: 700 12px/1.3 var(--font-body); text-decoration: none; transition: background .2s ease, transform .2s ease; }
-    .bio-resume-link:hover { background: rgba(248,192,69,.12); transform: translateY(-2px); }
-    .bio-resume-link:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 4px; }
-    .ai-contact-link { border-color: rgba(248,192,69,.72); color: var(--accent-yellow); }
-    .ai-contact-link:hover { background: rgba(248,192,69,.12); }
-
-    .work-case__evidence[hidden], #modalVisitLink[hidden] { display: none !important; }
-    .work-detail-visual img { object-fit: contain; }
-    .works-section .works-nav-tabs, .works-section .works-project-index { display: none !important; }
-    .works-section.works-empty .coverflow-track { display: flex; align-items: center; justify-content: center; min-height: 220px; }
-    .works-section.works-empty .coverflow-bottom-banner { display: none; }
-    .works-empty-message { max-width: 440px; padding: 28px; text-align: center; color: #e7e6d8; line-height: 1.7; }
-    .works-archive-open { display: inline-flex; align-items: center; gap: 14px; margin-top: 23px; padding: 13px 17px; border: 1px solid rgba(248,192,69,.65); border-radius: 4px; background: rgba(248,192,69,.13); color: #fff; font: 700 13px/1.25 var(--font-body); cursor: pointer; transition: background .2s ease, transform .2s ease; }
-    .works-archive-open:hover { background: rgba(248,192,69,.24); transform: translateY(-2px); }
-    .works-archive-open span:first-child { color: var(--accent-yellow); font: 700 12px/1 var(--font-mono); }
-    .works-archive-open span:last-child { color: var(--accent-yellow); font-size: 18px; }
-    .works-archive-open:focus-visible, .works-archive-close:focus-visible, .works-archive-search:focus-visible, .works-archive-item:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 3px; }
-    .works-archive { width: min(920px,calc(100vw - 32px)); max-height: min(760px,calc(100dvh - 32px)); margin: auto; padding: 0; border: 1px solid rgba(248,192,69,.42); border-radius: 10px; background: #1a231a; color: #fff; box-shadow: 0 28px 90px rgba(0,0,0,.58); overflow: hidden; }
-    .works-archive::backdrop { background: rgba(7,13,9,.78); backdrop-filter: blur(6px); }
-    .works-archive-shell { display: flex; flex-direction: column; max-height: min(760px,calc(100dvh - 32px)); padding: clamp(22px,3vw,36px); }
-    .works-archive-header { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
-    .works-archive-kicker { color: var(--accent-yellow); font: 700 11px/1.3 var(--font-mono); letter-spacing: .12em; }
-    .works-archive-header h2 { margin: 8px 0 0; font: 800 clamp(24px,3vw,36px)/1.14 var(--font-body); }
-    .works-archive-close { flex: none; width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.23); border-radius: 50%; background: rgba(255,255,255,.06); color: #fff; font-size: 26px; line-height: 1; cursor: pointer; }
-    .works-archive-search-label { margin-top: 24px; color: rgba(245,247,242,.7); font: 600 12px/1.4 var(--font-body); }
-    .works-archive-search { width: 100%; margin-top: 8px; padding: 13px 15px; border: 1px solid rgba(255,255,255,.24); border-radius: 5px; background: rgba(5,10,7,.38); color: #fff; font: 500 15px/1.4 var(--font-body); }
-    .works-archive-search::placeholder { color: rgba(245,247,242,.43); }
-    .works-archive-result { margin: 13px 0 14px; color: rgba(245,247,242,.65); font: 600 11px/1.4 var(--font-mono); }
-    .works-archive-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-content: start; gap: 9px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 4px 4px 0; }
-    .works-archive-item { display: flex; align-items: flex-start; gap: 14px; min-width: 0; padding: 17px; border: 1px solid rgba(255,255,255,.12); border-radius: 5px; background: rgba(255,255,255,.035); color: #fff; text-align: left; cursor: pointer; transition: border-color .2s ease, background .2s ease; }
-    .works-archive-item:hover { border-color: var(--accent-yellow); background: rgba(248,192,69,.1); }
-    .works-archive-item__number { color: var(--accent-yellow); font: 700 12px/1.4 var(--font-mono); }
-    .works-archive-item__body { display: grid; gap: 5px; min-width: 0; }
-    .works-archive-item__body small { color: var(--accent-yellow); font: 700 10px/1.35 var(--font-mono); }
-    .works-archive-item__body strong { font: 700 17px/1.3 var(--font-body); }
-    .works-archive-item__body > span { color: rgba(245,247,242,.62); font: 500 12px/1.5 var(--font-body); }
-    .works-archive-item__arrow { margin-left: auto; color: var(--accent-yellow); }
-    .works-archive-empty { grid-column: 1/-1; color: rgba(245,247,242,.7); font: 500 14px/1.5 var(--font-body); }
-
-    @media (max-width: 650px) { .works-archive-list { grid-template-columns: 1fr; } .works-archive-item { padding: 13px; } }
-    /* Keep scrolling on composited transforms; avoid re-blurring the moving scene. */
-    header.site-header, .chapter-next, .milestone-active-card,
-    .hero-tag-chips .hero-chip, .gaze-tracker-card, .contact-pill-card,
-    .folder-modal, .work-detail-modal {
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-    .work-detail-modal { visibility: hidden; background: rgba(13,16,11,.96); }
-    .work-detail-modal.active { visibility: visible; }
-    main.page-content { transition: none; }
-    body.modal-open main.page-content { filter: none; transform: none; }
-    .hero-fullbleed-stage { transition: none; will-change: auto; }
-    .hero-section.scene-active .hero-fullbleed-stage { will-change: transform; }
-    .hero-fullbleed-stage img.avatar-img { will-change: auto; transition: none; }
-    .hero-scroll-indicator { animation-play-state: paused; }
-    .hero-section.scene-active .hero-scroll-indicator { animation-play-state: running; }
-    .works-section .coverflow-viewport { perspective: none; }
-    .works-section .coverflow-slide[data-pos="0"] { will-change: transform, opacity; }
-    @media (max-width: 800px) {
-      .global-backdrop { background-image: linear-gradient(90deg,rgba(15,20,14,.46),rgba(15,20,14,.08) 46%,rgba(15,20,14,.4)),url('./optimized/jaxson_studio_wall_plate_v2-840.971bcf265697.webp'); }
-    }
-
-    /* One width-driven works layout. Short windows retain the same composition;
-       content may grow instead of switching to the legacy horizontal banner. */
-    section.works-section {
-      display: grid;
-      grid-template-columns: minmax(320px,min(36vw,480px)) minmax(0,1fr);
-      grid-template-rows: auto 1fr;
-      gap: 20px clamp(24px,4vw,64px);
-      width: 100%;
-      min-height: calc(100svh - 72px);
-      padding: clamp(24px,3svh,40px) max(4.5vw,calc((100vw - 1680px)/2)) 84px;
-      position: relative;
-      overflow: clip;
-      border-top: 0;
-    }
-    .works-header {
-      grid-column: 1;
-      grid-row: 1;
-      width: 100%;
-      min-width: 0;
-      max-width: none;
-      margin: 0;
-      padding: 0;
-    }
-    .works-header .section-mega-title {
-      font-size: clamp(32px,2.7vw,50px);
-      line-height: 1.1;
-      white-space: normal;
-    }
-    .works-intro {
-      max-width: 42ch;
-      margin-top: 10px;
-      color: rgba(245,247,242,.72);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .coverflow-viewport {
-      grid-column: 2;
-      grid-row: 1 / 3;
-      align-self: start;
-      position: sticky;
-      top: 96px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      min-width: 0;
-      height: clamp(220px,calc(100svh - 200px),680px);
-      overflow: clip;
-      user-select: none;
-      touch-action: pan-y;
-    }
-    .coverflow-track {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
-    .works-section .coverflow-slide {
-      width: min(100%,calc((100svh - 200px)*1.6),960px);
-      height: auto;
-      max-height: 100%;
-      aspect-ratio: 16 / 10;
-      border-radius: 12px;
-      background: #10171b;
-    }
-    .coverflow-bottom-banner {
-      grid-column: 1;
-      grid-row: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: flex-start;
-      gap: 16px;
-      width: 100%;
-      min-width: 0;
-      max-width: none;
-      margin: 0;
-      padding: 0;
-    }
-    .work-case { min-width: 0; }
-    .work-case__headline, .work-case__detail p { overflow-wrap: anywhere; }
-    .work-case-open {
-      display: inline-flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      width: min(100%,300px);
-      min-height: 44px;
-      padding: 11px 16px;
-      border: 1px solid var(--accent-yellow);
-      border-radius: 4px;
-      background: var(--accent-yellow);
-      color: #162015;
-      font: 800 13px/1.4 var(--font-body);
-      text-align: left;
-      cursor: pointer;
-      transition: transform .2s ease;
-    }
-    .work-case-open:hover { transform: translateY(-2px); }
-    .work-case-open:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-    .work-case-open span { flex: none; font: 700 20px/1 var(--font-mono); }
-    .coverflow-controls { display: flex; align-items: center; gap: 16px; }
-    .coverflow-arrow-btn { flex: none; min-width: 44px; min-height: 44px; }
-    .coverflow-counter-box {
-      flex: none;
-      white-space: nowrap;
-      color: var(--accent-yellow);
-      font: 700 14px/1.4 var(--font-mono);
-    }
-    @media (max-width: 1099px) {
-      section.works-section {
-        grid-template-columns: minmax(0,1fr);
-        grid-template-rows: auto auto auto;
-        gap: 24px;
-        padding: 32px 6vw 56px;
-      }
-      .works-header { grid-column: 1; grid-row: 1; }
-      .coverflow-viewport {
-        grid-column: 1;
-        grid-row: 2;
-        position: relative;
-        top: auto;
-        height: auto;
-        aspect-ratio: 16 / 10;
-        max-height: 520px;
-      }
-      .works-section .coverflow-slide { width: min(100%,832px); height: 100%; }
-      .coverflow-bottom-banner { grid-column: 1; grid-row: 3; }
-      .work-case-open { width: 100%; }
-    }
-    @media (max-width: 800px) {
-      section.works-section { min-height: calc(100svh - 96px); }
-      .works-header .section-mega-title { font-size: clamp(30px,7vw,44px); }
-      .works-section .coverflow-slide-info { padding: 16px; }
-      .works-section .coverflow-slide-info p { display: none; }
-    }
+      --bg: #F3F4F7; --panel: #FFFFFF; --card: #F8F9FB; --chip: #EEF0F5; --line: #E2E5EC;
+      --ink: #0E1526; --on-ink: #FFFFFF; --sub: #4B5468; --faint: #6B7385;
+      --accent: #2952E3; --accent-hover: #2246C7; --accent-bg: #E6ECFF; --hit: #A84E14; --hit-bg: #FCEBDD;
+      --shot: radial-gradient(70% 55% at 50% 32%, #DCE4FF, transparent 70%), linear-gradient(#EBEEF5, #D5DBE7);
+      --cover: linear-gradient(160deg, #E8EDFB, #D9E0EE);
+      --shadow: 0 1px 2px rgba(14,21,38,.04), 0 10px 30px -14px rgba(14,21,38,.12);
+      /* Every Chinese glyph comes from one system sans. Latin-only faces list it before the generic
+         family, or Windows draws Chinese in NSimSun (a Song serif). */
+      --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', 'Noto Sans CJK SC';
+      --font-text: 'Plus Jakarta Sans', var(--font-cjk), system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', var(--font-cjk), monospace;
+      --header: 64px; --gap: 14px; --gutter: 16px; --max: 1400px; --radius: 16px;
+    }
+    @media (min-width: 640px) { :root { --gutter: 20px; } }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: var(--header); }
+    body { background: var(--bg); color: var(--ink); font: 400 16px/1.7 var(--font-text); -webkit-font-smoothing: antialiased; }
+    img { max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding-inline: var(--gutter); }
+    .muted { color: var(--sub); }
+    .mono { font-family: var(--font-mono); }
+    /* External destinations get a small arrow drawn in CSS, not typed into the label. */
+    .ext::after { content: ''; display: inline-block; width: .65em; height: .65em; margin-left: .4em; background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4 1h7v7M11 1 1 11' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center/contain no-repeat;
+              mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4 1h7v7M11 1 1 11' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center/contain no-repeat; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 10px;
+      font: 700 15px/1 var(--font-text); border: 1px solid var(--line); background: var(--panel); color: var(--ink); transition: background-color .15s, border-color .15s; }
+    .btn:hover { border-color: #C9CEDA; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-ink); }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); min-width: 0; }
+    .ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--sub); }
+    .ph h2, .ph strong { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .badge { font: 500 14px/1 var(--font-mono); padding: 6px 8px; border-radius: 6px; background: var(--accent-bg); color: var(--accent); white-space: nowrap; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tags li { font: 500 14px/1 var(--font-mono); padding: 6px 9px; border-radius: 6px; background: var(--chip); color: var(--sub); }
+    .tags li.key { background: var(--accent-bg); color: var(--accent); font-weight: 700; }
+
+    /* Header: the only navigation. */
+    .site-header { position: sticky; top: 0; z-index: 10; height: var(--header); background: rgba(243,244,247,.88);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+    .site-header .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 800; font-size: 17px; white-space: nowrap; }
+    .brand::before { content: ''; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); }
+    .site-nav { display: flex; align-items: center; gap: 2px; }
+    .site-nav a:not(.btn) { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: var(--sub); font-size: 15px; white-space: nowrap; }
+    .site-nav a:not(.btn):hover, .site-nav a[aria-current="true"] { color: var(--ink); background: rgba(14,21,38,.05); }
+    .site-nav .btn { margin-left: 6px; padding: 0 14px; }
+    .nav-section { display: none !important; }
+    @media (min-width: 800px) { .nav-section { display: inline-flex !important; } }
+
+    /* First screen: profile, a sample conversation with the AI twin, and how that answer was found. */
+    .hero { display: grid; gap: var(--gap); padding-top: 4px; }
+    .profile { display: grid; overflow: hidden; }
+    .shot { position: relative; overflow: hidden; background: var(--shot); height: 300px; }
+    .shot img { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: auto; max-width: none; height: 200%; }
+    .status { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+      background: var(--panel); color: var(--accent); font-size: 14px; font-weight: 700; }
+    .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2E9E4F; }
+    .pbody { padding: 18px; display: grid; gap: 14px; align-content: start; }
+    .pbody h1 { font-size: 30px; line-height: 1.2; font-weight: 800; }
+    .pbody .role { font-size: 16px; color: var(--sub); margin-top: 4px; }
+    .facts { display: grid; gap: 6px; font-size: 15px; line-height: 1.6; }
+    .facts div { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 8px; }
+    .facts dt { color: var(--faint); }
+    .ctas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .chat { display: flex; flex-direction: column; }
+    .thread { flex: 1; min-height: 0; padding: 22px 30px 8px; display: flex; flex-direction: column; gap: 16px; }
+    .greet { font-size: clamp(26px, 2.4vw, 34px); line-height: 1.3; font-weight: 800; }
+    .greet em { font-style: normal; color: var(--accent); }
+    .greet-sub { margin-top: 6px; }
+    .q { align-self: flex-end; max-width: 80%; background: var(--ink); color: var(--on-ink); padding: 9px 16px; border-radius: 16px 16px 4px 16px; }
+    .a { font-size: 17px; line-height: 1.8; overflow-wrap: anywhere; }
+    .a sup { font: 700 14px/1 var(--font-mono); color: var(--accent); background: var(--accent-bg); border-radius: 4px; padding: 1px 5px; margin-left: 2px; vertical-align: 3px; }
+    .a .caret { display: inline-block; width: 8px; height: 18px; background: var(--accent); vertical-align: -3px; margin-left: 3px; }
+    .srcs { display: grid; gap: 10px; }
+    /* Two sources side by side only where the conversation is wide enough for both titles. */
+    @media (min-width: 640px) and (max-width: 759px), (min-width: 1200px) { .srcs { grid-template-columns: 1fr 1fr; } }
+    .src { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+    .src:hover { border-color: #C9CEDA; }
+    .src .thumb { width: 104px; height: 66px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--cover); color: var(--accent); font-size: 26px; font-weight: 800; }
+    .src img { width: 104px; height: 66px; object-fit: cover; object-position: top left; border-radius: 8px; border: 1px solid var(--line); display: block; }
+    .src span { display: block; font: 700 14px/1.4 var(--font-mono); color: var(--accent); }
+    .src b { display: block; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+    .composer { padding: 12px 30px 20px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .chips a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--sub); font-size: 14px; }
+    .chips a:hover { border-color: var(--accent); color: var(--accent); }
+    #askForm { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px 0 4px; border-radius: 14px; background: var(--panel);
+      border: 1.5px solid var(--accent); box-shadow: 0 0 0 4px var(--accent-bg); }
+    #askForm input { flex: 1; min-width: 0; height: 48px; border: 0; background: none; padding: 0 12px; font: 400 16px var(--font-text); color: var(--ink); }
+    #askForm input::placeholder { color: var(--faint); }
+    #askForm input:focus-visible { outline: none; }
+    #askForm:focus-within { box-shadow: 0 0 0 4px #C9D6FF; }
+    #askForm button { height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-ink); font: 700 15px var(--font-text); cursor: pointer; }
+    #askForm button:hover { background: var(--accent-hover); }
+
+    .trace { display: flex; flex-direction: column; overflow: hidden; }
+    .steps { padding: 14px 18px 4px; }
+    .step { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding-bottom: 12px; position: relative; }
+    .step::before { content: ''; position: absolute; left: 10px; top: 24px; bottom: 2px; width: 1px; background: var(--line); }
+    .step:last-child::before { display: none; }
+    .step i { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); font: 700 14px/22px var(--font-mono); text-align: center; font-style: normal; }
+    .step b { display: block; font-size: 15px; line-height: 1.5; }
+    .step small { display: block; font-size: 14px; line-height: 1.5; color: var(--faint); }
+    .kb { border-top: 1px solid var(--line); padding: 12px 18px 14px; flex: 1; }
+    .kb h3 { font-size: 14px; font-weight: 400; color: var(--sub); margin-bottom: 4px; }
+    .doc { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 15px; overflow-wrap: anywhere; }
+    .doc span { font: 500 14px/1 var(--font-mono); padding: 4px 6px; border-radius: 4px; background: var(--chip); color: var(--sub); white-space: nowrap; }
+    .doc.hit { font-weight: 700; }
+    .doc.hit span { background: var(--hit-bg); color: var(--hit); }
+
+    /* Tablet: profile beside the conversation, the trace below with its two halves side by side. */
+    @media (min-width: 760px) {
+      .hero { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); }
+      .profile { grid-template-rows: minmax(260px, 1fr) auto; }
+      .shot { height: auto; }
+      .trace { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
+      .trace .ph { grid-column: 1 / -1; }
+      .kb { border-top: 0; border-left: 1px solid var(--line); }
+    }
+    /* Desktop: three panels fill the first screen. */
+    @media (min-width: 1200px) {
+      .hero { grid-template-columns: minmax(280px, 330px) minmax(0, 1fr) minmax(300px, 340px); height: min(calc(100svh - var(--header) - 16px), 920px); min-height: 560px; }
+      .trace { grid-column: auto; display: flex; }
+      .kb { border-left: 0; border-top: 1px solid var(--line); }
+      .shot img { height: 640px; top: 6px; }
+    }
+    /* Short laptop windows keep the whole first screen, composer included. */
+    @media (min-width: 1200px) and (max-height: 860px) {
+      .x2 { display: none; }
+      .thread { gap: 12px; padding-top: 16px; }
+      .pbody { gap: 10px; padding: 14px 18px; }
+      .pbody h1 { font-size: 26px; }
+      .facts { gap: 2px; font-size: 14px; }
+      .step { padding-bottom: 8px; }
+    }
+    @media (min-width: 1200px) and (max-height: 720px) {
+      .greet-sub, .doc:nth-of-type(n+5) { display: none; }
+      .ph { padding-block: 9px; }
+      .step small { display: none; }
+    }
+
+    /* Below the first screen. */
+    .chapter { padding-top: 72px; }
+    .sh { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 4px 16px; margin-bottom: 18px; }
+    .sh h2 { font-size: clamp(28px, 3vw, 34px); line-height: 1.2; font-weight: 800; }
+
+    .works { display: grid; gap: var(--gap); }
+    .works + .works { margin-top: var(--gap); }
+    @media (min-width: 900px) {
+      .featured-grid { grid-template-columns: 1fr 1fr; }
+      /* One featured project lies across the row: screenshot beside its story. */
+      .featured:only-child { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+      .featured:only-child .cover { aspect-ratio: auto; min-height: 100%; }
+    }
+    /* Projects beyond the featured ones: one compact list, a line each on wide screens. */
+    .more-list { margin-top: var(--gap); overflow: hidden; }
+    .ph h3 { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .row { display: grid; gap: 4px 20px; padding: 14px 18px; border-bottom: 1px solid var(--line); align-items: center; }
+    .row:last-child { border-bottom: 0; }
+    .row h4 { font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+    .row-meta { font-size: 14px; color: var(--faint); }
+    .row .summary { font-size: 15px; color: var(--sub); overflow-wrap: anywhere; }
+    .row-links { display: flex; gap: 0 16px; }
+    .row-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .row-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
+    @media (min-width: 1000px) {
+      .row { grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr) minmax(0, 1.3fr) 160px; padding-block: 8px; }
+      .row .summary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .row .tags { flex-wrap: nowrap; overflow: hidden; }
+      .row-links { justify-content: flex-end; }
+    }
+    .show-all { display: flex; margin: 12px auto 14px; cursor: pointer; }
+    .project { display: flex; flex-direction: column; overflow: hidden; }
+    /* Screenshots run edge to edge from their top-left corner; no frame inside the card. */
+    .cover { aspect-ratio: 16 / 10; background: var(--card); border-bottom: 1px solid var(--line); overflow: hidden; }
+    .cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+    /* Without a screenshot the cover carries the project's own name instead of a stock image. */
+    .cover.placeholder { display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 20px 24px; background: var(--cover); }
+    .cover.placeholder b { font-size: 56px; line-height: 1; font-weight: 800; color: var(--accent); opacity: .35; }
+    .cover.placeholder span { font: 500 14px/1.5 var(--font-mono); color: var(--sub); overflow-wrap: anywhere; }
+    .wb { padding: 22px 24px 24px; display: grid; gap: 12px; }
+    .project h3 { font-size: 24px; line-height: 1.3; overflow-wrap: anywhere; }
+    .work-role { color: var(--sub); font-size: 14px; margin-top: -6px; }
+    .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 6px 12px; font-size: 15px; }
+    .story dt { color: var(--faint); }
+    .story dd { overflow-wrap: anywhere; }
+    .links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .works-status { color: var(--sub); }
+
+    .bio { display: grid; gap: var(--gap); align-items: start; }
+    @media (min-width: 900px) { .bio { grid-template-columns: 1.15fr 1fr; } }
+    .timeline { padding: 4px 24px 12px; }
+    .entry { display: grid; gap: 4px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+    .entry:last-child { border-bottom: 0; }
+    @media (min-width: 640px) { .entry { grid-template-columns: 136px minmax(0, 1fr); gap: 16px; } }
+    .when { font: 500 14px/1.6 var(--font-mono); color: var(--faint); padding-top: 3px; }
+    .entry h3 { font-size: 17px; line-height: 1.5; }
+    .entry .org { color: var(--sub); font-size: 15px; }
+    .entry p:not(.org):not(.when) { margin-top: 8px; font-size: 15px; }
+    .entry ul { margin-top: 8px; display: grid; gap: 4px; font-size: 15px; color: var(--sub); }
+    .entry li { position: relative; padding-left: 16px; }
+    .entry li::before { content: ''; position: absolute; left: 0; top: .8em; width: 6px; height: 6px; border-radius: 50%; background: #C3C9D6; }
+    .skills { padding: 8px 24px 24px; display: grid; gap: 18px; }
+    .skills h3 { font-size: 14px; font-weight: 400; color: var(--sub); margin-bottom: 8px; }
+    .skills .tags li { background: var(--panel); border: 1px solid var(--line); color: var(--ink); }
+    .skills .tags li.key { background: var(--accent-bg); border-color: transparent; color: var(--accent); }
+
+    .contact { margin-top: 72px; padding: 32px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;
+      background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+    @media (min-width: 640px) { .contact { padding: 40px; } }
+    .contact h2 { font-size: 32px; line-height: 1.2; }
+    .contact p { color: #A9B1C3; margin-top: 6px; }
+    .contact .btn { background: transparent; color: var(--on-ink); border-color: #2B3448; }
+    .contact .btn:hover { border-color: #56617A; }
+    .contact .btn-primary { background: var(--accent); border-color: var(--accent); }
+    .site-footer { padding: 16px 0 28px; color: var(--sub); font-size: 14px; }
+    .site-footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .site-footer a { display: inline-flex; align-items: center; min-height: 44px; }
+
+    /* One orchestrated moment: the three first-screen panels rise in once. */
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .hero .panel { animation: rise .55s cubic-bezier(.16, 1, .3, 1) both; }
+    .hero .chat { animation-delay: .06s; }
+    .hero .trace { animation-delay: .12s; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .hero .panel { animation: none; } }
   </style>
-<script src="./config.js"></script>
+  <script src="./config.js"></script>
 </head>
 <body>
-
-  <!-- SVG Liquid Lens Refraction Shader Definition -->
-  <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-    <defs>
-      <filter id="liquidFilter" x="-20%" y="-20%" width="140%" height="140%">
-        <feTurbulence id="turbSeed" type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="3" result="noise" seed="4" />
-        <feDisplacementMap id="dispMap" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </defs>
-  </svg>
-
-  <!-- Global Backdrop -->
-  <div class="global-backdrop"></div>
-  <div class="vignette-overlay"></div>
-
-  <!-- Header -->
   <header class="site-header">
-    <a href="#hero" class="brand-logo">
-      Jaxson<span class="dot">.</span>
-      <span class="brand-sub">AI & Products</span>
-    </a>
-
-    <nav class="nav-links">
-      <a href="#hero" class="active">初次见面</a>
-      <a href="#bio">个人履历</a>
-      <a href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_AI Product Builder简历.pdf" class="nav-resume-link">下载简历 ↓</a>
-      <a href="#works">精选作品</a>
-      <a href="#beyond">无限可能</a>
-      <a href="/ai" data-ai-link class="nav-ai-link">AI 对话 ↗</a>
-    </nav>
-
-    <div class="header-aside">
-      <div class="header-credentials">
-        <div class="title">AI PRODUCT BUILDER</div>
-        <div class="desc">深圳 · 2027 届 · 可线下到岗</div>
-      </div>
+    <div class="wrap">
+      <a class="brand" href="#hero">张锦鹏 Jaxson</a>
+      <nav class="site-nav" aria-label="主导航">
+        <a class="nav-section" href="#works">作品</a>
+        <a class="nav-section" href="#bio">履历</a>
+        <a class="nav-section" href="#beyond">联系</a>
+        <a href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_简历.pdf">简历 PDF</a>
+        <a class="btn btn-primary" href="/ai" data-ai-link>问我的 AI</a>
+      </nav>
     </div>
   </header>
 
-  <!-- Page Content -->
-  <main class="page-content" id="pageMain">
-
-    <!-- 01 HERO: FULL BLEED SEAMLESS WITH LIQUID OPTICAL REFRACTION -->
-    <section class="hero-section" id="hero">
-      <div class="hero-col-left">
-        <div class="hero-eyebrow">JAXSON / AI PRODUCT BUILDER</div>
-        <h1 class="hero-mega-title">IDEAS.<br/>INTO<br/>PRODUCTS.</h1>
-
-        <div class="hero-greeting">嗨，我是张锦鹏。把想法做成可用产品，把体验带到真实用户面前。</div>
-        <div class="hero-credentials">深圳职业技术大学大数据技术专业专科在读，2027 届，GPA 3.85 / 4.0，专业前 3%。现于广东润喵云科技有限公司担任开发实习生，可在深圳线下到岗。</div>
-
-        <div class="hero-cta-btn" onclick="scrollToSection('works')">
-          <span>直接看我的作品</span>
-          <div class="icon-circle">↗</div>
+  <main class="wrap">
+    <section class="hero" id="hero" aria-label="介绍">
+      <aside class="panel profile">
+        <div class="shot">
+          <img id="heroAvatarImg" src="./optimized/jaxson_character_navy_v1-1024.7282bb81ed17.webp"
+            srcset="./optimized/jaxson_character_navy_v1-512.92f74e2ade4d.webp 512w, ./optimized/jaxson_character_navy_v1-1024.7282bb81ed17.webp 1024w"
+            sizes="(min-width: 1200px) 430px, 640px" width="1024" height="1536" fetchpriority="high" decoding="async" alt="张锦鹏肖像" />
+          <p class="status">2027 届，正在找实习</p>
         </div>
-
-        <div class="hero-footnote">
-          从需求梳理、原型设计到前后端开发和上线迭代，我喜欢亲手把一个想法走通。
-        </div>
-      </div>
-
-      <!-- CENTER: Full-Bleed Character directly standing in room -->
-      <div class="hero-col-center">
-        <div class="hero-fullbleed-stage" id="heroFullbleedStage">
-          <img src="./optimized/jaxson_character_olive_v1-1024.cf396899a386.webp" srcset="./optimized/jaxson_character_olive_v1-512.c590c87a09fb.webp 512w, ./optimized/jaxson_character_olive_v1-1024.cf396899a386.webp 1024w" sizes="(max-width: 800px) 100vw, 53vw" width="1024" height="1536" fetchpriority="high" decoding="async" alt="张锦鹏肖像" class="avatar-img" id="heroAvatarImg" />
-        </div>
-        <div class="hero-scroll-indicator">
-          <span>SCROLL TO EXPLORE</span>
-          <span>↓</span>
-        </div>
-      </div>
-
-      <div class="hero-col-right">
-        <h2 class="hero-right-title">FROM IDEA<br/>TO LIFE.</h2>
-        <p class="hero-right-desc">
-          独立完成多款 Web 应用从 0 到 1 的设计、开发与上线。关注 AI Native 产品和下一代人机交互。
-        </p>
-
-        <div class="hero-tag-chips">
-          <div class="hero-chip">React · TypeScript</div>
-          <div class="hero-chip">AI Native</div>
-          <div class="hero-chip">0 → 1 产品落地</div>
-        </div>
-
-        <!-- Dynamic Gaze Tracker Pill -->
-        <div class="gaze-tracker-card">
-          <div class="gaze-header">HELLO, YOU.</div>
-          <div class="gaze-instruction">点击导航，或直接向下浏览。</div>
-          <div class="gaze-status-pill" id="gazeStatusPill">[ READY TO EXPLORE ]</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 02 BIOGRAPHY: GUIDED MILESTONE STAGE WITH POINTING CHARACTER -->
-    <section class="bio-section" id="bio">
-      <div class="bio-stage-grid">
-        <!-- Left: Overview & Credentials -->
-        <div class="bio-left-col">
-          <div class="section-eyebrow">02 BIOGRAPHY / 个人履历</div>
-          <h2 class="section-mega-title">DESIGN.<br/>BUILD.<br/>SHIP.</h2>
-          <div class="bio-author-title">张锦鹏 · JAXSON</div>
-
-          <p class="bio-intro">我喜欢把模糊的需求变成可用的产品：从交互与前后端实现，到上线后处理真实反馈。</p>
-          <div class="bio-proof-strip" aria-label="履历速览">
-            <div><strong>3.85</strong><span>GPA / 4.0</span></div>
-            <div><strong>11</strong><span>国家及省市级奖项</span></div>
-            <div><strong>03</strong><span>公开项目</span></div>
-          </div>
-          <p class="bio-read-cue">选择一个阶段，查看具体经历。</p>
-          <a class="bio-resume-link" href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_AI Product Builder简历.pdf">下载 PDF 简历 <span aria-hidden="true">↓</span></a>
-        </div>
-
-        <!-- Center: Dynamic Milestone Stage with Giant 3D Watermark Year -->
-        <div class="bio-center-col">
-          <div class="bio-watermark-year" id="bioWatermarkYear">2027</div>
-
-          <div class="milestone-stepper">
-            <button class="milestone-step-btn active" onclick="switchMilestone(0)">教育 · 2024—27</button>
-            <button class="milestone-step-btn" onclick="switchMilestone(1)">实习 · 2026—今</button>
-            <button class="milestone-step-btn" onclick="switchMilestone(2)">竞赛 · 2023—26</button>
-          </div>
-
-          <div class="milestone-active-card" id="milestoneCard">
-            <div class="milestone-badge" id="milestoneBadge">EDUCATION / 教育背景</div>
-            <div class="milestone-year-title" id="milestoneYear">2024 - 2027</div>
-            <div class="milestone-role-title" id="milestoneRole">深圳职业技术大学 · 大数据技术</div>
-            <p class="milestone-paragraph" id="milestonePara">2024.09 至 2027.06，大数据技术专业在读。</p>
-            <ul class="milestone-highlights" id="milestoneHighlights" aria-live="polite">
-              <li>GPA 3.85 / 4.0，专业排名前 3%</li>
-              <li>担任院学信委人工智能学院副主席、班级学习委员和甲骨文社团社长</li>
-            </ul>
-          </div>
-          <p class="bio-step-hint">SELECT A STAGE / SCROLL TO CONTINUE</p>
-        </div>
-
-        <!-- Right: Flawless Pointing Pixar Character Cutout -->
-        <div class="bio-right-col">
-          <div class="bio-char-container">
-            <img src="./optimized/jaxson_bio_gesture_matched_v2-1672.0e43c0f07cc1.webp" srcset="./optimized/jaxson_bio_gesture_matched_v2-960.b5753eed604b.webp 960w, ./optimized/jaxson_bio_gesture_matched_v2-1672.0e43c0f07cc1.webp 1672w" sizes="(max-width: 800px) 100vw, 800px" width="1672" height="941" loading="lazy" decoding="async" alt="张锦鹏伸手介绍履历" class="bio-pointing-img" id="bioPointingImg" />
-          </div>
-          <div class="bio-role-badge-bottom">
-            <span>PRODUCT THINKING · FULL STACK · AI</span><br/>
-            <span style="opacity: 0.6; font-size: 10px;">点击年份查看详情，继续下滑可直接看作品 ↓</span>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- 04 SELECTED WORKS: classic coverflow with real resume projects -->
-    <section class="works-section works-empty" id="works">
-      <div class="works-header">
-        <div class="section-eyebrow">03 // SELECTED WORKS / 精选作品</div>
-        <h2 class="section-mega-title">SELECTED WORKS.</h2>
-        <p class="works-intro">先看项目的难题、我的工作与结果。停留片刻会自动展示下一项，也可以用左右箭头切换。</p>
-        <button class="works-archive-open" id="worksArchiveOpen" type="button" aria-haspopup="dialog" aria-controls="worksArchive" disabled>浏览全部项目 <span id="worksArchiveCount">00</span><span aria-hidden="true">↗</span></button>
-        <div class="works-nav-tabs"></div>
-        <label class="works-project-index" id="worksProjectIndex" hidden>直接跳到项目 <select id="worksProjectJump" aria-label="直接跳到项目"></select></label>
-      </div>
-      <div class="coverflow-viewport">
-        <div class="coverflow-track" id="coverflowTrack"><p class="works-empty-message">正在加载项目…</p></div>
-      </div>
-      <div class="coverflow-bottom-banner">
-        <div class="work-case" aria-live="polite">
-          <div class="work-case__eyebrow" id="bottomActiveBadge"></div>
-          <h3 class="work-case__headline" id="caseProblem"></h3>
-          <p class="work-case__role" id="caseRole"></p>
-          <div class="work-case__detail"><span>关键工作</span><p id="caseAction"></p></div>
-          <div class="work-case__detail"><span>可验证结果</span><p id="caseResult"></p></div>
-          <a class="work-case__evidence" id="caseEvidenceLink" target="_blank" rel="noopener noreferrer" hidden></a>
-        </div>
-        <button class="work-case-open" type="button" onclick="openWorkDetail(currentCoverflowIdx)">查看当前项目完整档案 <span aria-hidden="true">↗</span></button>
-        <div class="coverflow-controls">
-          <button class="coverflow-arrow-btn" id="workPreviousBtn" onclick="stepCoverflow(-1)" aria-label="上一项作品">←</button>
-          <div class="coverflow-counter-box" id="coverflowCounter">00 / 00</div>
-          <button class="coverflow-arrow-btn" id="workNextBtn" onclick="stepCoverflow(1)" aria-label="下一项作品">→</button>
-        </div>
-      </div>
-    </section>
-
-    <dialog class="works-archive" id="worksArchive" aria-labelledby="worksArchiveTitle">
-      <div class="works-archive-shell">
-        <div class="works-archive-header">
-          <div><span class="works-archive-kicker">PROJECT INDEX / 项目目录</span><h2 id="worksArchiveTitle">选择想看的项目</h2></div>
-          <button type="button" class="works-archive-close" id="worksArchiveClose" aria-label="关闭项目目录">×</button>
-        </div>
-        <label class="works-archive-search-label" for="worksArchiveSearch">搜索项目名称、方向或技术</label>
-        <input id="worksArchiveSearch" class="works-archive-search" type="search" autocomplete="off" placeholder="输入关键词查找项目…" />
-        <p class="works-archive-result" id="worksArchiveResult" aria-live="polite"></p>
-        <div class="works-archive-list" id="worksArchiveList"></div>
-      </div>
-    </dialog>
-
-    <!-- 05 BEYOND THE ORDINARY -->
-    <section class="beyond-section" id="beyond">
-      <div class="beyond-info-col">
-        <div class="section-eyebrow">04 // BEYOND THE ORDINARY / 无限可能</div>
-        <h2 class="section-mega-title">下一个项目，<br/>一起做出来。</h2>
-        <p class="beyond-lede">我在深圳，2027 届。关注 AI 应用与 Web 产品体验，愿意从需求和原型一直做到开发上线。想聊岗位或项目细节，可以直接联系我。</p>
-
-        <div class="beyond-process" aria-label="我的工作方式">
-          <span>从想法到上线</span>
-          <strong>梳理需求 <i>→</i> 设计原型 <i>→</i> 完成开发 <i>→</i> 上线迭代</strong>
-        </div>
-
-        <div class="contact-cards-row beyond-actions">
-          <a href="mailto:1822103245@qq.com" class="contact-pill-card beyond-primary" aria-label="发邮件至 1822103245@qq.com 联系张锦鹏">
-            <span>邮件联系我<small>1822103245@qq.com</small></span><b aria-hidden="true">↗</b>
-          </a>
-          <a href="/ai" data-ai-link class="contact-pill-card beyond-secondary">
-            <span>问 Jaxson AI</span><b aria-hidden="true">↗</b>
-          </a>
-        </div>
-        <div class="beyond-footnote">深圳 · 2027 届 <a href="https://github.com/Jaxson-zip" target="_blank" rel="noopener">GitHub / Jaxson-zip ↗</a></div>
-      </div>
-
-      <div class="beyond-stage-card">
-        <img src="./optimized/jaxson_character_olive_v1-1024.cf396899a386.webp" srcset="./optimized/jaxson_character_olive_v1-512.c590c87a09fb.webp 512w, ./optimized/jaxson_character_olive_v1-1024.cf396899a386.webp 1024w" sizes="(max-width: 800px) 100vw, 32vw" width="1024" height="1536" loading="lazy" decoding="async" alt="张锦鹏肖像" />
-      </div>
-    </section>
-
-  </main>
-  <button type="button" class="chapter-next" id="chapterNext" onclick="advanceChapter()" aria-label="前往下一章节：个人履历">
-    <span class="chapter-next__meta"><span id="chapterProgress">01 / 04</span><span class="chapter-next__label" id="nextChapterLabel">个人履历</span></span>
-    <span class="chapter-next__arrow" id="chapterNextArrow" aria-hidden="true">↓</span>
-  </button>
-
-  <!-- FULLSCREEN WORK DETAIL MODAL (Matching 表哥's sec_550.jpg Popout) -->
-  <div class="work-detail-modal" id="workDetailModal" onclick="closeWorkDetailOnBackdrop(event)">
-    <div class="work-detail-card-outer">
-      <div class="work-detail-topbar">
-        <div class="work-detail-topbar-left">
-          <span id="modalDossierCategory"></span>
-          <span>·</span>
-          <span id="modalDossierMeta"></span>
-        </div>
-        <button class="work-close-btn" onclick="closeWorkDetail()">关闭作品 ✕</button>
-      </div>
-
-      <div class="work-detail-body">
-        <div class="work-detail-visual">
-          <img alt="项目封面" id="modalDossierImg" />
-        </div>
-
-        <div class="work-detail-dossier">
+        <div class="pbody">
           <div>
-            <div class="work-dossier-eyebrow" id="modalDossierEyebrow"></div>
-            <h3 class="work-dossier-title" id="modalDossierTitle"></h3>
-            <div class="work-dossier-facts"><span id="modalDossierRole"></span><span id="modalDossierDate"></span></div>
-            <div class="work-detail-section"><h4>背景与目标</h4><p id="modalDossierDesc"></p></div>
-
-            <div class="work-detail-section"><h4>我负责的工作</h4><ul id="modalDossierPoints" class="work-detail-points"></ul></div>
-            <div class="work-detail-section work-detail-outcome"><h4>交付与现状</h4><p id="modalDossierOutcome"></p></div>
-            <div class="work-detail-note" id="modalDossierNote" hidden></div>
-
-            <div class="work-stack-chips" id="modalStackChips"></div>
+            <h1>张锦鹏</h1>
+            <p class="role">AI 应用与全栈开发</p>
           </div>
+          <!-- Facts kept as on the live page until the owner confirms them (see docs/独立审查报告-2026-10-21.md P1-1). -->
+          <dl class="facts">
+            <div><dt>在读</dt><dd>深圳职业技术大学 大数据技术专业</dd></div>
+            <div><dt>实习</dt><dd>广东润喵云科技，开发实习生</dd></div>
+            <div><dt>方向</dt><dd>RAG 应用、AI 产品、全栈开发</dd></div>
+            <div><dt>地点</dt><dd>深圳，可线下到岗</dd></div>
+          </dl>
+          <div class="ctas">
+            <a class="btn btn-primary" href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_简历.pdf">下载简历</a>
+            <a class="btn" href="mailto:1822103245@qq.com">发邮件</a>
+          </div>
+        </div>
+      </aside>
 
-          <div class="work-dossier-actions">
-            <a target="_blank" rel="noopener" class="work-visit-btn" id="modalVisitLink" hidden>
-              <span id="modalVisitText"></span>
-            </a>
+      <section class="panel chat" aria-labelledby="chat-title">
+        <div class="ph"><h2 id="chat-title">和我的 AI 分身聊聊</h2><span class="badge">示例对话</span></div>
+        <div class="thread">
+          <div>
+            <p class="greet">别只看简历，<br /><em>直接问我的 AI 分身。</em></p>
+            <p class="greet-sub muted">它只引用我公开的项目和经历，回答都标明出处。下面是一段示例。</p>
+          </div>
+          <p class="q">你做过哪些项目？</p>
+          <!-- Rewritten from the project feed; this default stays true for any number of projects. -->
+          <p class="a" id="introAnswer">我做过的项目里，最有代表性的两个是：<b>待办备忘 Todo Memo</b>，离线可用、多端同步的待办工具，部署在 Vercel<sup>1</sup>；<b>Jaxson AI Space</b>，就是这个网站，有内容后台、向量检索和我这个 AI 分身<sup>2</sup>。</p>
+          <div class="srcs" id="introSources">
+            <a class="src" href="#works"><img src="./optimized/todo-memo-cover-900.765d77142054.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 1</span><b>待办备忘 Todo Memo</b></div></a>
+            <a class="src" href="#works"><img src="./optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 2</span><b>Jaxson AI Space</b></div></a>
+          </div>
+          <p class="q x2">RAG 是怎么实现的？</p>
+          <p class="a x2">先把问题同时做关键词检索（BM25）和向量检索（pgvector），合并排序后取最相关的几段公开资料，再交给 DeepSeek 生成回答。资料里没有的内容，我会直接说不知道。<span class="caret" aria-hidden="true"></span></p>
+        </div>
+        <div class="composer">
+          <div class="chips">
+            <a href="/ai" data-ai-link>你的实习做了什么？</a>
+            <a href="/ai" data-ai-link>你会哪些技术？</a>
+            <a href="/ai" data-ai-link>帮我做岗位匹配</a>
+          </div>
+          <form id="askForm" action="/ai" method="get">
+            <input type="text" name="q" aria-label="问我的 AI 分身" placeholder="问任何关于张锦鹏的问题……" maxlength="200" required autocomplete="off" />
+            <input type="hidden" name="from" />
+            <button type="submit">提问</button>
+          </form>
+        </div>
+      </section>
 
-            <div class="work-nav-arrows">
-              <button class="work-nav-btn" id="modalPreviousWork" onclick="stepDetailWork(-1)">上一件</button>
-              <button class="work-nav-btn" id="modalNextWork" onclick="stepDetailWork(1)">下一件</button>
-            </div>
+      <aside class="panel trace" aria-labelledby="trace-title">
+        <div class="ph"><h2 id="trace-title">这个回答是怎么来的</h2><span class="badge">RAG</span></div>
+        <ol class="steps">
+          <li class="step"><i>1</i><div><b>理解问题</b><small>识别为“项目经历”类问题</small></div></li>
+          <li class="step"><i>2</i><div><b>关键词 + 向量双路检索</b><small class="mono">BM25 + pgvector 1536 维</small></div></li>
+          <li class="step"><i>3</i><div><b>挑出最相关的资料</b><small id="introHits">命中 2 篇项目档案</small></div></li>
+          <li class="step"><i>4</i><div><b>DeepSeek 生成回答</b><small>流式输出，附引用编号</small></div></li>
+        </ol>
+        <div class="kb" id="introKnowledge">
+          <h3>它的知识库（公开资料）</h3>
+          <p class="doc hit">待办备忘 Todo Memo<span>项目 · 命中</span></p>
+          <p class="doc hit">Jaxson AI Space<span>项目 · 命中</span></p>
+          <p class="doc">润喵云 开发实习<span>经历</span></p>
+          <p class="doc">深圳职业技术大学<span>教育</span></p>
+          <p class="doc">AI 应用开发<span>技能</span></p>
+          <p class="doc">前端与全栈开发<span>技能</span></p>
+          <p class="doc">技能竞赛<span>荣誉</span></p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="chapter" id="works" aria-labelledby="works-title">
+      <div class="sh"><h2 id="works-title">作品</h2><p class="muted">精选在前，每个都能打开在线体验或源码核实</p></div>
+      <div id="projectList" aria-live="polite"><p class="works-status">正在加载项目…</p></div>
+    </section>
+
+    <section class="chapter" id="bio" aria-labelledby="bio-title">
+      <div class="sh"><h2 id="bio-title">履历</h2><p class="muted">实习、教育、竞赛和技术栈</p></div>
+      <div class="bio">
+        <!-- Wording kept from the live page until the owner confirms the disputed facts
+             (internship end date, GPA rank, award counts): docs/独立审查报告-2026-10-21.md P1-1. -->
+        <div class="panel">
+          <div class="ph"><strong>经历</strong></div>
+          <div class="timeline">
+            <article class="entry">
+              <p class="when">2026 年起</p>
+              <div>
+                <h3>开发实习生</h3>
+                <p class="org">广东润喵云科技有限公司</p>
+                <p>参与算力租赁平台用户端、管理端的功能迭代与日常运维。</p>
+                <ul>
+                  <li>开发与修复订单管理、资源调度、数据统计模块。</li>
+                  <li>跟进线上反馈，参与需求评审和问题排查。</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entry">
+              <p class="when">2024.09 – 2027.06</p>
+              <div>
+                <h3>大数据技术专业（专科），2027 届</h3>
+                <p class="org">深圳职业技术大学</p>
+                <ul>
+                  <li>GPA 3.85 / 4.0，专业排名前 3%。</li>
+                  <li>担任院学信委人工智能学院副主席、班级学习委员和甲骨文社团社长。</li>
+                </ul>
+              </div>
+            </article>
+            <article class="entry">
+              <p class="when">2023 – 2026</p>
+              <div>
+                <h3>技能竞赛</h3>
+                <p class="org">覆盖大数据开发、数据分析与网络安全</p>
+                <ul>
+                  <li>累计获得国家级奖项 5 项、省市级奖项 6 项。</li>
+                  <li>广东省职业院校技能大赛 大数据应用开发赛项，一等奖（2025–2026）。</li>
+                  <li>一带一路暨金砖国家技能大赛 企业信息系统安全国赛，二等奖。</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><strong>技术栈</strong><span>蓝色为主力</span></div>
+          <div class="skills">
+            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>大模型 API 接入</li><li>Prompt 上下文工程</li><li>AI 编程（Cursor、Claude）</li></ul></div>
+            <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li class="key">Next.js 16</li><li>Vue 3</li><li>Tailwind CSS</li><li>Vite</li></ul></div>
+            <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li>Go</li><li>Python</li><li>MySQL</li><li>Supabase</li><li>RESTful API</li><li>分布式大数据</li></ul></div>
+            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li>Linux 运维</li><li>Git 与 GitHub</li><li>PM2</li><li>Cloudflare Tunnel</li><li>Vercel</li></ul></div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- Bottom Persistent Player Bar -->
-  <footer class="bottom-player-bar">
-    <div class="player-left">
-      <span class="player-timecode" id="playerTimecode">00:02 / 00:08</span>
-      <span class="player-chapter-badge" id="playerChapterBadge">01 / INTRO</span>
-      <span id="playerChapterTitle">初次见面</span>
-    </div>
-
-    <div class="player-center-track" id="playerTrack" onclick="handleTrackClick(event)">
-      <div class="player-progress-fill" id="playerProgressFill">
-        <div class="player-scrubber-dot"></div>
+    <section class="panel contact" id="beyond" aria-labelledby="beyond-title">
+      <div>
+        <h2 id="beyond-title">想聊聊？</h2>
+        <p>我在深圳，2027 届，可以线下到岗。邮箱 1822103245@qq.com</p>
       </div>
-    </div>
-
-    <div class="player-right">
-      <button class="player-pause-btn" id="pauseInteractiveBtn" onclick="togglePauseInteractive()">暂停互动</button>
-
-      <div class="audio-synth-toggle" id="audioToggle" onclick="toggleAudio()">
-        <div class="audio-wave-bars">
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-          <div class="wave-bar"></div>
-        </div>
-        <span id="audioText">AMBIENT SOUND</span>
+      <div class="links">
+        <a class="btn btn-primary" href="mailto:1822103245@qq.com">发邮件</a>
+        <a class="btn" href="/ai" data-ai-link>问 AI 分身</a>
+        <a class="btn ext" href="https://github.com/Jaxson-zip" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>© 2026 张锦鹏</span>
+      <a href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_简历.pdf">下载 PDF 简历</a>
     </div>
   </footer>
 
-  <!-- Scripts -->
   <script>
-    // =========================================
-    // 1. Navigation Scroll
-    // =========================================
-    // Scrolling is native; links and the chapter button only choose a start.
-    function scrollToSection(id) {
-      const el = document.getElementById(id);
-      if (el) {
-        // Cancel an in-flight native animation before choosing the new target.
-        scrollTo({ top: scrollY, behavior: 'instant' });
-        const headerHeight = document.querySelector('.site-header').getBoundingClientRect().height;
-        const top = Math.max(0, scrollY + el.getBoundingClientRect().top - headerHeight);
-        scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-        if (location.hash !== `#${id}`) history.replaceState(null, '', `#${id}`);
-      }
-    }
-    document.querySelectorAll('header a[href^="#"]').forEach(link => {
-      link.addEventListener('click', event => {
-        if (event.button || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
-        const id = link.getAttribute('href').slice(1);
-        if (!document.getElementById(id)) return;
-        event.preventDefault();
-        if (location.hash !== `#${id}`) history.pushState(null, '', `#${id}`);
-        scrollToSection(id);
-      });
+    // AI links go to the CMS origin and say where to come back to; suggested questions arrive prefilled there.
+    const aiUrl = question => {
+      const target = new URL('/ai', window.JAXSON_BACKEND_ORIGIN);
+      if (question) target.searchParams.set('q', question);
+      target.searchParams.set('from', location.href);
+      return target.href;
+    };
+    document.querySelectorAll('[data-ai-link]').forEach(link => {
+      link.href = aiUrl(link.closest('.chips') ? link.textContent.trim() : '');
     });
+    const askForm = document.getElementById('askForm');
+    askForm.action = new URL('/ai', window.JAXSON_BACKEND_ORIGIN).href;
+    askForm.elements.from.value = location.href;
 
-    // =========================================
-    // Hero response: a small transform only. The page works equally well without pointer movement.
-    const heroStage = document.getElementById('heroFullbleedStage');
-    const gazeStatusPill = document.getElementById('gazeStatusPill');
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let isPaused = false;
-    let pointerFrame = 0;
-    let pointerX = 0, pointerY = 0;
-    function updateHeroPointer(event) {
-      if (isPaused || reducedMotion.matches || !heroStage) return;
-      pointerX = event.clientX;
-      pointerY = event.clientY;
-      if (pointerFrame) return;
-      pointerFrame = requestAnimationFrame(() => {
-        pointerFrame = 0;
-        const rect = heroStage.getBoundingClientRect();
-        const x = (pointerX - (rect.left + rect.width / 2)) / Math.max(rect.width, 1);
-        const y = (pointerY - (rect.top + rect.height / 2)) / Math.max(rect.height, 1);
-        heroStage.style.transform = `translate3d(${(x * 9).toFixed(1)}px, ${(y * 7).toFixed(1)}px, 0)`;
-        if (gazeStatusPill && gazeStatusPill.textContent !== '[ EXPLORING ]') gazeStatusPill.textContent = '[ EXPLORING ]';
-      });
-    }
-    document.getElementById('hero').addEventListener('pointermove', updateHeroPointer, { passive: true });
-    document.getElementById('hero').addEventListener('pointerleave', () => {
-      cancelAnimationFrame(pointerFrame);
-      pointerFrame = 0;
-      if (heroStage) heroStage.style.transform = 'translate3d(0,0,0)';
-      if (gazeStatusPill) gazeStatusPill.textContent = '[ READY TO EXPLORE ]';
-    });
-    function togglePauseInteractive() {
-      isPaused = !isPaused;
-      const btn = document.getElementById('pauseInteractiveBtn');
-      if (btn) btn.textContent = isPaused ? '恢复互动' : '暂停互动';
-      if (isPaused && heroStage) heroStage.style.transform = 'translate3d(0,0,0)';
-    }
+    // Older shared links used #folder for the works chapter, on load or while already on the page.
+    const aliasOldHash = () => {
+      if (location.hash !== '#folder') return;
+      history.replaceState(null, '', '#works');
+      document.getElementById('works').scrollIntoView();
+    };
+    addEventListener('hashchange', aliasOldHash);
+    aliasOldHash();
 
-    // 3. Section 02 Guided Milestone Stepper    // 3. Section 02 Guided Milestone Stepper
-    // =========================================
-    const milestones = [
-      { year: '2024 - 2027', watermark: '2027', badge: 'EDUCATION / 教育背景', role: '深圳职业技术大学 · 大数据技术', para: '2024.09 至 2027.06，大数据技术专业在读。', highlights: ['GPA 3.85 / 4.0，专业排名前 3%', '担任院学信委人工智能学院副主席、班级学习委员和甲骨文社团社长'] },
-      { year: '2026 - 至今', watermark: '2026', badge: 'INTERNSHIP / 真实业务开发', role: '广东润喵云科技 · 开发实习生', para: '参与算力租赁平台用户端、管理端的功能迭代与日常运维。', highlights: ['开发与修复订单管理、资源调度、数据统计模块', '跟进线上反馈，参与需求评审和问题排查'] },
-      { year: '2023 - 2026', watermark: '2023', badge: 'COMPETITIONS / 技能竞赛', role: '国家级与省市级技能竞赛', para: '竞赛覆盖大数据开发、数据分析与网络安全。', highlights: ['累计获得国家级奖项 5 项、省市级奖项 6 项', '2025—2026 广东省职业院校技能大赛大数据应用开发一等奖', '一带一路暨金砖国家技能大赛企业信息系统安全国赛二等奖'] }
-    ];
-    let currentMilestoneIdx = 0;
+    // Mark the chapter currently under the header in the navigation.
+    const navLinks = [...document.querySelectorAll('.site-nav a[href^="#"]')];
+    const chapters = navLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+    const markCurrent = () => {
+      const line = document.querySelector('.site-header').getBoundingClientRect().bottom + 1;
+      const current = chapters.filter(chapter => chapter.getBoundingClientRect().top <= line).at(-1);
+      navLinks.forEach(link => link.getAttribute('href') === `#${current?.id}` ? link.setAttribute('aria-current', 'true') : link.removeAttribute('aria-current'));
+    };
 
-    function switchMilestone(index) {
-      currentMilestoneIdx = index;
-      const m = milestones[index];
-      const buttons = document.querySelectorAll('.milestone-step-btn');
-      buttons.forEach((btn, i) => btn.classList.toggle('active', i === index));
-
-      const wm = document.getElementById('bioWatermarkYear');
-      const badge = document.getElementById('milestoneBadge');
-      const year = document.getElementById('milestoneYear');
-      const role = document.getElementById('milestoneRole');
-      const para = document.getElementById('milestonePara');
-      const card = document.getElementById('milestoneCard');
-
-      if (wm) wm.textContent = m.watermark;
-      if (badge) badge.textContent = m.badge;
-      if (year) year.textContent = m.year;
-      if (role) role.textContent = m.role;
-      if (para) para.textContent = m.para;
-      const highlights = document.getElementById('milestoneHighlights');
-      highlights.replaceChildren(...m.highlights.map(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        return li;
-      }));
-
-      if (card) {
-        card.style.transform = 'scale(0.97)';
-        setTimeout(() => {
-          card.style.transform = 'scale(1)';
-        }, 150);
-      }
-    }
-
-    // =========================================
-    // 4. Portfolio case selector
-    // =========================================
-    // 5. 3D Coverflow Carousel & Bottom Rationale Sync
-    // =========================================
-    let currentCoverflowIdx = 0;
-    let slides = document.querySelectorAll('.coverflow-slide');
-
-    let tabBtns = document.querySelectorAll('.works-tab-btn');
-    const counterEl = document.getElementById('coverflowCounter');
-    const projectJump = document.getElementById('worksProjectJump');
-    const projectIndex = document.getElementById('worksProjectIndex');
-    if (slides.length > 4) {
-      projectIndex.hidden = false;
-      tabBtns.forEach((button, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${String(index + 1).padStart(2, '0')} / ${button.querySelector('strong').textContent}`;
-        projectJump.append(option);
-      });
-      projectJump.addEventListener('change', () => setCoverflowIndex(Number(projectJump.value)));
-    }
-
-    let coverflowMeta = [];
-
-    function updateCoverflow() {
-      const total = slides.length;
-      if (!total) return;
-      [currentCoverflowIdx, (currentCoverflowIdx + 1) % total, (currentCoverflowIdx - 1 + total) % total].forEach(index => {
-        const img = slides[index]?.querySelector('img[data-src]');
-        if (img) { img.src = img.dataset.src; delete img.dataset.src; }
-      });
-      slides.forEach((slide) => {
-        const idx = parseInt(slide.getAttribute('data-index'), 10);
-        let diff = idx - currentCoverflowIdx;
-
-        if (diff > total / 2) diff -= total;
-        if (diff < -total / 2) diff += total;
-
-        slide.setAttribute('data-pos', diff.toString());
-      });
-
-      const firstVisible = Math.max(0, Math.min(currentCoverflowIdx - 1, total - 4));
-      tabBtns.forEach((btn, i) => {
-        btn.classList.toggle('active', i === currentCoverflowIdx);
-        btn.hidden = total > 4 && (i < firstVisible || i >= firstVisible + 4);
-      });
-      if (total > 4) projectJump.value = String(currentCoverflowIdx);
-
-      if (counterEl) {
-        counterEl.textContent = `${String(currentCoverflowIdx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
-      }
-
-      // Update dedicated bottom rationale banner
-      const m = coverflowMeta[currentCoverflowIdx];
-      const bBadge = document.getElementById('bottomActiveBadge');
-      if (bBadge) bBadge.textContent = m.badge;
-      document.getElementById('caseRole').textContent = m.role;
-      document.getElementById('caseProblem').textContent = m.problem;
-      document.getElementById('caseAction').textContent = m.action;
-      document.getElementById('caseResult').textContent = m.result;
-      const evidenceLink = document.getElementById('caseEvidenceLink');
-      evidenceLink.href = m.link;
-      evidenceLink.textContent = m.linkLabel;
-      evidenceLink.hidden = !m.link;
-      document.getElementById('workPreviousBtn').setAttribute('aria-label', '上一项作品');
-      document.getElementById('workNextBtn').setAttribute('aria-label', '下一项作品');
-    }
-
-    function setCoverflowIndex(index) {
-      currentCoverflowIdx = index;
-      updateCoverflow();
-    }
-
-    updateCoverflow();
-
-    function stepCoverflow(delta) {
-      if (!slides.length) return;
-      setCoverflowIndex((currentCoverflowIdx + delta + slides.length) % slides.length);
-    }
-
-    let suppressSlideClickUntil = 0;
-    const coverflowViewport = document.querySelector('.coverflow-viewport');
-    let touchStart = null;
-    coverflowViewport.addEventListener('touchstart', event => {
-      if (event.touches.length === 1) touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-    }, { passive: true });
-    coverflowViewport.addEventListener('touchend', event => {
-      if (!touchStart) return;
-      const dx = event.changedTouches[0].clientX - touchStart.x;
-      const dy = event.changedTouches[0].clientY - touchStart.y;
-      touchStart = null;
-      if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
-      event.preventDefault();
-      suppressSlideClickUntil = Date.now() + 500;
-      stepCoverflow(dx < 0 ? 1 : -1);
-    }, { passive: false });
-
-    function handleSlideClick(index) {
-      if (Date.now() < suppressSlideClickUntil) return;
-      if (currentCoverflowIdx === index) {
-        openWorkDetail(index);
-      } else {
-        setCoverflowIndex(index);
-      }
-    }
-
-    // =========================================
-    // 6. Fullscreen Work Detail Modal (Matching 表哥's sec_550.jpg)
-    // =========================================
-    let currentDetailIdx = 0;
-    let workDossiers = [];
-
-    function openWorkDetail(index) {
-      if (!workDossiers[index]) return;
-      currentDetailIdx = index;
-      setCoverflowIndex(index);
-      renderWorkDetail();
-      document.getElementById('workDetailModal').classList.add('active');
-      document.body.classList.add('modal-open');
-    }
-
-    function renderWorkDetail() {
-      const d = workDossiers[currentDetailIdx];
-      document.getElementById('modalDossierCategory').textContent = d.category;
-      document.getElementById('modalDossierMeta').textContent = d.meta;
-      const visual = document.getElementById('modalDossierImg');
-      visual.src = d.img;
-      visual.alt = d.title + '项目画面';
-      document.getElementById('modalDossierEyebrow').textContent = d.eyebrow;
-      document.getElementById('modalDossierTitle').textContent = d.title;
-      document.getElementById('modalDossierRole').textContent = d.role;
-      document.getElementById('modalDossierDate').textContent = d.date;
-      document.getElementById('modalDossierDesc').textContent = d.context;
-      document.getElementById('modalDossierOutcome').textContent = d.outcome;
-      const note = document.getElementById('modalDossierNote');
-      note.hidden = !d.note;
-      note.textContent = d.note;
-      const points = document.getElementById('modalDossierPoints');
-      points.replaceChildren(...d.points.map(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        return li;
-      }));
-      const chips = document.getElementById('modalStackChips');
-      chips.replaceChildren(...d.chips.map(item => {
-        const span = document.createElement('span');
-        span.className = 'work-stack-chip';
-        span.textContent = item;
-        return span;
-      }));
-      document.getElementById('modalVisitLink').href = d.link;
-      document.getElementById('modalVisitText').textContent = d.linkText;
-      document.getElementById('modalVisitLink').hidden = !d.link;
-      document.getElementById('modalPreviousWork').textContent = '上一件';
-      document.getElementById('modalNextWork').textContent = '下一件';
-      document.querySelector('.work-detail-dossier').scrollTop = 0;
-    }
-
-    function stepDetailWork(delta) {
-      if (!workDossiers.length) return;
-      currentDetailIdx = (currentDetailIdx + delta + workDossiers.length) % workDossiers.length;
-      setCoverflowIndex(currentDetailIdx);
-      renderWorkDetail();
-    }
-
-    function closeWorkDetail() {
-      document.getElementById('workDetailModal').classList.remove('active');
-      document.body.classList.remove('modal-open');
-    }
-
-    function closeWorkDetailOnBackdrop(e) {
-      if (e.target.id === 'workDetailModal') {
-        closeWorkDetail();
-      }
-    }
-
-    // Global keyboard support
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeWorkDetail();
-      }
-      if (e.key === 'ArrowLeft') {
-        if (document.getElementById('workDetailModal').classList.contains('active')) {
-          stepDetailWork(-1);
-        } else if (document.getElementById('works').classList.contains('scene-active')) {
-          stepCoverflow(-1);
-        }
-      }
-      if (e.key === 'ArrowRight') {
-        if (document.getElementById('workDetailModal').classList.contains('active')) {
-          stepDetailWork(1);
-        } else if (document.getElementById('works').classList.contains('scene-active')) {
-          stepCoverflow(1);
-        }
-      }
-    });
-
-    // =========================================
-    // 7. Scroll Timeline Sync with Bottom Player Bar
-    // =========================================
-    const sections = [
-      { id: 'hero', code: '01 / INTRO', title: '初次见面', time: '00:02' },
-      { id: 'bio', code: '02 / BIOGRAPHY', title: '个人履历', time: '00:04' },
-      { id: 'works', code: '03 / WORKS', title: '精选作品', time: '00:06' },
-      { id: 'beyond', code: '04 / BEYOND', title: '无限可能', time: '00:08' }
-    ];
-
-    const chapterBadge = document.getElementById('playerChapterBadge');
-    const chapterTitle = document.getElementById('playerChapterTitle');
-    const playerTimecode = document.getElementById('playerTimecode');
-    const progressFill = document.getElementById('playerProgressFill');
-    const navLinks = document.querySelectorAll('nav.nav-links a');
-
-    function updateChapterNavigation(id) {
-      const currentSection = sections.find(section => section.id === id) || sections[0];
-      if (chapterBadge) chapterBadge.textContent = currentSection.code;
-      if (chapterTitle) chapterTitle.textContent = currentSection.title;
-      if (playerTimecode) playerTimecode.textContent = `${currentSection.time} / 00:08`;
-
-      navLinks.forEach(link => {
-        link.classList.toggle('active', link.getAttribute('href') === `#${currentSection.id}`);
-      });
-    }
-
-    function handleTrackClick(e) {
-      const track = document.getElementById('playerTrack');
-      const rect = track.getBoundingClientRect();
-      const ratio = (e.clientX - rect.left) / rect.width;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      window.scrollTo({ top: docHeight * ratio, behavior: 'smooth' });
-    }
-
-    // =========================================
-    // 8. Web Audio API Ambient Synthesizer
-    // =========================================
-    let audioCtx = null;
-    let isPlayingAudio = false;
-    let osc1, osc2, gainNode;
-
-    function toggleAudio() {
-      const btn = document.getElementById('audioToggle');
-      const text = document.getElementById('audioText');
-
-      if (!isPlayingAudio) {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-
-        gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 2);
-
-        osc1 = audioCtx.createOscillator();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(130.81, audioCtx.currentTime); // C3
-
-        osc2 = audioCtx.createOscillator();
-        osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(196.00, audioCtx.currentTime); // G3
-
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        osc1.start();
-        osc2.start();
-
-        isPlayingAudio = true;
-        btn.classList.add('playing');
-        text.textContent = 'SOUND PLAYING';
-      } else {
-        if (gainNode) {
-          gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
-          setTimeout(() => {
-            if (osc1) osc1.stop();
-            if (osc2) osc2.stop();
-            isPlayingAudio = false;
-          }, 800);
-        }
-        btn.classList.remove('playing');
-        text.textContent = 'AMBIENT SOUND';
-      }
-    }
-  </script>
-
-  <script>
-    const sceneOrder = ['hero','bio','works','beyond'];
-    const sceneNames = ['初次见面','个人履历','精选作品','无限可能'];
-    let activeSceneId = null;
-    function activateScene(id) {
-      if (id === activeSceneId || !sceneOrder.includes(id)) return;
-      if (activeSceneId) document.getElementById(activeSceneId)?.classList.remove('scene-active');
-      activeSceneId = id;
-      document.getElementById(id)?.classList.add('scene-active');
-      updateChapterNavigation(id);
-      const index = sceneOrder.indexOf(id);
-      const next = (index + 1) % sceneOrder.length;
-      document.getElementById('chapterProgress').textContent = `${String(index + 1).padStart(2,'0')} / 04`;
-      document.getElementById('nextChapterLabel').textContent = next === 0 ? '回到开场' : sceneNames[next];
-      document.getElementById('chapterNextArrow').textContent = next === 0 ? '↑' : '↓';
-      document.getElementById('chapterNext').setAttribute('aria-label', next === 0 ? '回到开场' : `前往下一章节：${sceneNames[next]}`);
-    }
-    function advanceChapter() {
-      const next = (sceneOrder.indexOf(activeSceneId) + 1) % sceneOrder.length;
-      scrollToSection(sceneOrder[next]);
-    }
-    if (location.hash === '#folder') { history.replaceState(null, '', '#works'); document.getElementById('works').scrollIntoView(); }
-    let sceneSyncFrame = 0;
-    let resizeFrame = 0;
-    let viewportWidth = innerWidth;
-    let viewportHeight = innerHeight;
-    let readingPosition = null;
-    const viewportMeasure = document.createElement('div');
-    viewportMeasure.setAttribute('aria-hidden', 'true');
-    viewportMeasure.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;inset:0 auto auto 0;width:100svw;height:100svh;contain:strict';
-    document.body.append(viewportMeasure);
-    function rememberReadingPosition() {
-      const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom;
-      const id = sceneOrder.find(id => {
-        const box = document.getElementById(id).getBoundingClientRect();
-        return box.top <= headerBottom + 1 && box.bottom > headerBottom + 1;
-      });
-      if (!id) return;
-      const box = document.getElementById(id).getBoundingClientRect();
-      readingPosition = { id, progress: Math.max(0, (headerBottom - box.top) / box.height) };
-    }
-    function syncSceneFromViewport() {
-      const focusY = innerHeight * .43;
-      const visible = sceneOrder.find(id => {
-        const box = document.getElementById(id).getBoundingClientRect();
-        return box.top <= focusY && box.bottom > focusY;
-      });
-      if (visible) activateScene(visible);
-      rememberReadingPosition();
-    }
-    addEventListener('scroll', () => {
-      if (sceneSyncFrame) return;
-      sceneSyncFrame = requestAnimationFrame(() => {
-        sceneSyncFrame = 0;
-        // A resize can also emit scroll before its resize event. Keep the last
-        // reading position until the new layout has been placed below the header.
-        if (resizeFrame || innerWidth !== viewportWidth || innerHeight !== viewportHeight) return;
-        syncSceneFromViewport();
-      });
-    }, { passive: true });
-    addEventListener('resize', () => {
-      cancelAnimationFrame(resizeFrame);
-      resizeFrame = requestAnimationFrame(() => {
-        let viewportWaitFrames = 0;
-        // Some Chromium versions report innerWidth/Height before viewport-unit
-        // styles update. Wait for the actual CSS viewport, not a fixed delay.
-        resizeFrame = requestAnimationFrame(function restoreAfterReflow() {
-          const measured = viewportMeasure.getBoundingClientRect();
-          if (matchMedia('(pointer: fine)').matches && CSS.supports('height', '100svh') &&
-              CSS.supports('width', '100svw') && viewportWaitFrames++ < 12 &&
-              (Math.abs(measured.width - innerWidth) > 1 || Math.abs(measured.height - innerHeight) > 1)) {
-            resizeFrame = requestAnimationFrame(restoreAfterReflow);
-            return;
-          }
-          const onlyMobileHeightChanged = innerWidth === viewportWidth && matchMedia('(pointer: coarse)').matches;
-          viewportWidth = innerWidth;
-          viewportHeight = innerHeight;
-          if (readingPosition && !onlyMobileHeightChanged) {
-            const section = document.getElementById(readingPosition.id);
-            const box = section.getBoundingClientRect();
-            const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom;
-            scrollTo({ top: scrollY + box.top - headerBottom + readingPosition.progress * box.height, behavior: 'instant' });
-          }
-          resizeFrame = 0;
-          syncSceneFromViewport();
-        });
-      });
-    }, { passive: true });
-    syncSceneFromViewport();
-
-    // The floating chapter button steps aside instead of covering text or controls.
-    const chapterNextButton = document.getElementById('chapterNext');
-    let chapterCoverFrame = 0;
-    function chapterButtonCovers() {
-      const box = chapterNextButton.getBoundingClientRect();
-      if (!box.width || getComputedStyle(chapterNextButton).display === 'none') return false;
-      // Sample up to 1px inside each edge: a link edge under the border still counts.
-      for (let column = 0; column < 8; column++) for (const y of [box.top + 1, box.top + box.height / 2, box.bottom - 1]) {
-        const x = box.left + 1 + column * (box.width - 2) / 7;
-        for (const el of document.elementsFromPoint(x, y)) {
-          if (chapterNextButton.contains(el) || !el.closest('main') || el.closest('[aria-hidden="true"]')) continue;
-          if (el.closest('a, button') || [...el.childNodes].some(node => node.nodeType === 3 && node.textContent.trim())) return true;
-        }
-      }
-      return false;
-    }
-    function syncChapterButtonCover() {
-      if (chapterCoverFrame) return;
-      chapterCoverFrame = requestAnimationFrame(() => {
-        chapterCoverFrame = 0;
-        chapterNextButton.classList.toggle('is-covering', chapterButtonCovers());
-      });
-    }
-    addEventListener('scroll', syncChapterButtonCover, { passive: true });
-    addEventListener('resize', syncChapterButtonCover, { passive: true });
-    // Content also moves without scrolling: the works carousel advances on its own.
-    setInterval(() => { if (!document.hidden) syncChapterButtonCover(); }, 400);
-    syncChapterButtonCover();
-
-    if (matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
-      const folderButton = document.querySelector('.folder-interactive-wrap');
-      const folderCover = document.querySelector('.folder-card-outer img');
-      let tiltFrame = 0;
-      folderButton?.addEventListener('pointermove', event => {
-        if (tiltFrame) return;
-        const rect = folderButton.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / rect.width - .5;
-        const y = (event.clientY - rect.top) / rect.height - .5;
-        tiltFrame = requestAnimationFrame(() => {
-          tiltFrame = 0;
-          folderCover.style.transform = `perspective(900px) rotateX(${(-y*10).toFixed(1)}deg) rotateY(${(x*10).toFixed(1)}deg)`;
-        });
-      });
-      folderButton?.addEventListener('pointerleave', () => { folderCover.style.transform = ''; });
-    }
-  </script>
-<script>
-  document.querySelectorAll('[data-ai-link]').forEach(link => {
-    const target = new URL('/ai', window.JAXSON_BACKEND_ORIGIN);
-    target.searchParams.set('from', location.href);
-    link.href = target.href;
-  });
-</script>
-
-<script>
-  // Published projects come from the CMS. The page never embeds old project records.
-  (() => {
-    const endpoint = new URL('/api/showcase-projects', location.origin);
-    const initialProjects = [];
-    const archive = document.getElementById('worksArchive');
-    const archiveOpen = document.getElementById('worksArchiveOpen');
-    const archiveClose = document.getElementById('worksArchiveClose');
-    const archiveSearch = document.getElementById('worksArchiveSearch');
-    const archiveList = document.getElementById('worksArchiveList');
-    const archiveResult = document.getElementById('worksArchiveResult');
-    const archiveCount = document.getElementById('worksArchiveCount');
-    let archiveProjects = initialProjects;
-    function renderArchive() {
-      const query = archiveSearch.value.trim().toLocaleLowerCase();
-      const matches = archiveProjects.map((project, index) => ({ project, index }))
-        .filter(({ project }) => [project.title, project.shortTitle, project.category, project.role,
-          project.summary, ...(project.technologies || [])].some(value =>
-          String(value || '').toLocaleLowerCase().includes(query)));
-      archiveCount.textContent = String(archiveProjects.length).padStart(2, '0');
-      archiveResult.textContent = query
-        ? `找到 ${matches.length} / ${archiveProjects.length} 个项目`
-        : `共 ${archiveProjects.length} 个项目 · 选择后直接查看`;
-      archiveList.replaceChildren();
-      matches.forEach(({ project, index }) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'works-archive-item';
-        const number = document.createElement('span');
-        number.className = 'works-archive-item__number';
-        number.textContent = String(index + 1).padStart(2, '0');
-        const body = document.createElement('span');
-        body.className = 'works-archive-item__body';
-        const category = document.createElement('small');
-        category.textContent = project.category || '项目档案';
-        const title = document.createElement('strong');
-        title.textContent = project.title;
-        const summary = document.createElement('span');
-        summary.textContent = project.summary || project.role || '';
-        body.append(category, title, summary);
-        const arrow = document.createElement('span');
-        arrow.className = 'works-archive-item__arrow';
-        arrow.setAttribute('aria-hidden', 'true');
-        arrow.textContent = '↗';
-        button.append(number, body, arrow);
-        button.addEventListener('click', () => {
-          setCoverflowIndex(index);
-          archive.close();
-          archiveOpen.focus();
-        });
-        archiveList.append(button);
-      });
-      if (!matches.length) {
-        const empty = document.createElement('p');
-        empty.className = 'works-archive-empty';
-        empty.textContent = '没有找到匹配的项目，试试项目名称或技术关键词。';
-        archiveList.append(empty);
-      }
-    }
-    archiveOpen.addEventListener('click', () => {
-      archiveSearch.value = '';
-      renderArchive();
-      archive.showModal();
-      archiveSearch.focus();
-    });
-    archiveClose.addEventListener('click', () => archive.close());
-    archiveSearch.addEventListener('input', renderArchive);
-    archive.addEventListener('click', event => { if (event.target === archive) archive.close(); });
-    renderArchive();
-    const worksSection = document.getElementById('works');
-    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    let worksInView = false;
-    let lastInteractionAt = 0;
-    new IntersectionObserver(entries => {
-      worksInView = entries[0].intersectionRatio >= .5;
-    }, { threshold: [.5] }).observe(worksSection);
-    ['pointerdown', 'touchstart', 'keydown'].forEach(type =>
-      worksSection.addEventListener(type, () => { lastInteractionAt = performance.now(); }, { passive: true }));
-    setInterval(() => {
-      if (!worksInView || reducedMotion.matches || document.hidden || archive.open ||
-          archiveProjects.length < 2 || performance.now() - lastInteractionAt < 10000 ||
-          document.getElementById('workDetailModal').classList.contains('active') ||
-          worksSection.querySelector('.work-case:hover')) return;
-      stepCoverflow(1);
-    }, 6000);
-    function imageUrl(value) {
-      if (!value) return './project-dossier-cover.svg?v=clean-caption-2';
-      const optimizedCovers = {
-        'project-dossier-cover.svg': './project-dossier-cover.svg?v=clean-caption-2',
+    // Published projects come from the CMS through this origin's feed. CMS text is only ever set as text.
+    (() => {
+      const list = document.getElementById('projectList');
+      const covers = {
         'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
-        'portfolio-actual-20260928.png': './optimized/portfolio-actual-20260928-1440.a7d8b0fe934f.webp'
+        // The CMS still names the old screenshot; both names show the current home page.
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
       };
-      const localName = value.replace(/^\.\//, '');
-      if (optimizedCovers[localName]) return optimizedCovers[localName];
-      return /^(https?:\/\/|\/|\.\/)/.test(value) ? value : './' + value;
-    }
-    function createCase(project, index) {
-      const link = project.demoUrl || project.repoUrl || '';
-      return {
-        badge: `${String(index + 1).padStart(2, '0')} / ${project.category || '项目档案'}`,
-        role: [project.role, project.date].filter(Boolean).join(' · '),
-        problem: project.problem || project.summary || '',
-        action: project.action || '', result: project.outcome || '', link,
-        linkLabel: project.demoUrl ? '打开线上项目 ↗' : link ? '查看开源代码 ↗' : ''
+      // Small copies for the first screen's source cards.
+      const thumbs = {
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
       };
-    }
-    function createDossier(project, index) {
-      const link = project.demoUrl || project.repoUrl || '';
-      return {
-        category: `${String(index + 1).padStart(2, '0')} // ${project.category || '项目档案'}`,
-        meta: project.date || '', img: imageUrl(project.image),
-        eyebrow: project.status || '项目档案', title: project.title,
-        role: project.role || '', date: project.date || '',
-        context: project.problem || project.summary || '',
-        points: project.action ? [project.action] : [],
-        outcome: project.outcome || '', note: project.note || '',
-        chips: project.technologies || [], link,
-        linkText: project.demoUrl ? '打开线上项目 ↗' : link ? '查看开源仓库 ↗' : ''
+      // The feed names the stock dossier image when a project has no screenshot of its own.
+      const hasImage = value => Boolean(value) && !/project-dossier-cover\.svg/.test(value);
+      const imageUrl = value => {
+        const name = value.replace(/^\.\//, '');
+        return covers[name] || (/^(https?:\/\/|\/|\.\/)/.test(value) ? value : './' + value);
       };
-    }
-    function install(projects, emptyMessage = '目前没有公开项目。') {
-      if (!Array.isArray(projects) || projects.some(p => !p.slug || !p.title)) return;
-      const previousSlug = slides[currentCoverflowIdx]?.dataset.slug;
-      const tabList = document.querySelector('.works-nav-tabs');
-      const track = document.getElementById('coverflowTrack');
-      tabList.replaceChildren();
-      track.replaceChildren();
-      if (!projects.length) {
-        const empty = document.createElement('p');
-        empty.className = 'works-empty-message';
-        empty.textContent = emptyMessage;
-        track.append(empty);
-        worksSection.classList.add('works-empty');
-        slides = document.querySelectorAll('.coverflow-slide');
-        tabBtns = document.querySelectorAll('.works-tab-btn');
-        archiveProjects = [];
-        archiveOpen.disabled = true;
-        counterEl.textContent = '00 / 00';
-        renderArchive();
-        return;
-      }
-      worksSection.classList.remove('works-empty');
-      archiveOpen.disabled = false;
-      projects.forEach((project, index) => {
-        const tab = document.createElement('button');
-        tab.type = 'button';
-        tab.className = 'works-tab-btn';
-        const number = document.createElement('span');
-        number.className = 'work-index';
-        number.textContent = `${String(index + 1).padStart(2, '0')} / ${project.category || '项目档案'}`;
-        const title = document.createElement('strong');
-        title.textContent = project.shortTitle || project.title;
-        const role = document.createElement('small');
-        role.textContent = project.role || '';
-        tab.append(number, title, role);
-        tab.addEventListener('click', () => setCoverflowIndex(index));
-        tabList.append(tab);
+      const el = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      };
+      const status = text => list.replaceChildren(el('p', 'works-status', text));
+      const nameOf = project => project.shortTitle || project.title;
+      // Featured projects lead (two at most); without any, the first two in the owner's order stand in.
+      const pickFeatured = projects => {
+        const flagged = projects.filter(project => project.featured);
+        return (flagged.length ? flagged : projects).slice(0, 2);
+      };
+      const brief = text => {
+        const clean = (text || '').trim().replace(/[。.]$/, '');
+        return clean.length > 36 ? clean.slice(0, 35) + '…' : clean;
+      };
 
-        const slide = document.createElement('div');
-        slide.className = 'coverflow-slide';
-        slide.dataset.index = String(index);
-        slide.dataset.slug = project.slug;
-        slide.dataset.pos = '2';
-        slide.addEventListener('click', () => handleSlideClick(index));
-        const img = document.createElement('img');
-        img.decoding = 'async';
-        if (index === 0) img.src = imageUrl(project.image);
-        else img.dataset.src = imageUrl(project.image);
-        img.alt = project.title + '项目封面';
-        const info = document.createElement('div');
-        info.className = 'coverflow-slide-info';
-        const copy = document.createElement('div');
-        const heading = document.createElement('h4');
-        heading.textContent = project.title;
-        const summary = document.createElement('p');
-        summary.textContent = project.summary || '';
-        copy.append(heading, summary);
-        const linkLabel = document.createElement('span');
-        linkLabel.className = 'coverflow-view-link';
-        linkLabel.textContent = '查看项目档案 ↗';
-        info.append(copy, linkLabel);
-        slide.append(img, info);
-        track.append(slide);
-      });
-      slides = document.querySelectorAll('.coverflow-slide');
-      tabBtns = document.querySelectorAll('.works-tab-btn');
-      coverflowMeta = projects.map(createCase);
-      workDossiers = projects.map(createDossier);
-      projectJump.replaceChildren();
-      projectIndex.hidden = projects.length <= 4;
-      if (projects.length > 4) {
-        projects.forEach((project, index) => {
-          const option = document.createElement('option');
-          option.value = String(index);
-          option.textContent = `${String(index + 1).padStart(2, '0')} / ${project.shortTitle || project.title}`;
-          projectJump.append(option);
-        });
-      }
-      currentCoverflowIdx = Math.max(0, projects.findIndex(p => p.slug === previousSlug));
-      updateCoverflow();
-      archiveProjects = projects;
-      renderArchive();
-    }
-    projectJump.addEventListener('change', () => setCoverflowIndex(Number(projectJump.value)));
-    fetch(endpoint, { cache: 'no-store' })
-      .then(response => response.ok ? response.json() : Promise.reject(new Error('CMS response failed')))
-      .then(data => {
-        if (Array.isArray(data.projects)) {
-          install(data.projects);
+      // The first screen's sample answer, its sources and the knowledge base follow the published projects.
+      const renderIntro = (projects, picks) => {
+        const answer = document.getElementById('introAnswer');
+        const sources = document.getElementById('introSources');
+        const knowledge = document.getElementById('introKnowledge');
+        knowledge.querySelectorAll('.doc.hit, .doc.more').forEach(row => row.remove());
+        if (!projects.length) {
+          answer.textContent = '我正在整理项目，很快会公开。你可以先问问我的实习经历和技术栈。';
+          sources.replaceChildren();
+          document.getElementById('introHits').textContent = '还没有公开的项目档案';
+          return;
         }
-      })
-      .catch(() => install([], '项目暂时无法加载，请稍后刷新页面。'));
-  })();
-</script>
+        const rest = projects.length - picks.length;
+        const parts = [`我一共公开了 ${projects.length} 个项目${rest ? '，最有代表性的是：' : '：'}`];
+        picks.forEach((project, index) => {
+          const summary = brief(project.summary);
+          parts.push(el('b', '', nameOf(project)), summary ? `，${summary}` : '', el('sup', '', String(index + 1)), index < picks.length - 1 ? '；' : '。');
+        });
+        if (rest) parts.push(`其余 ${rest} 个在下面的作品区。`);
+        answer.replaceChildren(...parts);
+        sources.replaceChildren(...picks.map((project, index) => {
+          const card = el('a', 'src');
+          card.href = '#works';
+          let thumb;
+          if (hasImage(project.image)) {
+            thumb = el('img');
+            thumb.src = thumbs[project.image.replace(/^\.\//, '')] || imageUrl(project.image);
+            thumb.alt = '';
+            thumb.decoding = 'async';
+          } else {
+            thumb = el('span', 'thumb', Array.from(nameOf(project))[0]);
+            thumb.setAttribute('aria-hidden', 'true');
+          }
+          const label = el('div');
+          label.append(el('span', '', `来源 ${index + 1}`), el('b', '', nameOf(project)));
+          card.append(thumb, label);
+          return card;
+        }));
+        const rows = picks.map(project => {
+          const row = el('p', 'doc hit', nameOf(project));
+          row.append(el('span', '', '项目 · 命中'));
+          return row;
+        });
+        if (rest) {
+          const more = el('p', 'doc more', `还有 ${rest} 篇项目档案`);
+          more.append(el('span', '', '项目'));
+          rows.push(more);
+        }
+        knowledge.querySelector('h3').after(...rows);
+        document.getElementById('introHits').textContent = `命中 ${picks.length} 篇项目档案`;
+      };
+
+      const projectLinks = (project, className, primary) => {
+        const links = el('div', className);
+        for (const [label, href] of [['在线体验', project.demoUrl], ['源码', project.repoUrl]]) {
+          if (!href) continue;
+          const link = el('a', primary ? (links.children.length ? 'btn ext' : 'btn btn-primary ext') : 'ext', label);
+          link.href = href;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          links.append(link);
+        }
+        return links;
+      };
+
+      // Featured projects tell the whole story: screenshot, problem, approach, result.
+      const projectCard = project => {
+        const name = nameOf(project);
+        const card = el('article', 'panel project featured');
+        const cover = el('div', 'cover');
+        if (hasImage(project.image)) {
+          const img = el('img');
+          img.src = imageUrl(project.image);
+          img.alt = `${name}界面截图`;
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          cover.append(img);
+        } else {
+          // The name is already the card's heading: the cover shows its initial and the stack.
+          cover.classList.add('placeholder');
+          cover.setAttribute('aria-hidden', 'true');
+          cover.append(el('b', '', Array.from(name)[0]));
+          if (project.technologies?.length) cover.append(el('span', '', project.technologies.slice(0, 4).join(' · ')));
+        }
+        const body = el('div', 'wb');
+        body.append(el('h3', '', name));
+        const role = [project.role, project.date].filter(Boolean).join('，');
+        if (role) body.append(el('p', 'work-role', role));
+        if (project.summary) body.append(el('p', 'summary', project.summary));
+        const story = el('dl', 'story');
+        for (const [label, text] of [['难题', project.problem], ['做法', project.action], ['结果', project.outcome]]) {
+          if (text) story.append(el('dt', '', label), el('dd', '', text));
+        }
+        if (story.children.length) body.append(story);
+        if (project.technologies?.length) {
+          const stack = el('ul', 'tags stack');
+          stack.append(...project.technologies.map(tech => el('li', '', tech)));
+          body.append(stack);
+        }
+        const links = projectLinks(project, 'links', true);
+        if (links.children.length) body.append(links);
+        card.append(cover, body);
+        return card;
+      };
+
+      // Every other project is one row: name, one line of summary, its main stack and links.
+      const projectRow = project => {
+        const row = el('article', 'row');
+        const head = el('div');
+        head.append(el('h4', '', nameOf(project)));
+        const meta = [project.role, project.date].filter(Boolean).join('，');
+        if (meta) head.append(el('p', 'row-meta', meta));
+        const stack = el('ul', 'tags');
+        stack.append(...(project.technologies || []).slice(0, 3).map(tech => el('li', '', tech)));
+        row.append(head, el('p', 'summary', project.summary || ''), stack, projectLinks(project, 'row-links', false));
+        return row;
+      };
+
+      const render = projects => {
+        const picks = pickFeatured(projects);
+        renderIntro(projects, picks);
+        if (!projects.length) return status('目前没有公开项目。');
+        const others = projects.filter(project => !picks.includes(project));
+        const featured = el('div', 'works featured-grid');
+        featured.append(...picks.map(projectCard));
+        const blocks = [featured];
+        if (others.length) {
+          const more = el('section', 'panel more-list');
+          more.setAttribute('aria-labelledby', 'more-title');
+          const head = el('div', 'ph');
+          head.append(Object.assign(el('h3', '', '更多项目'), { id: 'more-title' }), el('span', '', `${others.length} 个`));
+          const rows = el('div', 'rows');
+          rows.append(...others.slice(0, 6).map(projectRow));
+          more.append(head, rows);
+          if (others.length > 6) {
+            const all = el('button', 'btn show-all', `显示全部 ${projects.length} 个项目`);
+            all.type = 'button';
+            all.setAttribute('aria-expanded', 'false');
+            all.addEventListener('click', () => {
+              rows.append(...others.slice(6).map(projectRow));
+              all.remove();
+            });
+            more.append(all);
+          }
+          blocks.push(more);
+        }
+        list.replaceChildren(...blocks);
+      };
+      fetch(new URL('/api/showcase-projects', location.origin), { cache: 'no-store' })
+        .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
+        .then(data => Array.isArray(data.projects) && data.projects.every(p => p.slug && p.title)
+          ? render(data.projects) : Promise.reject(new Error('Invalid feed')))
+        .catch(() => status('项目暂时无法加载，请稍后刷新页面。'));
+    })();
+
+    let currentFrame = 0;
+    addEventListener('scroll', () => { if (!currentFrame) currentFrame = requestAnimationFrame(() => { currentFrame = 0; markCurrent(); }); }, { passive: true });
+    markCurrent();
+  </script>
 </body>
 </html>
