@@ -19,6 +19,7 @@ import './ai-cinematic.css'
 import { buildChatHistory, CHAT_LIMITS, type ConversationMessage as Message } from '@/features/ai/chat-history'
 import { consumeChatStream } from '@/features/ai/chat-stream'
 import { buildSuggestions, type Suggestion } from '@/features/ai/suggestions'
+import { initialQuestion } from '@/features/ai/initial-question'
 
 const INITIAL_MESSAGES: Message[] = [
   {
@@ -150,6 +151,19 @@ export default function AIPage() {
     activeRequestRef.current?.abort()
     activeRequestRef.current = null
     requestGenerationRef.current++
+  }, [])
+
+  // A question typed on the portfolio arrives prefilled; the visitor still sends it.
+  const composerRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const question = initialQuestion(window.location.search)
+    if (!question) return
+    // After hydration, so the server-rendered empty field matches the first client render.
+    const frame = requestAnimationFrame(() => {
+      setInput(question)
+      composerRef.current?.focus()
+    })
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   useEffect(() => {
@@ -455,6 +469,7 @@ export default function AIPage() {
           >
             <input
               type="text"
+              ref={composerRef}
               className="composer-input-field"
               placeholder="向 AI 分身提问，或直接粘贴贵司岗位 JD 需求..."
               value={input}
