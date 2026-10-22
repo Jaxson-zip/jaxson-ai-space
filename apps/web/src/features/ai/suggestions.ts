@@ -1,6 +1,7 @@
 export interface PublishedProject {
   title: string
   shortTitle?: string
+  featured?: boolean
 }
 
 export interface Suggestion {
@@ -20,7 +21,9 @@ const GENERAL: Suggestion[] = [
 
 /** Project chips come from the published list, so an unpublished project never gets a dead-end question. */
 export function buildSuggestions(projects: readonly PublishedProject[]): Suggestion[] {
-  const projectChips = projects.slice(0, MAX_PROJECT_CHIPS).map((project) => {
+  // Featured projects first, as on the home page; the rest keep the feed's order.
+  const ordered = [...projects.filter((project) => project.featured), ...projects.filter((project) => !project.featured)]
+  const projectChips = ordered.slice(0, MAX_PROJECT_CHIPS).map((project) => {
     const name = (project.shortTitle || project.title).trim()
     return {
       kind: 'project' as const,

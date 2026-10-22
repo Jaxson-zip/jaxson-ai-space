@@ -8,6 +8,7 @@ import {
 import type { Experience, Project } from './types'
 import cinematicProjects from './cinematic-projects.json'
 import { safeExternalUrl } from './urls'
+import { orderProjects } from './project-order'
 
 const knownCoverBySlug = new Map(
   cinematicProjects.map((project) => [project.slug, `/assets/${project.image}`]),
@@ -48,11 +49,12 @@ export async function getHydratedPortfolioData(
 
     const projects: Project[] =
       projectsDocs.totalDocs > 0
-        ? projectsDocs.docs.map((doc: any) => ({
+        ? orderProjects(projectsDocs.docs).map((doc: any) => ({
             slug: doc.slug || String(doc.id),
             title: doc.title,
             category: doc.category || '全栈工程 · 真实交付',
             sourceVisibility: (doc.visibility as 'public' | 'private') || 'public',
+            featured: doc.featured === true,
             status: doc.status || '已上线',
             role: doc.role || '独立开发',
             summary: doc.summary || '',

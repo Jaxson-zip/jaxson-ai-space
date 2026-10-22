@@ -1,6 +1,8 @@
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { getHydratedPortfolioData } from '@/features/portfolio/data'
+import { homeOrder, pickFeatured } from '@/features/portfolio/project-order'
+import type { Project } from '@/features/portfolio/types'
 import { embedIndexText, getIndexEmbeddingConfig, LOCAL_MODEL_KEY } from '../../../../scripts/lib/index-embedding.mjs'
 import { getPgPool } from './db-pool'
 import type { ChunkCategory, KnowledgeChunk } from './types'
@@ -79,15 +81,20 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
     allowStaticFallback: false,
   })
 
-  // 3. Add Project Chunks (Strictly filter public projects only)
-  for (const p of projects.filter((proj) => proj.sourceVisibility === 'public')) {
+  // 3. Add Project Chunks (Strictly filter public projects only), in the order the home page shows them,
+  //    so a project-list answer names the same work first.
+  const publicProjects = homeOrder<Project>(projects.filter((proj) => proj.sourceVisibility === 'public'))
+  const highlights = new Set(pickFeatured(publicProjects))
+  for (const p of publicProjects) {
+    const featured = highlights.has(p)
     chunks.push({
       id: `project-${p.slug}`,
       title: `项目：${p.title}`,
       category: 'project',
-      content: `【项目背景】${p.problem}\n【技术方案】${p.approach}\n【交付结果】${p.outcome}\n【技术栈】${p.technologies.join('、')}\n【状态】${p.status}${p.links.some((link) => link.kind === 'source') ? '（有公开源码）' : ''}`,
+      content: `【项目背景】${p.problem}\n【技术方案】${p.approach}\n【交付结果】${p.outcome}\n【技术栈】${p.technologies.join('、')}\n【状态】${p.status}${p.links.some((link) => link.kind === 'source') ? '（有公开源码）' : ''}${featured ? '\n【首页精选】是，作者的代表作之一' : ''}`,
       evidenceTag: `项目档案：${p.title}`,
-      keywords: [p.title, p.slug, p.category, ...p.technologies, p.status],
+      keywords: [p.title, p.slug, p.category, ...p.technologies, p.status, ...(featured ? ['代表作', '精选'] : [])],
+      featured,
       vectorScore: indexedScores.get(`proj-${p.slug}`),
       vectorSource: indexedScores.has(`proj-${p.slug}`) ? indexedSource : 'local',
     })

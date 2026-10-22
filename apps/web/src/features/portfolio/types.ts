@@ -40,6 +40,8 @@ export interface Project {
   readonly technologies: readonly string[]
   readonly image: string | null
   readonly links: readonly ProjectLink[]
+  /** Ticked as a home page highlight in the CMS. */
+  readonly featured?: boolean
 }
 
 export interface Award {

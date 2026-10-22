@@ -153,6 +153,26 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(results.every((result) => result.chunk.category === 'project')).toBe(true)
   })
 
+  it('lists projects in the order the home page shows them, not by retrieval score', () => {
+    const project = (id: string, title: string, featured = false): KnowledgeChunk => ({
+      ...MOCK_CHUNKS[1], id, title: `项目：${title}`, content: `${title} 的项目档案。`, keywords: [title], featured,
+    })
+    // Loader order is the home page order: featured first, then the owner's sort order.
+    const chunks = [project('p-b', '乙', true), project('p-c', '丙', true), project('p-a', '甲 项目 做过 哪些')]
+    const results = groundedRetrieve('你做过哪些项目？', chunks)
+    expect(results.map((result) => result.chunk.id)).toEqual(['p-b', 'p-c', 'p-a'])
+  })
+
+  it('answers "best work" questions with the featured projects', () => {
+    const project = (id: string, featured = false): KnowledgeChunk => ({
+      ...MOCK_CHUNKS[1], id, title: `项目：${id}`, content: `${id} 的项目档案。`, keywords: [id], featured,
+    })
+    const chunks = [project('p-star', true), project('p-plain'), ...MOCK_CHUNKS]
+    for (const question of ['你最有代表性的项目是什么？', '你最拿得出手的作品是哪个？']) {
+      expect(groundedRetrieve(question, chunks).map((result) => result.chunk.id), question).toEqual(['p-star'])
+    }
+  })
+
   it('lists multiple retrieved live projects without adding canned claims', () => {
     const projects: KnowledgeChunk[] = [
       { ...MOCK_CHUNKS[1], content: '【交付结果】支持离线任务。\n【状态】已上线' },

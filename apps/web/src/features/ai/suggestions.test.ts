@@ -31,6 +31,13 @@ describe('AI page suggestions', () => {
     expect(labels).toEqual(['项目0', '项目1', '项目2'])
   })
 
+  it('asks about the featured projects first, like the home page', () => {
+    const suggestions = buildSuggestions([
+      { title: '项目甲' }, { title: '项目乙', featured: true }, { title: '项目丙' }, { title: '项目丁', featured: true },
+    ])
+    expect(suggestions.filter((item) => item.kind === 'project').map((item) => item.label)).toEqual(['项目乙', '项目丁', '项目甲'])
+  })
+
   it('still offers general questions when no project list is available', () => {
     const labels = buildSuggestions([]).map((item) => item.label)
     expect(labels).toEqual(['岗位 JD 匹配', '全部公开项目', '实习经历'])

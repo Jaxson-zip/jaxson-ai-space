@@ -11,6 +11,8 @@ export interface KnowledgeChunk {
   /** Similarity calculated by the pgvector query, when loaded from PostgreSQL. */
   vectorScore?: number
   vectorSource?: 'local' | 'semantic'
+  /** A project the home page leads with; "best work" questions answer with these. */
+  featured?: boolean
 }
 
 export interface RetrievalResult {

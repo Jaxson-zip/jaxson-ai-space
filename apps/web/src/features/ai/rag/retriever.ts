@@ -132,12 +132,24 @@ export function hybridRetrieve(
   return results.slice(0, topK)
 }
 
+function inLoaderOrder(results: RetrievalResult[], chunks: KnowledgeChunk[]): RetrievalResult[] {
+  const position = new Map(chunks.map((chunk, index) => [chunk.id, index]))
+  return [...results].sort((a, b) => (position.get(a.chunk.id) ?? 0) - (position.get(b.chunk.id) ?? 0))
+}
+
 /** The local hash projection is not semantic evidence by itself. */
 export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5): RetrievalResult[] {
+  const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
+  // "Best work" questions get the projects the home page leads with.
+  const wantsHighlights = /代表|最好|最满意|拿得出手|精选|主推|得意/.test(query) && /项目|作品/.test(query)
+  const highlights = projectChunks.filter((chunk) => chunk.featured)
+  if (wantsHighlights && highlights.length > 0) {
+    return inLoaderOrder(hybridRetrieve(query, highlights, highlights.length), highlights)
+  }
   const wantsProjectList = /项目|作品/.test(query) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(query)
   if (wantsProjectList) {
-    const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
-    return hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length))
+    // Every project, in the loader's (home page) order rather than by score.
+    return inLoaderOrder(hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length)), projectChunks)
   }
 
   const topics = new Set(TOPIC_CATEGORIES.flatMap(([pattern, categories]) => pattern.test(query) ? categories : []))
