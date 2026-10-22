@@ -1790,6 +1790,9 @@
     .chapter-next { position: fixed; right: 28px; bottom: 24px; z-index: 80; display: flex; align-items: center; gap: 18px; padding: 11px 12px 11px 20px; border: 1px solid rgba(248,192,69,.55); border-radius: 100px; color: #fff; background: rgba(19,25,18,.82); backdrop-filter: blur(16px); cursor: pointer; box-shadow: 0 14px 40px rgba(0,0,0,.22); transition: background .25s ease, transform .25s ease; }
     .chapter-next:hover { background: rgba(54,61,42,.95); transform: translateY(-4px); }
     .chapter-next:focus-visible { outline: 2px solid var(--accent-yellow); outline-offset: 4px; }
+    /* Over text or controls: fade out and let clicks reach the content. Keyboard focus still shows it. */
+    .chapter-next.is-covering:not(:focus-visible) { opacity: 0; pointer-events: none; }
+    .chapter-next { transition: background .25s ease, transform .25s ease, opacity .2s ease; }
     .chapter-next__meta { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font: 700 10px/1.3 var(--font-mono); letter-spacing: .1em; color: var(--accent-yellow); }
     .chapter-next__label { font: 700 13px/1.3 var(--font-body); color: #fff; letter-spacing: 0; }
     .chapter-next__arrow { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-yellow); color: #172015; font-size: 19px; }
@@ -2385,7 +2388,7 @@
       </div>
 
       <div class="hero-col-right">
-        <h2 class="hero-right-title">FROM IDEA<br/>TO LIVE.</h2>
+        <h2 class="hero-right-title">FROM IDEA<br/>TO LIFE.</h2>
         <p class="hero-right-desc">
           独立完成多款 Web 应用从 0 到 1 的设计、开发与上线。关注 AI Native 产品和下一代人机交互。
         </p>
@@ -2420,7 +2423,7 @@
             <div><strong>11</strong><span>国家及省市级奖项</span></div>
             <div><strong>03</strong><span>公开项目</span></div>
           </div>
-          <p class="bio-read-cue">右侧选择一个阶段，查看具体经历。</p>
+          <p class="bio-read-cue">选择一个阶段，查看具体经历。</p>
           <a class="bio-resume-link" href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_AI Product Builder简历.pdf">下载 PDF 简历 <span aria-hidden="true">↓</span></a>
         </div>
 
@@ -2444,7 +2447,7 @@
               <li>担任院学信委人工智能学院副主席、班级学习委员和甲骨文社团社长</li>
             </ul>
           </div>
-          <p class="bio-step-hint">CLICK A DATE / SCROLL TO CONTINUE</p>
+          <p class="bio-step-hint">SELECT A STAGE / SCROLL TO CONTINUE</p>
         </div>
 
         <!-- Right: Flawless Pointing Pixar Character Cutout -->
@@ -2466,7 +2469,7 @@
       <div class="works-header">
         <div class="section-eyebrow">03 // SELECTED WORKS / 精选作品</div>
         <h2 class="section-mega-title">SELECTED WORKS.</h2>
-        <p class="works-intro">先看项目的难题、我的工作与结果。停留片刻会自动展示下一项；滚轮可直接跳过。</p>
+        <p class="works-intro">先看项目的难题、我的工作与结果。停留片刻会自动展示下一项，也可以用左右箭头切换。</p>
         <button class="works-archive-open" id="worksArchiveOpen" type="button" aria-haspopup="dialog" aria-controls="worksArchive" disabled>浏览全部项目 <span id="worksArchiveCount">00</span><span aria-hidden="true">↗</span></button>
         <div class="works-nav-tabs"></div>
         <label class="works-project-index" id="worksProjectIndex" hidden>直接跳到项目 <select id="worksProjectJump" aria-label="直接跳到项目"></select></label>
@@ -3097,6 +3100,35 @@
       });
     }, { passive: true });
     syncSceneFromViewport();
+
+    // The floating chapter button steps aside instead of covering text or controls.
+    const chapterNextButton = document.getElementById('chapterNext');
+    let chapterCoverFrame = 0;
+    function chapterButtonCovers() {
+      const box = chapterNextButton.getBoundingClientRect();
+      if (!box.width || getComputedStyle(chapterNextButton).display === 'none') return false;
+      // Sample up to 1px inside each edge: a link edge under the border still counts.
+      for (let column = 0; column < 8; column++) for (const y of [box.top + 1, box.top + box.height / 2, box.bottom - 1]) {
+        const x = box.left + 1 + column * (box.width - 2) / 7;
+        for (const el of document.elementsFromPoint(x, y)) {
+          if (chapterNextButton.contains(el) || !el.closest('main') || el.closest('[aria-hidden="true"]')) continue;
+          if (el.closest('a, button') || [...el.childNodes].some(node => node.nodeType === 3 && node.textContent.trim())) return true;
+        }
+      }
+      return false;
+    }
+    function syncChapterButtonCover() {
+      if (chapterCoverFrame) return;
+      chapterCoverFrame = requestAnimationFrame(() => {
+        chapterCoverFrame = 0;
+        chapterNextButton.classList.toggle('is-covering', chapterButtonCovers());
+      });
+    }
+    addEventListener('scroll', syncChapterButtonCover, { passive: true });
+    addEventListener('resize', syncChapterButtonCover, { passive: true });
+    // Content also moves without scrolling: the works carousel advances on its own.
+    setInterval(() => { if (!document.hidden) syncChapterButtonCover(); }, 400);
+    syncChapterButtonCover();
 
     if (matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
       const folderButton = document.querySelector('.folder-interactive-wrap');

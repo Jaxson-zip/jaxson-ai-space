@@ -51,6 +51,55 @@ test('the AI entry stays fully visible in the phone header', async ({ page }) =>
   }
 })
 
+test('on-page guidance matches how the page works on phones and desktops', async ({ page }) => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
+    await page.setViewportSize(viewport)
+    await openScene(page, 'hero')
+    const text = await page.locator('main').innerText()
+    // Phones stack the timeline below; wheel scrolling no longer skips chapters.
+    expect(text, JSON.stringify(viewport)).not.toMatch(/右侧选择|CLICK A DATE|滚轮可直接跳过|TO LIVE/i)
+  }
+})
+
+test('the floating chapter button never covers text or controls while it is usable', async ({ page }) => {
+  // Live-shaped content: the original cover issue was over this card's action link.
+  const live = (slug: string, title: string, summary: string) => ({ slug, title, shortTitle: title, category: '全栈工程', role: '独立全栈开发',
+    summary, problem: '日常工作与学习中任务容易分散在散乱的临时记录中，缺少一个轻量入口把收集、归类和多端同步高效统一起来。',
+    action: '围绕极速收集、按场景分组、离线可用和云端持久化组织界面流，高频操作一键直达，并通过 Supabase 实现跨端实时同步。',
+    outcome: '项目已完整部署至 Vercel，提供顺畅的桌面与移动端 PWA 安装体验，支持离线缓存与多设备实时同步。', technologies: ['React', 'TypeScript'] })
+  await page.route('**/api/showcase-projects', route => route.fulfill({ json: { source: 'cms', projects: [
+    live('todo-memo', '待办备忘 (Todo Memo)', '已真正上线的待办与备忘工具，覆盖登录鉴权、云端持久化、任务多级分组、标签过滤、即时检索与离线运行。'),
+    live('jaxson-ai-space', 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', '作品站、无头 CMS 与只引用公开事实的 AI 分身。'),
+  ] } }))
+  for (const viewport of [{ width: 1366, height: 657 }, { width: 1440, height: 789 }, { width: 1280, height: 609 }]) {
+    await page.setViewportSize(viewport)
+    await openScene(page, 'hero')
+    const covered = await page.evaluate(async () => {
+      const button = document.getElementById('chapterNext')!
+      const hits = new Set<string>()
+      const max = document.documentElement.scrollHeight - innerHeight
+      for (let y = 0; y <= max; y += 40) {
+        scrollTo(0, y)
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+        const style = getComputedStyle(button)
+        if (style.display === 'none' || style.pointerEvents === 'none' || +style.opacity < 0.5) continue
+        const b = button.getBoundingClientRect()
+        for (const el of document.querySelectorAll('main *')) {
+          const ownText = [...el.childNodes].some(node => node.nodeType === 3 && node.textContent!.trim())
+          if (!ownText && !el.matches('a, button')) continue
+          const cs = getComputedStyle(el)
+          if (cs.visibility === 'hidden' || +cs.opacity === 0 || el.closest('[aria-hidden="true"]')) continue
+          const r = el.getBoundingClientRect()
+          const area = Math.max(0, Math.min(r.right, b.right) - Math.max(r.left, b.left)) * Math.max(0, Math.min(r.bottom, b.bottom) - Math.max(r.top, b.top))
+          if (area > 40) hits.add(`${y}: ${el.textContent!.trim().slice(0, 20)}`)
+        }
+      }
+      return [...hits].slice(0, 5)
+    })
+    expect(covered, JSON.stringify(viewport)).toEqual([])
+  }
+})
+
 test('the desktop finale keeps its contacts and footer on the first screen', async ({ page }) => {
   for (const viewport of [{ width: 1920, height: 900 }, { width: 1440, height: 700 }, { width: 1280, height: 600 },
     { width: 960, height: 540 }, { width: 1780, height: 572 }, { width: 2048, height: 600 }]) {
