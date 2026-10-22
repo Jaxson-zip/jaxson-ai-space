@@ -27,7 +27,7 @@ const PROJECTS = [
     problem: '传统作品集为纯静态单向展示，招聘方无法深度交互探索候选人技术栈；个人知识碎片与真实案例缺少动态易维护的后端体系。',
     approach: '基于 Next.js 16 + React 19 构建流式交互界面，嵌入 Payload CMS 3.x 动态管理内容；后端基于 PostgreSQL 17 + pgvector 构建知识切片余弦相似度检索与物理权限隔离。',
     outcome: '项目已完整部署至外网生产环境（结合 Docker、PM2 与 Cloudflare Tunnel），实现毫秒级首屏加载与稳定第一人称防幻觉 RAG 问答流。',
-    demo_url: 'http://space.jaxson.bond/',
+    demo_url: 'https://jaxson.bond/',
     repo_url: 'https://github.com/Jaxson-zip/jaxson-ai-space',
     tags: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
   },
@@ -154,7 +154,7 @@ const AI_KNOWLEDGE = [
   {
     title: 'Jaxson AI Space (本站) 全栈架构与技术实现',
     category: 'project',
-    content: '【项目背景】传统作品集为静态单向展示，无法实现深度双向互动分析；缺少统一易维护的生产级全栈后台。\n【技术方案】基于 Next.js 16 + React 19 构建流式响应界面，嵌入 Payload CMS 3.x 统一管理内容；后端采用 PostgreSQL 17 + pgvector 搭建 dual schema（owner 与 public_read）物理隔离架构；集成第一人称 RAG 混合向量检索与知识切片溯源。\n【交付成果】已上线生产环境（space.jaxson.bond），开源于 github.com/Jaxson-zip/jaxson-ai-space。',
+    content: '【项目背景】传统作品集为静态单向展示，无法实现深度双向互动分析；缺少统一易维护的生产级全栈后台。\n【技术方案】基于 Next.js 16 + React 19 构建流式响应界面，嵌入 Payload CMS 3.x 统一管理内容；后端采用 PostgreSQL 17 + pgvector 搭建 dual schema（owner 与 public_read）物理隔离架构；集成第一人称 RAG 混合向量检索与知识切片溯源。\n【交付成果】已上线生产环境（jaxson.bond），开源于 github.com/Jaxson-zip/jaxson-ai-space。',
     is_public: true,
     evidence_tag: 'Jaxson AI Space 核心项目',
   },

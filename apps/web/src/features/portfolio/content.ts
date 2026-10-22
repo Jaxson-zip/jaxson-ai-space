@@ -57,7 +57,7 @@ export const projects = [
     technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
     image: '/assets/jaxson-ai-space-cover.png',
     links: [
-      { label: '在线体验', href: 'https://space.jaxson.bond/', kind: 'live' },
+      { label: '在线体验', href: 'https://jaxson.bond/', kind: 'live' },
       { label: '开源仓库', href: 'https://github.com/Jaxson-zip/jaxson-ai-space', kind: 'source' },
     ],
   },
