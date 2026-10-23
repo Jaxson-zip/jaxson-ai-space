@@ -39,6 +39,8 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
   const provider = deepseekKey ? 'deepseek' : dashscopeKey ? 'dashscope' : 'openai'
 
   const evidenceTags = retrievalResults.map((r) => r.chunk.evidenceTag)
+  // Numbered like the prompt's 【事实证据 n】, so the page can match each [n] in the answer to its source.
+  const sources = retrievalResults.map(({ chunk }) => chunk.project ? { tag: chunk.evidenceTag, project: chunk.project } : { tag: chunk.evidenceTag })
 
   // If a live LLM API key is present, stream and transform from the provider
   if (apiKey && retrievalResults.length > 0) {
@@ -96,7 +98,7 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
               // The model failed before its first word (cold start, dropped connection, empty reply):
               // answer from the retrieved facts instead of showing an error.
               console.warn('[RAG] External LLM failed before answering; using local generator:', code)
-              emit('meta', { evidence: evidenceTags, isJdMatch, generator: 'local' })
+              emit('meta', { evidence: evidenceTags, sources, isJdMatch, generator: 'local' })
               emit('text', { text: buildLocalRAGAnswer(userMessage, retrievalResults, isJdMatch) })
               emit('done', {})
             } else {
@@ -137,7 +139,7 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
             controller = value
             upstreamSignal.addEventListener('abort', onAbort, { once: true })
             if (upstreamSignal.aborted) { onAbort(); return }
-            emit('meta', { evidence: evidenceTags, isJdMatch, generator: 'external', provider, model })
+            emit('meta', { evidence: evidenceTags, sources, isJdMatch, generator: 'external', provider, model })
             void pump()
           },
           cancel() {
@@ -164,8 +166,7 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       // 1. Send Evidence Event
-      const evidenceTags = retrievalResults.map((r) => r.chunk.evidenceTag)
-      const initialMeta = `event: meta\ndata: ${JSON.stringify({ evidence: evidenceTags, isJdMatch, generator: 'local' })}\n\n`
+      const initialMeta = `event: meta\ndata: ${JSON.stringify({ evidence: evidenceTags, sources, isJdMatch, generator: 'local' })}\n\n`
       controller.enqueue(encoder.encode(initialMeta))
 
       // 2. Chunk and stream text with signal.aborted interruption check
@@ -224,6 +225,6 @@ export function buildLocalRAGAnswer(
     : wantsProjectList
       ? '目前检索到的相关公开项目：'
       : '根据目前公开的资料：'
-  const facts = selected.map(({ chunk }) => `**${chunk.title}**\n${chunk.content}\n来源：${chunk.evidenceTag}`)
+  const facts = selected.map((result) => `**${result.chunk.title}** [${retrievalResults.indexOf(result) + 1}]\n${result.chunk.content}`)
   return `${intro}\n\n${facts.join('\n\n')}\n\n如需更多细节，可以打开对应项目档案或与本人核实。`
 }

@@ -97,6 +97,19 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(prompt).toContain('广东润喵云科技有限公司实习证明')
   })
 
+  it('asks for inline [n] citations instead of an evidence list at the end, since the page shows the sources', () => {
+    const prompt = buildSystemPrompt(hybridRetrieve('润喵云实习', MOCK_CHUNKS, 1), false)
+    expect(prompt).toContain('[1]')
+    expect(prompt).not.toContain('末尾，自动简要列出')
+  })
+
+  it('cites each fact of the local answer by its source number', () => {
+    const results = hybridRetrieve('润喵云实习', MOCK_CHUNKS, 2)
+    const answer = buildLocalRAGAnswer('润喵云实习', results)
+    expect(answer).toContain(`**${results[0].chunk.title}** [1]`)
+    expect(answer).not.toContain('来源：')
+  })
+
   it('builds a dedicated JD matching system prompt when isJdMatch is true', () => {
     const results = hybridRetrieve('前端开发工程师 React Vue 岗位需求', MOCK_CHUNKS, 2)
     const prompt = buildSystemPrompt(results, true)

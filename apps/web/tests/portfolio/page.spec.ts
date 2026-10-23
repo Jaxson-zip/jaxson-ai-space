@@ -218,6 +218,36 @@ test.describe('first screen', () => {
     await expect(field).toHaveValue('')
   })
 
+  test('a live answer cites like the sample: numbered marks, then a card for each cited source', async ({ page }) => {
+    await askable(page, [
+      sse('meta', { evidence: ['项目档案：待办备忘 (Todo Memo)', '广东润喵云科技 · 开发实习生', '没被引用的资料'], generator: 'external',
+        sources: [{ tag: '项目档案：待办备忘 (Todo Memo)', project: 'todo-memo' }, { tag: '广东润喵云科技 · 开发实习生' }, { tag: '没被引用的资料' }] }),
+      sse('text', { text: '我做过**待办备忘**[1]，也在润喵云实习过[2]。' }),
+      sse('text', { text: '\n\n---\n**引用事实证据**：事实证据 1、事实证据 2。' }),
+      sse('done', {}),
+    ])
+    await page.locator('.chips button').first().click()
+    const live = page.locator('#hero .live')
+    await expect(live.locator('.a sup')).toHaveText(['1', '2'])
+    await expect(live.locator('.a')).toHaveText('我做过待办备忘1，也在润喵云实习过2。')
+    await expect(live.locator('.src div span')).toHaveText(['来源 1', '来源 2'])
+    await expect(live.locator('.src b')).toHaveText(['待办备忘 (Todo Memo)', '广东润喵云科技 · 开发实习生'])
+    await expect(live.locator('.src').first().locator('img')).toHaveAttribute('src', /todo-memo-cover/)
+    await expect(live.locator('.src').first()).toHaveAttribute('href', '#works')
+    await expect(live.locator('.src').nth(1).locator('.thumb')).toHaveText('广')
+  })
+
+  test('without numbered marks every source gets a card; tags alone still find the project', async ({ page }) => {
+    await askable(page, [
+      sse('meta', { evidence: ['项目档案：Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', '张锦鹏个人履历'], generator: 'local' }),
+      sse('text', { text: '这是本站。' }), sse('done', {}),
+    ])
+    await page.locator('.chips button').first().click()
+    const live = page.locator('#hero .live')
+    await expect(live.locator('.src b')).toHaveText(['Jaxson AI Space', '张锦鹏个人履历'])
+    await expect(live.locator('.src').first().locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
+  })
+
   test('a long answer scrolls inside the panel; the first screen keeps its size', async ({ page }) => {
     const long = Array.from({ length: 60 }, (_, index) => `第 ${index + 1} 行回答内容`).join('\n')
     await askable(page, [sse('text', { text: long }), sse('done', {})])
@@ -416,7 +446,8 @@ test.describe('more than two projects', () => {
     for (const index of [0, 1]) {
       await expect(covers.nth(index)).toHaveClass(/placeholder/)
       await expect(covers.nth(index).locator('b')).toHaveText('项')
-      await expect(covers.nth(index).locator('span')).toHaveText('React · TypeScript · Supabase')
+      await expect(covers.nth(index).locator('b')).toHaveCSS('opacity', '1')
+      await expect(covers.nth(index).locator('li')).toHaveText(['React', 'TypeScript', 'Supabase'])
       await expect(covers.nth(index).locator('img')).toHaveCount(0)
     }
     await expect(page.locator('#hero .src img')).toHaveCount(0)
@@ -446,6 +477,14 @@ test.describe('works', () => {
     await expect(first.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
     await expect(first.locator('img')).toHaveAttribute('src', './optimized/todo-memo-cover-900.765d77142054.webp')
     await expect(first.locator('img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
+  })
+
+  test('this site gets its own screenshot even while the CMS still names the stock image', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const cover = page.locator('#works .project').nth(1).locator('.cover')
+    await expect(cover).not.toHaveClass(/placeholder/)
+    await expect(cover.locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
+    await expect(page.locator('#hero .src').nth(1).locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
   })
 
   test('sits two cards per row on wide screens and one per row on phones', async ({ page }) => {
@@ -512,6 +551,22 @@ test.describe('résumé', () => {
     await open(page, { width: 1440, height: 900 })
     await expect(page.locator('#bio .skills h3')).toHaveText(['AI 应用开发', '前端开发', '后端与数据', '工程交付'])
     for (const group of await page.locator('#bio .skills .group').all()) expect(await group.locator('li').count()).toBeGreaterThanOrEqual(4)
+  })
+
+  test('experience and skills end on the same line, leaving no empty strip under either', async ({ page }) => {
+    for (const width of [1024, 1280, 1440]) {
+      await open(page, { width, height: 900 })
+      const [experience, skills] = await page.locator('#bio .bio > .panel').evaluateAll(panels => panels.map(panel => panel.getBoundingClientRect().bottom))
+      expect(Math.abs(experience - skills), `${width}px`).toBeLessThanOrEqual(1)
+    }
+  })
+
+  test('the AI group names the retrieval and generation pieces this site really uses', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const ai = page.locator('#bio .skills .group').first().locator('li')
+    for (const item of ['RAG 检索增强', 'pgvector 向量检索', 'BM25 + 向量混合检索', 'Embedding 向量化', 'SSE 流式输出', '引用溯源与防幻觉']) {
+      await expect(ai.filter({ hasText: item })).toHaveCount(1)
+    }
   })
 
   test('puts experience and skills side by side on wide screens, dates beside entries', async ({ page }) => {

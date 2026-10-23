@@ -159,3 +159,18 @@ it('falls back to the facts when the first token never arrives', async () => {
   expect(output).toContain('event: done')
   expect(output).not.toContain('first_token_timeout')
 })
+
+it('names every source in the meta event, with the project slug when the source is a project', async () => {
+  const stream = await createRAGStream({
+    messages: [{ id: 'question', role: 'user', content: '你做过哪些项目？' }],
+    retrievalResults: [
+      { chunk: { id: 'project-todo-memo', project: 'todo-memo', title: '项目：待办备忘', category: 'project',
+        content: 'A real published project', evidenceTag: '项目档案：待办备忘', keywords: [] }, score: 1, vectorScore: 1, bm25Score: 1 },
+      { chunk: { id: 'exp-1', title: '经历：润喵云', category: 'internship',
+        content: 'An internship', evidenceTag: '广东润喵云科技 · 开发实习生', keywords: [] }, score: 1, vectorScore: 1, bm25Score: 1 },
+    ],
+  })
+  const meta = JSON.parse(/event: meta\ndata: (.*)/.exec(await new Response(stream).text())![1])
+  expect(meta.evidence).toEqual(['项目档案：待办备忘', '广东润喵云科技 · 开发实习生'])
+  expect(meta.sources).toEqual([{ tag: '项目档案：待办备忘', project: 'todo-memo' }, { tag: '广东润喵云科技 · 开发实习生' }])
+})

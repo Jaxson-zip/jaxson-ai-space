@@ -13,6 +13,8 @@ export interface KnowledgeChunk {
   vectorSource?: 'local' | 'semantic'
   /** A project the home page leads with; "best work" questions answer with these. */
   featured?: boolean
+  /** The project's slug when this chunk is a project record; the home page shows its screenshot as the source. */
+  project?: string
 }
 
 export interface RetrievalResult {

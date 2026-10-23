@@ -237,9 +237,12 @@
     .cover { aspect-ratio: 16 / 10; background: var(--card); border-bottom: 1px solid var(--line); overflow: hidden; }
     .cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
     /* Without a screenshot the cover carries the project's own name instead of a stock image. */
-    .cover.placeholder { display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 20px 24px; background: var(--cover); }
-    .cover.placeholder b { font-size: 56px; line-height: 1; font-weight: 800; color: var(--accent); opacity: .35; }
-    .cover.placeholder span { font: 500 14px/1.5 var(--font-mono); color: var(--sub); overflow-wrap: anywhere; }
+    .cover.placeholder { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 18px; padding: 28px;
+      background: radial-gradient(circle, rgba(41, 82, 227, .12) 1px, transparent 1.5px) 0 0 / 20px 20px, var(--cover); }
+    .cover.placeholder b { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 18px; background: var(--accent); color: var(--on-ink);
+      font-size: 36px; line-height: 1; font-weight: 800; box-shadow: 0 8px 24px rgba(41, 82, 227, .25); }
+    .cover.placeholder ul { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cover.placeholder li { font: 500 14px/1 var(--font-mono); padding: 7px 10px; border-radius: 6px; background: rgba(255, 255, 255, .75); color: var(--sub); }
     .wb { padding: 22px 24px 24px; display: grid; gap: 12px; }
     .project h3 { font-size: 24px; line-height: 1.3; overflow-wrap: anywhere; }
     .work-role { color: var(--sub); font-size: 14px; margin-top: -6px; }
@@ -250,7 +253,12 @@
     .works-status { color: var(--sub); }
 
     .bio { display: grid; gap: var(--gap); align-items: start; }
-    @media (min-width: 900px) { .bio { grid-template-columns: 1.15fr 1fr; } }
+    /* Side by side both panels end on one line; the skill groups spread over the extra height. */
+    @media (min-width: 900px) {
+      .bio { grid-template-columns: 1.15fr 1fr; align-items: stretch; }
+      .bio > .panel { display: flex; flex-direction: column; }
+      .bio .skills { flex: 1; align-content: space-evenly; }
+    }
     .timeline { padding: 4px 24px 12px; }
     .entry { display: grid; gap: 4px; padding: 18px 0; border-bottom: 1px solid var(--line); }
     .entry:last-child { border-bottom: 0; }
@@ -437,7 +445,7 @@
         <div class="panel">
           <div class="ph"><strong>技术栈</strong><span>蓝色为主力</span></div>
           <div class="skills">
-            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>大模型 API 接入</li><li>Prompt 上下文工程</li><li>AI 编程（Cursor、Claude）</li></ul></div>
+            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li class="key">BM25 + 向量混合检索</li><li>Embedding 向量化</li><li>大模型 API 接入（DeepSeek）</li><li>SSE 流式输出</li><li>Prompt 上下文工程</li><li>引用溯源与防幻觉</li><li>AI 编程（Cursor、Claude）</li></ul></div>
             <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li class="key">Next.js 16</li><li>Vue 3</li><li>Tailwind CSS</li><li>Vite</li></ul></div>
             <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li>Go</li><li>Python</li><li>MySQL</li><li>Supabase</li><li>RESTful API</li><li>分布式大数据</li></ul></div>
             <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li>Linux 运维</li><li>Git 与 GitHub</li><li>PM2</li><li>Cloudflare Tunnel</li><li>Vercel</li></ul></div>
@@ -478,6 +486,61 @@
     askForm.action = new URL('/ai', window.JAXSON_BACKEND_ORIGIN).href;
     askForm.elements.from.value = location.href;
 
+    // Projects and their screenshots, shared by the works chapter, the sample answer and live answers.
+    const published = [];
+    const media = (() => {
+      const covers = {
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
+        // The CMS still names the old screenshot; both names show the current home page.
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
+      };
+      // Small copies for source cards.
+      const thumbs = {
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
+      };
+      // This site is its own screenshot, even while its CMS record still names the stock image.
+      const bySlug = { 'jaxson-ai-space': 'jaxson-ai-space-home-20261022.png' };
+      // The feed names the stock dossier image when a project has no screenshot of its own.
+      const own = value => Boolean(value) && !/project-dossier-cover\.svg/.test(value) ? value.replace(/^\.\//, '') : '';
+      const url = name => covers[name] || (/^(https?:\/\/|\/)/.test(name) ? name : './' + name);
+      const imageOf = project => own(project.image) || bySlug[project.slug] || '';
+      return {
+        cover: project => imageOf(project) && url(imageOf(project)),
+        thumb: project => imageOf(project) && (thumbs[imageOf(project)] || url(imageOf(project))),
+      };
+    })();
+    const nameOf = project => project.shortTitle || project.title;
+    // One source under an answer: the project's screenshot, or the first character of the source's name.
+    const sourceCard = (number, name, project) => {
+      const card = document.createElement(project ? 'a' : 'div');
+      card.className = 'src';
+      if (project) card.href = '#works';
+      const image = project && media.thumb(project);
+      let thumb;
+      if (image) {
+        thumb = document.createElement('img');
+        thumb.src = image;
+        thumb.alt = '';
+        thumb.decoding = 'async';
+      } else {
+        thumb = document.createElement('span');
+        thumb.className = 'thumb';
+        thumb.textContent = Array.from(name)[0] || '';
+        thumb.setAttribute('aria-hidden', 'true');
+      }
+      const label = document.createElement('div');
+      const tag = document.createElement('span');
+      tag.textContent = `来源 ${number}`;
+      const title = document.createElement('b');
+      title.textContent = name;
+      label.append(tag, title);
+      card.append(thumb, label);
+      return card;
+    };
+
     // Ask the AI twin right here: the answer streams from the CMS, its sources fill the trace panel.
     // Answers are only ever set as text.
     (() => {
@@ -510,17 +573,35 @@
         }
         return messages;
       };
-      // **bold** and "- " list lines; everything else is plain text.
+      // The cards under the answer already list the sources; drop an evidence list the model adds at the end.
+      const withoutEvidenceList = text => text.replace(/(\n\s*-{3,}\s*)?\n+[\s*#]*(引用|参考)[^\n]{0,8}证据[\s\S]*$/, '');
+      // [1], [1, 2] or 【1】 after a sentence.
+      const CITE = String.raw`\s?[[【]\d{1,2}(?:\s*[,，、]\s*\d{1,2})*[\]】]`;
+      const citedNumbers = text => (withoutEvidenceList(text).match(new RegExp(CITE, 'g')) || []).flatMap(mark => mark.match(/\d+/g).map(Number));
+      // **bold**, "- " list lines and [n] citations; everything else is plain text.
       const renderAnswer = (node, text) => {
-        node.replaceChildren(...text.split(/\n+/).filter(line => line.trim()).map(line => {
+        node.replaceChildren(...withoutEvidenceList(text).split(/\n+/).filter(line => line.trim() && !/^\s*-{3,}\s*$/.test(line)).map(line => {
           const item = /^\s*[-*]\s+/.test(line);
           const paragraph = make('p', item ? 'li' : '');
-          line.replace(/^\s*[-*]\s+/, '').split(/(\*\*[^*]+\*\*)/).forEach(part => {
+          line.replace(/^\s*[-*]\s+/, '').split(new RegExp(String.raw`(\*\*[^*]+\*\*|${CITE})`)).forEach(part => {
             if (part.startsWith('**') && part.endsWith('**') && part.length > 4) paragraph.append(make('b', '', part.slice(2, -2)));
+            else if (new RegExp(`^${CITE}$`).test(part)) part.match(/\d+/g).forEach(number => paragraph.append(make('sup', '', number)));
             else if (part) paragraph.append(part);
           });
           return paragraph;
         }));
+      };
+      // A card for each source the answer cites by number, or for every source when it cites none.
+      const sourceCards = (sources, text) => {
+        const cited = [...new Set(citedNumbers(text))].filter(number => number >= 1 && number <= sources.length).sort((a, b) => a - b);
+        const numbers = cited.length ? cited : sources.map((_, index) => index + 1);
+        const box = make('div', 'srcs');
+        box.append(...numbers.map(number => {
+          const source = sources[number - 1];
+          const project = published.find(item => item.slug === source.project) || published.find(item => source.tag.includes(item.title));
+          return sourceCard(number, project ? nameOf(project) : source.tag.replace(/^[^：:]{1,6}[：:]\s*/, ''), project);
+        }));
+        return box;
       };
       const showSources = (evidence, generator) => {
         knowledge.querySelectorAll('.doc').forEach(row => row.remove());
@@ -559,6 +640,7 @@
         answer.textContent = '正在查找公开资料并生成回答…';
         scrollDown();
         let text = '';
+        let sources = [];
         const fail = (message, withLink) => {
           if (!text) answer.remove();
           const status = make('p', 'status', message);
@@ -593,7 +675,13 @@
             for (const block of events) {
               const type = /^event: (.+)$/m.exec(block)?.[1];
               const data = JSON.parse(/^data: (.*)$/m.exec(block)?.[1] || '{}');
-              if (type === 'meta') showSources(Array.isArray(data.evidence) ? data.evidence.filter(tag => typeof tag === 'string') : [], data.generator);
+              if (type === 'meta') {
+                const evidence = Array.isArray(data.evidence) ? data.evidence.filter(tag => typeof tag === 'string') : [];
+                // Older servers send only the tags.
+                sources = Array.isArray(data.sources) && data.sources.every(source => typeof source?.tag === 'string')
+                  ? data.sources : evidence.map(tag => ({ tag }));
+                showSources(evidence, data.generator);
+              }
               if (type === 'text' && typeof data.text === 'string') {
                 text += data.text;
                 answer.className = 'a';
@@ -605,6 +693,7 @@
           }
           if (finished === 'done' && text) {
             rounds.push([question, text]);
+            if (sources.length) answer.after(sourceCards(sources, text));
           } else {
             fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时没能生成回答，请重试。');
           }
@@ -654,24 +743,6 @@
     // Published projects come from the CMS through this origin's feed. CMS text is only ever set as text.
     (() => {
       const list = document.getElementById('projectList');
-      const covers = {
-        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
-        // The CMS still names the old screenshot; both names show the current home page.
-        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
-        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
-      };
-      // Small copies for the first screen's source cards.
-      const thumbs = {
-        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
-        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
-        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
-      };
-      // The feed names the stock dossier image when a project has no screenshot of its own.
-      const hasImage = value => Boolean(value) && !/project-dossier-cover\.svg/.test(value);
-      const imageUrl = value => {
-        const name = value.replace(/^\.\//, '');
-        return covers[name] || (/^(https?:\/\/|\/|\.\/)/.test(value) ? value : './' + value);
-      };
       const el = (tag, className, text) => {
         const node = document.createElement(tag);
         if (className) node.className = className;
@@ -679,7 +750,6 @@
         return node;
       };
       const status = text => list.replaceChildren(el('p', 'works-status', text));
-      const nameOf = project => project.shortTitle || project.title;
       // Featured projects lead (two at most); without any, the first two in the owner's order stand in.
       const pickFeatured = projects => {
         const flagged = projects.filter(project => project.featured);
@@ -712,24 +782,7 @@
         });
         if (rest) parts.push(`其余 ${rest} 个在下面的作品区。`);
         answer.replaceChildren(...parts);
-        sources.replaceChildren(...picks.map((project, index) => {
-          const card = el('a', 'src');
-          card.href = '#works';
-          let thumb;
-          if (hasImage(project.image)) {
-            thumb = el('img');
-            thumb.src = thumbs[project.image.replace(/^\.\//, '')] || imageUrl(project.image);
-            thumb.alt = '';
-            thumb.decoding = 'async';
-          } else {
-            thumb = el('span', 'thumb', Array.from(nameOf(project))[0]);
-            thumb.setAttribute('aria-hidden', 'true');
-          }
-          const label = el('div');
-          label.append(el('span', '', `来源 ${index + 1}`), el('b', '', nameOf(project)));
-          card.append(thumb, label);
-          return card;
-        }));
+        sources.replaceChildren(...picks.map((project, index) => sourceCard(index + 1, nameOf(project), project)));
         const rows = picks.map(project => {
           const row = el('p', 'doc hit', nameOf(project));
           row.append(el('span', '', '项目 · 命中'));
@@ -762,9 +815,9 @@
         const name = nameOf(project);
         const card = el('article', 'panel project featured');
         const cover = el('div', 'cover');
-        if (hasImage(project.image)) {
+        if (media.cover(project)) {
           const img = el('img');
-          img.src = imageUrl(project.image);
+          img.src = media.cover(project);
           img.alt = `${name}界面截图`;
           img.loading = 'lazy';
           img.decoding = 'async';
@@ -774,7 +827,11 @@
           cover.classList.add('placeholder');
           cover.setAttribute('aria-hidden', 'true');
           cover.append(el('b', '', Array.from(name)[0]));
-          if (project.technologies?.length) cover.append(el('span', '', project.technologies.slice(0, 4).join(' · ')));
+          if (project.technologies?.length) {
+            const stack = el('ul');
+            stack.append(...project.technologies.slice(0, 4).map(tech => el('li', '', tech)));
+            cover.append(stack);
+          }
         }
         const body = el('div', 'wb');
         body.append(el('h3', '', name));
@@ -811,6 +868,7 @@
       };
 
       const render = projects => {
+        published.splice(0, published.length, ...projects);
         const picks = pickFeatured(projects);
         renderIntro(projects, picks);
         if (!projects.length) return status('目前没有公开项目。');
