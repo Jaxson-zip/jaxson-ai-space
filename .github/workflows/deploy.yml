@@ -137,7 +137,7 @@ jobs:
           PY
           cp docker/backup-vps-existing.sh docker/restore-vps-existing.sh docker/deploy-vps-existing.sh release-artifact/tools/
           cp docker/notify-vps-failure.sh docker/notify-vps-failure.mjs release-artifact/tools/
-          cp docker/lib/release.sh docker/lib/release_snapshot.py docker/lib/release_candidate.py docker/lib/release_images.py release-artifact/tools/lib/
+          cp docker/lib/release.sh docker/lib/release_snapshot.py docker/lib/release_candidate.py docker/lib/release_images.py docker/lib/release_retention.py release-artifact/tools/lib/
           (cd release-artifact && sha256sum images.tar artifact.json > SHA256SUMS)
           python3 docker/lib/release_snapshot.py artifact release-artifact
       - name: Retain the verified deployment artifact
