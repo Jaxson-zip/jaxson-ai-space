@@ -206,51 +206,78 @@
     .sh { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 4px 16px; margin-bottom: 18px; }
     .sh h2 { font-size: clamp(28px, 3vw, 34px); line-height: 1.2; font-weight: 800; }
 
+    /* Every project is the same small card; the details open in a dialog. */
     .works { display: grid; gap: var(--gap); }
-    .works + .works { margin-top: var(--gap); }
-    @media (min-width: 900px) {
-      .featured-grid { grid-template-columns: 1fr 1fr; }
-      /* One featured project lies across the row: screenshot beside its story. */
-      .featured:only-child { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-      .featured:only-child .cover { aspect-ratio: auto; min-height: 100%; }
+    @media (min-width: 640px) { .works { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1100px) {
+      .works { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      /* Two projects share the row rather than leaving a third of it empty. */
+      .works:has(> .project:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    /* Projects beyond the featured ones: one compact list, a line each on wide screens. */
-    .more-list { margin-top: var(--gap); overflow: hidden; }
-    .ph h3 { font-size: 15px; font-weight: 700; color: var(--ink); }
-    .row { display: grid; gap: 4px 20px; padding: 14px 18px; border-bottom: 1px solid var(--line); align-items: center; }
-    .row:last-child { border-bottom: 0; }
-    .row h4 { font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
-    .row-meta { font-size: 14px; color: var(--faint); }
-    .row .summary { font-size: 15px; color: var(--sub); overflow-wrap: anywhere; }
-    .row-links { display: flex; gap: 0 16px; }
-    .row-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-    .row-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
-    @media (min-width: 1000px) {
-      .row { grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr) minmax(0, 1.3fr) 160px; padding-block: 8px; }
-      .row .summary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .row .tags { flex-wrap: nowrap; overflow: hidden; }
-      .row-links { justify-content: flex-end; }
-    }
-    .show-all { display: flex; margin: 12px auto 14px; cursor: pointer; }
-    .project { display: flex; flex-direction: column; overflow: hidden; }
+    .show-all { display: flex; margin: 18px auto 0; cursor: pointer; }
+    .project { position: relative; display: flex; flex-direction: column; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .project:hover { transform: translateY(-3px); border-color: #C9CEDA; box-shadow: 0 14px 32px rgba(14, 21, 38, .10); }
+    @media (prefers-reduced-motion: reduce) { .project:hover { transform: none; } }
+    /* The title's button covers the whole card, so the card opens from anywhere and keeps its heading. */
+    .project .open { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: inherit;
+      font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+    .project .open::after { content: ""; position: absolute; inset: 0; }
+    .project .open:focus-visible { outline: none; }
+    .project:has(.open:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .project .cover { position: relative; }
+    .project .badge { position: absolute; top: 12px; left: 12px; background: rgba(14, 21, 38, .78); color: var(--on-ink); }
+    .card-body { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 20px 22px 22px; }
+    .project h3 { font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
+    .project .summary { flex: 1; color: var(--sub); font-size: 15px; line-height: 1.6; overflow-wrap: anywhere;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+    .project .tags { flex-wrap: nowrap; overflow: hidden; }
+    .project .more { font-size: 14px; font-weight: 700; color: var(--accent); }
     /* Screenshots run edge to edge from their top-left corner; no frame inside the card. */
     .cover { aspect-ratio: 16 / 10; background: var(--card); border-bottom: 1px solid var(--line); overflow: hidden; }
     .cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
     /* Without a screenshot the cover carries the project's own name instead of a stock image. */
-    .cover.placeholder { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 18px; padding: 28px;
+    .cover.placeholder { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 14px; padding: 22px;
       background: radial-gradient(circle, rgba(41, 82, 227, .12) 1px, transparent 1.5px) 0 0 / 20px 20px, var(--cover); }
-    .cover.placeholder b { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 18px; background: var(--accent); color: var(--on-ink);
-      font-size: 36px; line-height: 1; font-weight: 800; box-shadow: 0 8px 24px rgba(41, 82, 227, .25); }
+    .cover.placeholder b { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: var(--on-ink);
+      font-size: 28px; line-height: 1; font-weight: 800; box-shadow: 0 8px 24px rgba(41, 82, 227, .25); }
     .cover.placeholder ul { display: flex; flex-wrap: wrap; gap: 6px; }
     .cover.placeholder li { font: 500 14px/1 var(--font-mono); padding: 7px 10px; border-radius: 6px; background: rgba(255, 255, 255, .75); color: var(--sub); }
-    .wb { padding: 22px 24px 24px; display: grid; gap: 12px; }
-    .project h3 { font-size: 24px; line-height: 1.3; overflow-wrap: anywhere; }
-    .work-role { color: var(--sub); font-size: 14px; margin-top: -6px; }
-    .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 6px 12px; font-size: 15px; }
+    .works-status { color: var(--sub); }
+
+    /* Project dialog: the demo (video or screenshot) on the left, the story on the right. */
+    .project-dialog { width: min(1120px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0;
+      border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); overflow: hidden;
+      box-shadow: 0 30px 80px rgba(14, 21, 38, .28); }
+    .project-dialog::backdrop { background: rgba(14, 21, 38, .55); backdrop-filter: blur(4px); }
+    .project-dialog[open] { display: grid; }
+    @media (prefers-reduced-motion: no-preference) {
+      .project-dialog[open] { animation: dialog-in .22s ease-out; }
+      @keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+    }
+    .project-dialog .frame { display: grid; min-height: 0; overflow: auto; }
+    @media (min-width: 900px) {
+      .project-dialog .frame { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); overflow: hidden; }
+      .project-dialog .info { overflow: auto; }
+      /* The whole screenshot sits framed on a light ground; a video keeps the dark one. */
+      .project-dialog .media:not(:has(video)) { padding: 28px; background: radial-gradient(circle, rgba(41, 82, 227, .10) 1px, transparent 1.5px) 0 0 / 20px 20px, var(--cover); }
+      .project-dialog .media:not(:has(video)) > img, .project-dialog .media > .cover { border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(14, 21, 38, .16); background: var(--panel); }
+    }
+    .project-dialog .media { background: #0E1526; display: grid; place-items: center; min-height: 0; }
+    .project-dialog .media video, .project-dialog .media img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; background: #0E1526; }
+    .project-dialog .media img { object-fit: cover; object-position: top left; }
+    .project-dialog .media .cover { width: 100%; border: 0; }
+    .project-dialog .info { display: flex; flex-direction: column; gap: 14px; padding: 28px 28px 24px; min-height: 0; }
+    .project-dialog h3 { font-size: 24px; line-height: 1.3; padding-right: 48px; overflow-wrap: anywhere; }
+    .project-dialog .work-role { color: var(--sub); font-size: 14px; margin-top: -8px; }
+    .project-dialog .summary { font-size: 16px; overflow-wrap: anywhere; }
+    .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 8px 12px; font-size: 15px; }
     .story dt { color: var(--faint); }
     .story dd { overflow-wrap: anywhere; }
-    .links { display: flex; flex-wrap: wrap; gap: 8px; }
-    .works-status { color: var(--sub); }
+    .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 4px; }
+    .project-dialog .close { position: absolute; top: 12px; right: 12px; z-index: 1; width: 44px; height: 44px; display: grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; }
+    .project-dialog .close:hover { border-color: var(--accent); color: var(--accent); }
+    @media (max-width: 899px) { .project-dialog .close { background: rgba(255, 255, 255, .92); } }
 
     .bio { display: grid; gap: var(--gap); align-items: start; }
     /* Side by side both panels end on one line; the skill groups spread over the extra height. */
@@ -395,7 +422,7 @@
     </section>
 
     <section class="chapter" id="works" aria-labelledby="works-title">
-      <div class="sh"><h2 id="works-title">作品</h2><p class="muted">精选在前，每个都能打开在线体验或源码核实</p></div>
+      <div class="sh"><h2 id="works-title">作品</h2><p class="muted">精选在前，点开卡片看演示和介绍</p></div>
       <div id="projectList" aria-live="polite"><p class="works-status">正在加载项目…</p></div>
     </section>
 
@@ -466,6 +493,12 @@
       </div>
     </section>
   </main>
+
+  <!-- Filled from the card that opens it; CMS text is only ever set as text. -->
+  <dialog class="project-dialog" id="projectDialog" aria-labelledby="projectDialogTitle">
+    <button type="button" class="close" aria-label="关闭">×</button>
+    <div class="frame"><div class="media"></div><div class="info"></div></div>
+  </dialog>
 
   <footer class="site-footer">
     <div class="wrap">
@@ -810,14 +843,13 @@
         return links;
       };
 
-      // Featured projects tell the whole story: screenshot, problem, approach, result.
-      const projectCard = project => {
+      // A screenshot, or the project's initial and stack when it has none.
+      const coverOf = (project, src) => {
         const name = nameOf(project);
-        const card = el('article', 'panel project featured');
         const cover = el('div', 'cover');
-        if (media.cover(project)) {
+        if (src) {
           const img = el('img');
-          img.src = media.cover(project);
+          img.src = src;
           img.alt = `${name}界面截图`;
           img.loading = 'lazy';
           img.decoding = 'async';
@@ -833,38 +865,89 @@
             cover.append(stack);
           }
         }
-        const body = el('div', 'wb');
-        body.append(el('h3', '', name));
+        return cover;
+      };
+      // Only a web address can be a video source; anything else from the CMS shows the screenshot instead.
+      const videoOf = project => {
+        try {
+          return /^https?:$/.test(new URL(project.video, location.href).protocol) && project.video ? project.video : '';
+        } catch { return ''; }
+      };
+
+      // The dialog: the demo (video, else screenshot) on the left; the story and links on the right.
+      const dialog = document.getElementById('projectDialog');
+      const dialogMedia = dialog.querySelector('.media');
+      const dialogInfo = dialog.querySelector('.info');
+      let opener = null;
+      const showProject = (project, button) => {
+        const name = nameOf(project);
+        const video = videoOf(project);
+        if (video) {
+          const player = el('video');
+          Object.assign(player, { src: video, controls: true, muted: true, defaultMuted: true, playsInline: true, loop: true, autoplay: true, preload: 'metadata' });
+          if (media.cover(project)) player.poster = media.cover(project);
+          player.setAttribute('aria-label', `${name}演示视频`);
+          dialogMedia.replaceChildren(player);
+        } else {
+          dialogMedia.replaceChildren(coverOf(project, media.cover(project)));
+        }
+        const title = el('h3', '', name);
+        title.id = 'projectDialogTitle';
+        const parts = [title];
         const role = [project.role, project.date].filter(Boolean).join('，');
-        if (role) body.append(el('p', 'work-role', role));
-        if (project.summary) body.append(el('p', 'summary', project.summary));
+        if (role) parts.push(el('p', 'work-role', role));
+        if (project.summary) parts.push(el('p', 'summary', project.summary));
         const story = el('dl', 'story');
         for (const [label, text] of [['难题', project.problem], ['做法', project.action], ['结果', project.outcome]]) {
           if (text) story.append(el('dt', '', label), el('dd', '', text));
         }
-        if (story.children.length) body.append(story);
+        if (story.children.length) parts.push(story);
         if (project.technologies?.length) {
-          const stack = el('ul', 'tags stack');
+          const stack = el('ul', 'tags');
           stack.append(...project.technologies.map(tech => el('li', '', tech)));
-          body.append(stack);
+          parts.push(stack);
         }
         const links = projectLinks(project, 'links', true);
-        if (links.children.length) body.append(links);
+        if (links.children.length) parts.push(links);
+        dialogInfo.replaceChildren(...parts);
+        dialogInfo.scrollTop = 0;
+        opener = button;
+        dialog.showModal();
+      };
+      dialog.querySelector('.close').addEventListener('click', () => dialog.close());
+      // A click on the dimmed backdrop lands on the dialog element itself.
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+      dialog.addEventListener('close', () => {
+        // Stop the video and give focus back to the card that opened the dialog.
+        dialogMedia.replaceChildren();
+        opener?.focus();
+      });
+
+      // Every project is one small card: screenshot, name, two lines of summary and the main stack.
+      const projectCard = project => {
+        const name = nameOf(project);
+        const card = el('article', 'panel project');
+        const cover = coverOf(project, media.thumb(project));
+        if (videoOf(project)) cover.append(el('span', 'badge', '演示视频'));
+        const body = el('div', 'card-body');
+        const open = el('button', 'open', name);
+        open.type = 'button';
+        open.setAttribute('aria-haspopup', 'dialog');
+        open.addEventListener('click', () => showProject(project, open));
+        const title = el('h3');
+        title.append(open);
+        body.append(title);
+        if (project.summary) body.append(el('p', 'summary', project.summary));
+        if (project.technologies?.length) {
+          const stack = el('ul', 'tags');
+          stack.append(...project.technologies.slice(0, 3).map(tech => el('li', '', tech)));
+          body.append(stack);
+        }
+        const more = el('span', 'more', videoOf(project) ? '看演示和介绍 →' : '查看介绍 →');
+        more.setAttribute('aria-hidden', 'true');
+        body.append(more);
         card.append(cover, body);
         return card;
-      };
-
-      // Every other project is one row: name, one line of summary, its main stack and links.
-      const projectRow = project => {
-        const row = el('article', 'row');
-        const head = el('div');
-        head.append(el('h4', '', nameOf(project)));
-        const meta = [project.role, project.date].filter(Boolean).join('，');
-        if (meta) head.append(el('p', 'row-meta', meta));
-        const stack = el('ul', 'tags');
-        stack.append(...(project.technologies || []).slice(0, 3).map(tech => el('li', '', tech)));
-        row.append(head, el('p', 'summary', project.summary || ''), stack, projectLinks(project, 'row-links', false));
-        return row;
       };
 
       const render = projects => {
@@ -872,29 +955,20 @@
         const picks = pickFeatured(projects);
         renderIntro(projects, picks);
         if (!projects.length) return status('目前没有公开项目。');
-        const others = projects.filter(project => !picks.includes(project));
-        const featured = el('div', 'works featured-grid');
-        featured.append(...picks.map(projectCard));
-        const blocks = [featured];
-        if (others.length) {
-          const more = el('section', 'panel more-list');
-          more.setAttribute('aria-labelledby', 'more-title');
-          const head = el('div', 'ph');
-          head.append(Object.assign(el('h3', '', '更多项目'), { id: 'more-title' }), el('span', '', `${others.length} 个`));
-          const rows = el('div', 'rows');
-          rows.append(...others.slice(0, 6).map(projectRow));
-          more.append(head, rows);
-          if (others.length > 6) {
-            const all = el('button', 'btn show-all', `显示全部 ${projects.length} 个项目`);
-            all.type = 'button';
-            all.setAttribute('aria-expanded', 'false');
-            all.addEventListener('click', () => {
-              rows.append(...others.slice(6).map(projectRow));
-              all.remove();
-            });
-            more.append(all);
-          }
-          blocks.push(more);
+        // The projects the first screen cites lead; the rest follow in the owner's order.
+        const ordered = [...picks, ...projects.filter(project => !picks.includes(project))];
+        const grid = el('div', 'works');
+        grid.append(...ordered.slice(0, 6).map(projectCard));
+        const blocks = [grid];
+        if (ordered.length > 6) {
+          const all = el('button', 'btn show-all', `显示全部 ${projects.length} 个项目`);
+          all.type = 'button';
+          all.setAttribute('aria-expanded', 'false');
+          all.addEventListener('click', () => {
+            grid.append(...ordered.slice(6).map(projectCard));
+            all.remove();
+          });
+          blocks.push(all);
         }
         list.replaceChildren(...blocks);
       };

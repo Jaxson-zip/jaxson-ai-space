@@ -388,58 +388,50 @@ test.describe('more than two projects', () => {
     await expect(page.locator('#hero .src')).toHaveCount(2)
   })
 
-  test('featured projects get large cards; the rest are rows in one list, each on a single line', async ({ page }) => {
+  test('every project is the same small card; featured ones lead, the rest follow in CMS order', async ({ page }) => {
     await open(page, { width: 1440, height: 900 }, five)
-    await expect(page.locator('#works .project.featured h3')).toHaveText(['项目2', '项目4'])
-    const list = page.locator('#works .more-list')
-    await expect(list.getByRole('heading', { level: 3, name: '更多项目' })).toBeVisible()
-    await expect(list.locator('.row h4')).toHaveText(['项目0', '项目1', '项目3'])
-    await expect(list.locator('img, .cover')).toHaveCount(0)
-    await expect(list.locator('.row').first().locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
-    await expect(list.locator('.row').first().getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
-    // On wide screens name, summary, stack and links sit side by side.
-    const heights = await list.locator('.row').evaluateAll(rows => rows.map(row => Math.round(row.getBoundingClientRect().height)))
-    for (const height of heights) expect(height).toBeLessThan(110)
+    await expect(page.locator('#works .project h3')).toHaveText(['项目2', '项目4', '项目0', '项目1', '项目3'])
+    const sizes = await page.locator('#works .project').evaluateAll(cards => cards.map(card => {
+      const box = card.getBoundingClientRect()
+      return `${Math.round(box.width)}x${Math.round(box.height)}`
+    }))
+    expect(new Set(sizes.slice(0, 3)).size, sizes.join(' ')).toBe(1)
+    await expect(page.locator('#works .more-list, #works .row')).toHaveCount(0)
   })
 
-  test('the list stacks each row on phones without sideways scrolling', async ({ page }) => {
-    await open(page, { width: 375, height: 812 }, five)
-    const row = page.locator('#works .more-list .row').first()
-    const [name, summary] = await Promise.all(['h4', '.summary'].map(selector => row.locator(selector).evaluate(el => el.getBoundingClientRect().top)))
-    expect(summary).toBeGreaterThan(name)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+  test('three cards per row on wide screens, two on tablets, one on phones', async ({ page }) => {
+    for (const [width, perRow] of [[1440, 3], [768, 2], [375, 1]]) {
+      await open(page, { width, height: 900 }, five)
+      const tops = await page.locator('#works .project').evaluateAll(cards => cards.map(card => Math.round(card.getBoundingClientRect().top)))
+      expect(tops.filter(top => top === tops[0]).length, `${width}px`).toBe(perRow)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    }
   })
 
-  test('a single featured project spans the full width', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 }, five.map((item, index) => ({ ...item, featured: index === 2 })))
-    const [card, list] = await Promise.all([
-      page.locator('#works .project.featured').evaluate(el => el.getBoundingClientRect().width),
-      page.locator('#works').evaluate(el => el.querySelector('.works')!.getBoundingClientRect().width),
-    ])
-    expect(Math.abs(card - list)).toBeLessThanOrEqual(2)
-  })
-
-  test('without other projects there is no list', async ({ page }) => {
+  test('fewer than three projects share the whole row instead of leaving a gap', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    await expect(page.locator('#works .more-list')).toHaveCount(0)
+    const [grid, last] = await Promise.all([
+      page.locator('#works .works').evaluate(el => el.getBoundingClientRect().right),
+      page.locator('#works .project').last().evaluate(el => el.getBoundingClientRect().right),
+    ])
+    expect(Math.abs(grid - last)).toBeLessThanOrEqual(1)
   })
 
-  test('lists six more projects, then a button reveals the rest', async ({ page }) => {
+  test('shows six cards, then a button reveals the rest', async ({ page }) => {
     const twelve = Array.from({ length: 12 }, (_, index) => project(`p${index}`, `项目${index}`))
     await open(page, { width: 1440, height: 900 }, twelve)
-    await expect(page.locator('#works .more-list .row')).toHaveCount(6)
+    await expect(page.locator('#works .project')).toHaveCount(6)
     const more = page.getByRole('button', { name: '显示全部 12 个项目' })
     await expect(more).toHaveAttribute('aria-expanded', 'false')
     await more.click()
-    await expect(page.locator('#works .more-list .row')).toHaveCount(10)
+    await expect(page.locator('#works .project')).toHaveCount(12)
     await expect(more).toHaveCount(0)
   })
 
-  test('featured projects without a screenshot get a light cover with their initial and stack', async ({ page }) => {
+  test('projects without a screenshot get a light cover with their initial and stack', async ({ page }) => {
     await open(page, { width: 1440, height: 900 }, [
       project('a', '项目甲', { image: '', featured: true }),
       project('b', '项目乙', { image: 'project-dossier-cover.svg', featured: true }),
-      project('c', '项目丙'),
     ])
     const covers = page.locator('#works .cover')
     await expect(covers).toHaveCount(2)
@@ -463,20 +455,76 @@ test.describe('more than two projects', () => {
 })
 
 test.describe('works', () => {
-  test('shows each published project as a card with its evidence, in CMS order', async ({ page }) => {
+  test('each card shows the screenshot, name, summary and main stack, and opens its details', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     const cards = page.locator('#works .project')
     await expect(cards).toHaveCount(2)
     await expect(cards.locator('h3')).toHaveText(['待办备忘 (Todo Memo)', 'Jaxson AI Space'])
     const first = cards.first()
-    await expect(first.locator('.story dt')).toHaveText(['难题', '做法', '结果'])
     await expect(first.getByText('已上线的待办与备忘工具', { exact: false })).toBeVisible()
-    await expect(first.locator('.stack li')).toHaveText(['React', 'TypeScript', 'Supabase'])
-    await expect(first.getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
-    await expect(first.getByRole('link', { name: '源码' })).toHaveAttribute('href', 'https://github.com/example/todo')
-    await expect(first.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
+    await expect(first.locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
     await expect(first.locator('img')).toHaveAttribute('src', './optimized/todo-memo-cover-900.765d77142054.webp')
-    await expect(first.locator('img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
+    await expect(first.locator('.story, a')).toHaveCount(0)
+    const opener = first.getByRole('button', { name: /待办备忘 \(Todo Memo\)/ })
+    await expect(opener).toHaveAttribute('aria-haspopup', 'dialog')
+    await opener.click()
+    const dialog = page.getByRole('dialog', { name: '待办备忘 (Todo Memo)' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('.story dt')).toHaveText(['难题', '做法', '结果'])
+    await expect(dialog.locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
+    await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
+    await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
+    await expect(dialog.getByRole('link', { name: '源码' })).toHaveAttribute('href', 'https://github.com/example/todo')
+    await expect(dialog.locator('.media img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
+  })
+
+  test('the dialog plays the demo video when the project has one, with the screenshot as its poster', async ({ page }) => {
+    await page.route('https://cms.example.test/media/**', route => route.fulfill({ status: 404 }))
+    await open(page, { width: 1440, height: 900 }, [project('demo', '演示项目', { video: 'https://cms.example.test/media/demo.mp4' }), project('still', '无视频项目')])
+    await page.locator('#works .project').first().getByRole('button').click()
+    const video = page.getByRole('dialog').locator('.media video')
+    await expect(video).toHaveAttribute('src', 'https://cms.example.test/media/demo.mp4')
+    await expect(video).toHaveAttribute('poster', './optimized/todo-memo-cover-900.765d77142054.webp')
+    expect(await video.evaluate((el: HTMLVideoElement) => [el.controls, el.muted, el.playsInline, el.loop])).toEqual([true, true, true, true])
+    await expect(page.locator('#works .project').first().locator('.badge')).toHaveText('演示视频')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('#projectDialog video')).toHaveCount(0)
+    await page.locator('#works .project').nth(1).getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('.media video')).toHaveCount(0)
+    await expect(page.getByRole('dialog').locator('.media img')).toBeVisible()
+  })
+
+  test('the dialog closes by its button, Escape or a click outside, and hands focus back to the card', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const card = page.locator('#works .project').first().getByRole('button')
+    const dialog = page.getByRole('dialog')
+    for (const close of [
+      () => dialog.getByRole('button', { name: '关闭' }).click(),
+      () => page.keyboard.press('Escape'),
+      () => page.mouse.click(8, 8),
+    ]) {
+      await card.click()
+      await expect(dialog).toBeVisible()
+      await close()
+      await expect(dialog).toBeHidden()
+      await expect(card).toBeFocused()
+    }
+  })
+
+  test('in the dialog the media sits left of the details on wide screens and above them on phones', async ({ page }) => {
+    for (const [width, height, beside] of [[1440, 900, true], [375, 812, false]] as const) {
+      await open(page, { width, height })
+      await page.locator('#works .project').first().getByRole('button').click()
+      const dialog = page.getByRole('dialog')
+      await dialog.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)))
+      const [media, info] = await Promise.all(['.media', '.info'].map(selector => dialog.locator(selector).evaluate(el => el.getBoundingClientRect().toJSON())))
+      if (beside) expect(info.left).toBeGreaterThanOrEqual(media.right - 1)
+      else expect(info.top).toBeGreaterThanOrEqual(media.bottom - 1)
+      const box = await dialog.evaluate(el => el.getBoundingClientRect().toJSON())
+      expect(box.width).toBeLessThanOrEqual(width)
+      expect(box.height).toBeLessThanOrEqual(height)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    }
   })
 
   test('this site gets its own screenshot even while the CMS still names the stock image', async ({ page }) => {
@@ -487,19 +535,10 @@ test.describe('works', () => {
     await expect(page.locator('#hero .src').nth(1).locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
   })
 
-  test('sits two cards per row on wide screens and one per row on phones', async ({ page }) => {
-    const tops = async () => page.locator('#works .project').evaluateAll(cards => cards.map(card => Math.round(card.getBoundingClientRect().top)))
+  test('has no carousel and nothing advances by itself', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    const [a, b] = await tops()
-    expect(a).toBe(b)
-    await open(page, { width: 375, height: 812 })
-    const [c, d] = await tops()
-    expect(d).toBeGreaterThan(c)
-  })
-
-  test('has no carousel, automatic advance or archive dialog', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 })
-    await expect(page.locator('#works button:not(.show-all), #works dialog, .coverflow-slide')).toHaveCount(0)
+    await expect(page.locator('.coverflow-slide')).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toBeHidden()
     const before = await page.locator('#works .project h3').allTextContents()
     await page.waitForTimeout(7000)
     expect(await page.locator('#works .project h3').allTextContents()).toEqual(before)
@@ -520,15 +559,20 @@ test.describe('works', () => {
       index % 2 ? { demoUrl: '', repoUrl: '', image: '' } : {}))
     await open(page, { width: 320, height: 568 }, many)
     await page.getByRole('button', { name: '显示全部 20 个项目' }).click()
-    await expect(page.locator('#works .project, #works .more-list .row')).toHaveCount(20)
+    await expect(page.locator('#works .project')).toHaveCount(20)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
-    await expect(page.locator('#works .project').nth(1).locator('.links')).toHaveCount(0)
     await expect(page.locator('#works .project').nth(1).locator('.cover.placeholder b')).toHaveText('S')
+    await page.locator('#works .project').nth(1).getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('.links')).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
   })
 
   test('renders CMS text as text, never as markup', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 }, [project('x', '<img src=x onerror="window.__pwned=1">标题')])
+    await open(page, { width: 1440, height: 900 }, [project('x', '<img src=x onerror="window.__pwned=1">标题', { video: 'javascript:alert(1)' })])
     await expect(page.locator('#works .project h3')).toHaveText('<img src=x onerror="window.__pwned=1">标题')
+    await page.locator('#works .project').getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('h3')).toHaveText('<img src=x onerror="window.__pwned=1">标题')
+    await expect(page.getByRole('dialog').locator('video')).toHaveCount(0)
     expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined()
   })
 })
