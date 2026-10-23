@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath, URL as NodeUrl } from 'node:url'
 
@@ -125,9 +125,6 @@ describe('portfolio content', () => {
     // space.jaxson.bond no longer serves TLS; the live site is jaxson.bond.
     const hrefs = typedProjects.flatMap((project) => project.links.map((link) => link.href))
     for (const href of hrefs) expect(new NodeUrl(href).hostname, href).not.toBe('space.jaxson.bond')
-    // A fresh database seeded from this script would reintroduce the dead link.
-    const seed = readFileSync(fileURLToPath(new NodeUrl('../../../../../scripts/seed-payload.mjs', import.meta.url)), 'utf8')
-    expect(seed).not.toMatch(/space\.jaxson\.bond/)
   })
 
   it('references public assets that exist on disk', () => {

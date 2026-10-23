@@ -1,32 +1,4 @@
 {
-  "jaxson_studio_wall_plate_v2": [
-    {
-      "src": "./optimized/jaxson_studio_wall_plate_v2-840.971bcf265697.webp",
-      "width": 840,
-      "height": 473,
-      "bytes": 71182
-    },
-    {
-      "src": "./optimized/jaxson_studio_wall_plate_v2-1672.b889d9664779.webp",
-      "width": 1672,
-      "height": 941,
-      "bytes": 210026
-    }
-  ],
-  "jaxson_character_olive_v1": [
-    {
-      "src": "./optimized/jaxson_character_olive_v1-512.c590c87a09fb.webp",
-      "width": 512,
-      "height": 768,
-      "bytes": 40144
-    },
-    {
-      "src": "./optimized/jaxson_character_olive_v1-1024.cf396899a386.webp",
-      "width": 1024,
-      "height": 1536,
-      "bytes": 100200
-    }
-  ],
   "jaxson_character_navy_v1": [
     {
       "src": "./optimized/jaxson_character_navy_v1-512.92f74e2ade4d.webp",
@@ -39,34 +11,6 @@
       "width": 1024,
       "height": 1536,
       "bytes": 87168
-    }
-  ],
-  "jaxson_bio_gesture_matched_v2": [
-    {
-      "src": "./optimized/jaxson_bio_gesture_matched_v2-960.b5753eed604b.webp",
-      "width": 960,
-      "height": 540,
-      "bytes": 45368
-    },
-    {
-      "src": "./optimized/jaxson_bio_gesture_matched_v2-1672.0e43c0f07cc1.webp",
-      "width": 1672,
-      "height": 941,
-      "bytes": 105620
-    }
-  ],
-  "portfolio-actual-20260928": [
-    {
-      "src": "./optimized/portfolio-actual-20260928-900.75c888581e28.webp",
-      "width": 900,
-      "height": 562,
-      "bytes": 24938
-    },
-    {
-      "src": "./optimized/portfolio-actual-20260928-1440.a7d8b0fe934f.webp",
-      "width": 1440,
-      "height": 900,
-      "bytes": 46404
     }
   ],
   "todo-memo-cover": [
