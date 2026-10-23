@@ -22,6 +22,7 @@ pnpm --filter @jaxson/web typecheck
 pnpm --filter @jaxson/web lint
 pnpm --filter @jaxson/portfolio test
 pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.config.ts
+pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts   # 需要本地 CMS 数据
 ```
 
 在 Windows 上，`integrations/openclaw/weixin-context.test.mjs` 会因为检出时换行符被转成 CRLF 而失败；CI 在 Linux 上运行，不受影响。

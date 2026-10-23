@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import React from 'react'
 
-import { Footer } from '@/components/public-site/footer'
-import { Header } from '@/components/public-site/header'
+import { SiteFooter } from '@/components/public-site/site-footer'
+import { SiteHeader } from '@/components/public-site/site-header'
 
 import './styles.css'
+import './site.css'
 
 export const metadata: Metadata = {
   title: {
@@ -50,9 +51,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip-link" href="#main-content">
           跳到主要内容
         </a>
-        <Header />
+        <SiteHeader />
         <main id="main-content">{children}</main>
-        <Footer />
+        <SiteFooter />
       </body>
     </html>
   )

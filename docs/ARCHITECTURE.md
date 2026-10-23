@@ -118,6 +118,7 @@ Caddyfile 和 `production.env` 沿用服务器上当前版本的副本，不随�
 | 症状 | 先看哪里 | 相关文件 | 检查方法 |
 | --- | --- | --- | --- |
 | 首页打不开或样式错乱 | portfolio 容器、Caddy | `apps/portfolio/index.html`、`scripts/serve.mjs`、`docker/Caddyfile` | 本地 `pnpm dev:portfolio`；`pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.config.ts` |
+| `/ai`、简历页或项目页样式错乱 | 共用样式与页头 | `apps/web/src/app/(frontend)/site.css`、`ai/ai.css`、`components/public-site/` | `pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts` |
 | 首页显示“项目暂时无法加载” | 作品接口代理 → web | `apps/portfolio/scripts/showcase.mjs`、`apps/web/src/app/api/showcase-projects/route.ts` | 打开 `https://api.jaxson.bond/api/showcase-projects` |
 | 后台改了内容，网页没变 | 是否改到同一条记录；缓存刷新 | `collections/Projects.ts`、`features/cms/revalidate-hook.ts` | 对比 `/api/projects?depth=0` 的 `id` 和 `updatedAt` |
 | 精选或排序不生效 | 接口排序、首页挑选逻辑 | `features/portfolio/project-order.ts`、`index.html` 里的 `pickFeatured` | 接口返回的 `featured` 和项目顺序 |
