@@ -63,7 +63,8 @@ export function createShowcaseFeed() {
       const body = cached && Date.now() < cached.expires ? cached.body :
         await (pending ??= loadFeed().finally(() => { pending = null }))
       response.writeHead(200, {
-        'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
+        // Browsers always ask again; Cloudflare's edge may keep the public list 30 seconds. Failures are never kept.
+        'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'CDN-Cache-Control': 'max-age=30',
         'Content-Length': Buffer.byteLength(body),
       })
       response.end(request.method === 'HEAD' ? undefined : body)

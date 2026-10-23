@@ -42,6 +42,8 @@ test('the portfolio exposes only the anonymous public project feed on its own or
   assert.deepEqual(await response.json(), { source: 'cms', projects: state.projects })
   assert.equal(response.headers.get('set-cookie'), null)
   assert.equal(response.headers.get('cache-control'), 'no-store')
+  // Cloudflare's edge may keep the public list for 30 seconds; browsers always ask again.
+  assert.equal(response.headers.get('cdn-cache-control'), 'max-age=30')
   assert.equal(state.requests[0].url, '/api/showcase-projects')
   assert.equal(state.requests[0].headers.cookie, undefined)
   assert.equal(state.requests[0].headers.authorization, undefined)
@@ -64,6 +66,7 @@ test('concurrent readers share a bounded cache; withdrawals expire and failed re
   const failure = await fetch(`${origin}/api/showcase-projects`)
   assert.equal(failure.status, 503)
   assert.equal(failure.headers.get('cache-control'), 'no-store')
+  assert.equal(failure.headers.get('cdn-cache-control'), null, 'the edge must never keep a failure')
   assert.deepEqual(await failure.json(), { error: 'Project data is temporarily unavailable' })
   state.status = 200
   state.projects = [{ slug: 'newly-published', title: 'New project' }]
