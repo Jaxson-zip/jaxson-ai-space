@@ -82,7 +82,7 @@ export const Projects: CollectionConfig = {
       defaultValue: false,
       admin: {
         position: 'sidebar',
-        description: '勾选后在首页 AI 对话里被引用，并在作品区用大卡片展示。最多显示 2 个；都不勾选时取排在最前的 2 个。',
+        description: '勾选后在首页 AI 对话里被引用（最多 2 个；都不勾选时取排在最前的 2 个），并排在作品区最前面。',
       },
     },
     {
@@ -117,7 +117,7 @@ export const Projects: CollectionConfig = {
       type: 'textarea',
       required: true,
       admin: {
-        description: '首页 AI 对话只引用前 36 个字，更多项目列表里只显示一行；建议 30 字以内，说清做了什么。',
+        description: '首页 AI 对话只引用前 36 个字，作品卡片上最多显示两行；建议 30 字以内，说清做了什么。',
       },
     },
     {
@@ -126,7 +126,17 @@ export const Projects: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       admin: {
-        description: '精选项目的大卡片会显示它：建议上传 16:10 的真实界面截图（例如 1440×900），从左上角开始裁切。不上传时显示项目名首字和技术栈。',
+        description: '作品卡片和项目弹窗都会显示它：建议上传 16:10 的真实界面截图（例如 1440×900），从左上角开始裁切。不上传时显示项目名首字和技术栈。',
+      },
+    },
+    {
+      name: 'demoVideo',
+      label: '演示视频',
+      type: 'upload',
+      relationTo: 'media',
+      filterOptions: { mimeType: { contains: 'video' } },
+      admin: {
+        description: '点开作品卡片后在弹窗左边静音循环播放，封面图作为加载前的画面。建议 16:10 的 mp4（H.264），1 分钟以内、30 MB 以下。不上传时弹窗显示封面图。',
       },
     },
     {

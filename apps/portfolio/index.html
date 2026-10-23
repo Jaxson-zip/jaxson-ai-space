@@ -41,7 +41,7 @@
       --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', 'Noto Sans CJK SC';
       --font-text: 'Plus Jakarta Sans', var(--font-cjk), system-ui, sans-serif;
       --font-mono: 'JetBrains Mono', var(--font-cjk), monospace;
-      --header: 64px; --gap: 14px; --gutter: 16px; --max: 1400px; --radius: 16px;
+      --header: 64px; --gap: 20px; --gutter: 16px; --max: 1160px; --radius: 16px;
     }
     @media (min-width: 640px) { :root { --gutter: 20px; } }
 
@@ -118,6 +118,7 @@
     .live .a .li { position: relative; padding-left: 16px; }
     .live .a .li::before { content: ''; position: absolute; left: 2px; top: .8em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
     .live .a.pending { color: var(--faint); }
+    .live .a.pending:empty { display: none; }
     .live .status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--sub); font-size: 14px; }
     .live .status a { color: var(--accent); font-weight: 700; }
     .greet { font-size: clamp(26px, 2.4vw, 34px); line-height: 1.3; font-weight: 800; }
@@ -152,43 +153,50 @@
     #askForm button { height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-ink); font: 700 15px var(--font-text); cursor: pointer; }
     #askForm button:hover { background: var(--accent-hover); }
 
-    .trace { display: flex; flex-direction: column; overflow: hidden; }
-    .steps { padding: 14px 18px 4px; }
-    .step { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding-bottom: 12px; position: relative; }
-    .step::before { content: ''; position: absolute; left: 10px; top: 24px; bottom: 2px; width: 1px; background: var(--line); }
-    .step:last-child::before { display: none; }
-    .step i { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); font: 700 14px/22px var(--font-mono); text-align: center; font-style: normal; }
-    .step b { display: block; font-size: 15px; line-height: 1.5; }
-    .step small { display: block; font-size: 14px; line-height: 1.5; color: var(--faint); }
-    .kb { border-top: 1px solid var(--line); padding: 12px 18px 14px; flex: 1; }
-    .kb h3 { font-size: 14px; font-weight: 400; color: var(--sub); margin-bottom: 4px; }
-    .doc { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 15px; overflow-wrap: anywhere; }
-    .doc span { font: 500 14px/1 var(--font-mono); padding: 4px 6px; border-radius: 4px; background: var(--chip); color: var(--sub); white-space: nowrap; }
-    .doc.hit { font-weight: 700; }
-    .doc.hit span { background: var(--hit-bg); color: var(--hit); }
+    /* How the answer was found, like a model's thinking: one grey line between question and answer
+       that opens into the steps and the sources hit, set off by a rule on the left instead of a box. */
+    .thinking { align-self: flex-start; max-width: 100%; }
+    .thinking summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; list-style: none;
+      font-size: 14px; color: var(--faint); }
+    .thinking summary::-webkit-details-marker { display: none; }
+    .thinking summary::before { content: ''; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0 3px, transparent 3.5px), var(--accent-bg); }
+    .thinking summary::after { content: ''; width: 6px; height: 6px; margin-left: 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+      transform: rotate(-45deg); transition: transform .2s ease; }
+    .thinking[open] summary::after { transform: rotate(45deg) translateY(-2px); }
+    .thinking summary:hover { color: var(--sub); }
+    .think-label { font-weight: 700; color: var(--sub); }
+    .thinking.busy .think-label { background: linear-gradient(90deg, var(--faint) 0%, var(--accent) 50%, var(--faint) 100%) 0 0 / 200% 100%;
+      -webkit-background-clip: text; background-clip: text; color: transparent; }
+    @media (prefers-reduced-motion: no-preference) { .thinking.busy .think-label { animation: shimmer 1.6s linear infinite; } }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .think-body { margin: 2px 0 6px 6px; padding: 2px 0 2px 16px; border-left: 2px solid var(--line); display: grid; gap: 10px; font-size: 14px; color: var(--sub); }
+    .steps { display: grid; gap: 6px; }
+    .step { display: flex; flex-wrap: wrap; gap: 0 8px; line-height: 1.6; }
+    .step b { font-weight: 700; color: var(--sub); }
+    .step b::after { content: '：'; }
+    .step small { font-size: 14px; color: var(--faint); }
+    .kb { display: grid; gap: 4px; }
+    .doc { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--sub); overflow-wrap: anywhere; }
+    .doc::before { content: '✓'; color: var(--hit); font-weight: 700; }
+    .doc.more::before { content: '·'; color: var(--faint); }
+    .doc span { font: 500 14px/1 var(--font-mono); padding: 3px 6px; border-radius: 4px; background: var(--chip); color: var(--faint); white-space: nowrap; }
 
     /* Below the desktop layout the page scrolls, so a long conversation scrolls inside its panel
        and the composer stays right under the latest answer. */
     @media (max-width: 1199px) { .thread { max-height: min(62svh, 560px); } }
-    /* Tablet: profile beside the conversation, the trace below with its two halves side by side. */
+    /* From tablets up: who I am beside the conversation. */
     @media (min-width: 760px) {
-      .hero { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); }
+      .hero { grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 24px; }
       .profile { grid-template-rows: minmax(260px, 1fr) auto; }
       .shot { height: auto; }
-      .trace { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
-      .trace .ph { grid-column: 1 / -1; }
-      .kb { border-top: 0; border-left: 1px solid var(--line); }
     }
-    /* Desktop: three panels fill the first screen. */
+    /* Desktop: the two panels share the first screen, with room left around them. */
     @media (min-width: 1200px) {
-      .hero { grid-template-columns: minmax(280px, 330px) minmax(0, 1fr) minmax(300px, 340px); height: min(calc(100svh - var(--header) - 16px), 920px); min-height: 560px; grid-template-rows: minmax(0, 1fr); }
-      .trace { grid-column: auto; display: flex; }
-      .kb { border-left: 0; border-top: 1px solid var(--line); }
+      .hero { height: min(calc(100svh - var(--header) - 48px), 720px); min-height: 560px; grid-template-rows: minmax(0, 1fr); padding-top: 16px; }
       .shot img { height: 640px; top: 6px; }
     }
     /* Short laptop windows keep the whole first screen, composer included. */
     @media (min-width: 1200px) and (max-height: 860px) {
-      .x2 { display: none; }
       .thread { gap: 12px; padding-top: 16px; }
       .pbody { gap: 10px; padding: 14px 18px; }
       .pbody h1 { font-size: 26px; }
@@ -202,79 +210,109 @@
     }
 
     /* Below the first screen. */
-    .chapter { padding-top: 72px; }
-    .sh { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 4px 16px; margin-bottom: 18px; }
+    .chapter { padding-top: 120px; }
+    .sh { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 4px 16px; margin-bottom: 28px; }
     .sh h2 { font-size: clamp(28px, 3vw, 34px); line-height: 1.2; font-weight: 800; }
 
+    /* Every project is the same small card; the details open in a dialog. */
     .works { display: grid; gap: var(--gap); }
-    .works + .works { margin-top: var(--gap); }
-    @media (min-width: 900px) {
-      .featured-grid { grid-template-columns: 1fr 1fr; }
-      /* One featured project lies across the row: screenshot beside its story. */
-      .featured:only-child { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-      .featured:only-child .cover { aspect-ratio: auto; min-height: 100%; }
+    @media (min-width: 640px) { .works { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1100px) {
+      .works { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      /* Two projects share the row rather than leaving a third of it empty. */
+      .works:has(> .project:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    /* Projects beyond the featured ones: one compact list, a line each on wide screens. */
-    .more-list { margin-top: var(--gap); overflow: hidden; }
-    .ph h3 { font-size: 15px; font-weight: 700; color: var(--ink); }
-    .row { display: grid; gap: 4px 20px; padding: 14px 18px; border-bottom: 1px solid var(--line); align-items: center; }
-    .row:last-child { border-bottom: 0; }
-    .row h4 { font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
-    .row-meta { font-size: 14px; color: var(--faint); }
-    .row .summary { font-size: 15px; color: var(--sub); overflow-wrap: anywhere; }
-    .row-links { display: flex; gap: 0 16px; }
-    .row-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-    .row-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
-    @media (min-width: 1000px) {
-      .row { grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr) minmax(0, 1.3fr) 160px; padding-block: 8px; }
-      .row .summary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .row .tags { flex-wrap: nowrap; overflow: hidden; }
-      .row-links { justify-content: flex-end; }
-    }
-    .show-all { display: flex; margin: 12px auto 14px; cursor: pointer; }
-    .project { display: flex; flex-direction: column; overflow: hidden; }
+    .show-all { display: flex; margin: 18px auto 0; cursor: pointer; }
+    .project { position: relative; display: flex; flex-direction: column; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .project:hover { transform: translateY(-3px); border-color: #C9CEDA; box-shadow: 0 14px 32px rgba(14, 21, 38, .10); }
+    @media (prefers-reduced-motion: reduce) { .project:hover { transform: none; } }
+    /* The title's button covers the whole card, so the card opens from anywhere and keeps its heading. */
+    .project .open { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: inherit;
+      font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+    .project .open::after { content: ""; position: absolute; inset: 0; }
+    .project .open:focus-visible { outline: none; }
+    .project:has(.open:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .project .cover { position: relative; }
+    .project .badge { position: absolute; top: 12px; left: 12px; background: rgba(14, 21, 38, .78); color: var(--on-ink); }
+    .card-body { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 20px 22px 22px; }
+    .project h3 { font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
+    .project .summary { flex: 1; color: var(--sub); font-size: 15px; line-height: 1.6; overflow-wrap: anywhere;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+    .project .tags { flex-wrap: nowrap; overflow: hidden; }
+    .project .more { font-size: 14px; font-weight: 700; color: var(--accent); }
     /* Screenshots run edge to edge from their top-left corner; no frame inside the card. */
     .cover { aspect-ratio: 16 / 10; background: var(--card); border-bottom: 1px solid var(--line); overflow: hidden; }
     .cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
     /* Without a screenshot the cover carries the project's own name instead of a stock image. */
-    .cover.placeholder { display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 20px 24px; background: var(--cover); }
-    .cover.placeholder b { font-size: 56px; line-height: 1; font-weight: 800; color: var(--accent); opacity: .35; }
-    .cover.placeholder span { font: 500 14px/1.5 var(--font-mono); color: var(--sub); overflow-wrap: anywhere; }
-    .wb { padding: 22px 24px 24px; display: grid; gap: 12px; }
-    .project h3 { font-size: 24px; line-height: 1.3; overflow-wrap: anywhere; }
-    .work-role { color: var(--sub); font-size: 14px; margin-top: -6px; }
-    .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 6px 12px; font-size: 15px; }
-    .story dt { color: var(--faint); }
-    .story dd { overflow-wrap: anywhere; }
-    .links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cover.placeholder { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 14px; padding: 22px;
+      background: radial-gradient(circle, rgba(41, 82, 227, .12) 1px, transparent 1.5px) 0 0 / 20px 20px, var(--cover); }
+    .cover.placeholder b { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--accent); color: var(--on-ink);
+      font-size: 28px; line-height: 1; font-weight: 800; box-shadow: 0 8px 24px rgba(41, 82, 227, .25); }
+    .cover.placeholder ul { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cover.placeholder li { font: 500 14px/1 var(--font-mono); padding: 7px 10px; border-radius: 6px; background: rgba(255, 255, 255, .75); color: var(--sub); }
     .works-status { color: var(--sub); }
 
-    .bio { display: grid; gap: var(--gap); align-items: start; }
-    @media (min-width: 900px) { .bio { grid-template-columns: 1.15fr 1fr; } }
-    .timeline { padding: 4px 24px 12px; }
-    .entry { display: grid; gap: 4px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+    /* Project dialog: the demo (video or screenshot) on the left, the story on the right. */
+    .project-dialog { width: min(1120px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0;
+      border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); overflow: hidden;
+      box-shadow: 0 30px 80px rgba(14, 21, 38, .28); }
+    .project-dialog::backdrop { background: rgba(14, 21, 38, .55); backdrop-filter: blur(4px); }
+    .project-dialog[open] { display: grid; }
+    @media (prefers-reduced-motion: no-preference) {
+      .project-dialog[open] { animation: dialog-in .22s ease-out; }
+      @keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+    }
+    .project-dialog .frame { display: grid; min-height: 0; overflow: auto; }
+    @media (min-width: 900px) {
+      .project-dialog .frame { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); overflow: hidden; }
+      .project-dialog .info { overflow: auto; }
+      /* The whole screenshot sits framed on a light ground; a video keeps the dark one. */
+      .project-dialog .media:not(:has(video)) { padding: 28px; background: radial-gradient(circle, rgba(41, 82, 227, .10) 1px, transparent 1.5px) 0 0 / 20px 20px, var(--cover); }
+      .project-dialog .media:not(:has(video)) > img, .project-dialog .media > .cover { border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(14, 21, 38, .16); background: var(--panel); }
+    }
+    .project-dialog .media { background: #0E1526; display: grid; place-items: center; min-height: 0; }
+    .project-dialog .media video, .project-dialog .media img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; background: #0E1526; }
+    .project-dialog .media img { object-fit: cover; object-position: top left; }
+    .project-dialog .media .cover { width: 100%; border: 0; }
+    .project-dialog .info { display: flex; flex-direction: column; gap: 14px; padding: 28px 28px 24px; min-height: 0; }
+    .project-dialog h3 { font-size: 24px; line-height: 1.3; padding-right: 48px; overflow-wrap: anywhere; }
+    .project-dialog .work-role { color: var(--sub); font-size: 14px; margin-top: -8px; }
+    .project-dialog .summary { font-size: 16px; overflow-wrap: anywhere; }
+    .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 8px 12px; font-size: 15px; }
+    .story dt { color: var(--faint); }
+    .story dd { overflow-wrap: anywhere; }
+    .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 4px; }
+    .project-dialog .close { position: absolute; top: 12px; right: 12px; z-index: 1; width: 44px; height: 44px; display: grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; }
+    .project-dialog .close:hover { border-color: var(--accent); color: var(--accent); }
+    @media (max-width: 899px) { .project-dialog .close { background: rgba(255, 255, 255, .92); } }
+
+    /* The résumé sits on the page itself: two columns of type, no boxes. */
+    .bio { display: grid; gap: 56px; align-items: start; }
+    @media (min-width: 900px) { .bio { grid-template-columns: 1.2fr 1fr; gap: 72px; } }
+    .col-title { font: 700 14px/1 var(--font-mono); letter-spacing: .08em; color: var(--faint); padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
+    .timeline { padding: 0; }
+    .entry { display: grid; gap: 4px; padding: 26px 0; border-bottom: 1px solid var(--line); }
     .entry:last-child { border-bottom: 0; }
     @media (min-width: 640px) { .entry { grid-template-columns: 136px minmax(0, 1fr); gap: 16px; } }
     .when { font: 500 14px/1.6 var(--font-mono); color: var(--faint); padding-top: 3px; }
     .entry h3 { font-size: 17px; line-height: 1.5; }
     .entry .org { color: var(--sub); font-size: 15px; }
     .entry p:not(.org):not(.when) { margin-top: 8px; font-size: 15px; }
-    .entry ul { margin-top: 8px; display: grid; gap: 4px; font-size: 15px; color: var(--sub); }
+    .entry ul { margin-top: 10px; display: grid; gap: 8px; font-size: 15px; color: var(--sub); }
     .entry li { position: relative; padding-left: 16px; }
     .entry li::before { content: ''; position: absolute; left: 0; top: .8em; width: 6px; height: 6px; border-radius: 50%; background: #C3C9D6; }
-    .skills { padding: 8px 24px 24px; display: grid; gap: 18px; }
-    .skills h3 { font-size: 14px; font-weight: 400; color: var(--sub); margin-bottom: 8px; }
+    .skills { padding-top: 26px; display: grid; gap: 30px; }
+    .also { margin-top: 10px; font-size: 14px; line-height: 1.7; color: var(--faint); }
+    .skills h3 { font-size: 14px; font-weight: 400; color: var(--sub); margin-bottom: 12px; }
+    .skills .tags { gap: 8px; }
     .skills .tags li { background: var(--panel); border: 1px solid var(--line); color: var(--ink); }
     .skills .tags li.key { background: var(--accent-bg); border-color: transparent; color: var(--accent); }
 
-    .contact { margin-top: 72px; padding: 32px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;
-      background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
-    @media (min-width: 640px) { .contact { padding: 40px; } }
-    .contact h2 { font-size: 32px; line-height: 1.2; }
-    .contact p { color: #A9B1C3; margin-top: 6px; }
-    .contact .btn { background: transparent; color: var(--on-ink); border-color: #2B3448; }
-    .contact .btn:hover { border-color: #56617A; }
-    .contact .btn-primary { background: var(--accent); border-color: var(--accent); }
+    /* The page ends on an open line: a large question and the ways to answer it. */
+    .contact { margin-top: 140px; padding: 56px 0 48px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; }
+    .contact h2 { font-size: clamp(32px, 4vw, 48px); line-height: 1.15; font-weight: 800; }
+    .contact p { color: var(--sub); margin-top: 10px; }
     .site-footer { padding: 16px 0 28px; color: var(--sub); font-size: 14px; }
     .site-footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
     .site-footer a { display: inline-flex; align-items: center; min-height: 44px; }
@@ -340,14 +378,28 @@
           <!-- Replaced by the live conversation once the visitor asks. -->
           <div class="sample">
           <p class="q">你做过哪些项目？</p>
+          <!-- How the answer was found, folded between question and answer like a model's thinking. -->
+          <details class="thinking">
+            <summary><span class="think-label">已检索公开资料</span><span class="think-meta" id="introThinkMeta">命中 2 篇</span></summary>
+            <div class="think-body">
+              <ol class="steps">
+                <li class="step"><b>理解问题</b><small>识别为“项目经历”类问题</small></li>
+                <li class="step"><b>关键词 + 向量双路检索</b><small>BM25 + pgvector 1536 维</small></li>
+                <li class="step"><b>挑出最相关的资料</b><small id="introHits">命中 2 篇项目档案</small></li>
+                <li class="step"><b>DeepSeek 生成回答</b><small>流式输出，附引用编号</small></li>
+              </ol>
+              <div class="kb" id="introKnowledge">
+                <p class="doc hit">待办备忘 Todo Memo<span>项目</span></p>
+                <p class="doc hit">Jaxson AI Space<span>项目</span></p>
+              </div>
+            </div>
+          </details>
           <!-- Rewritten from the project feed; this default stays true for any number of projects. -->
           <p class="a" id="introAnswer">我做过的项目里，最有代表性的两个是：<b>待办备忘 Todo Memo</b>，离线可用、多端同步的待办工具，部署在 Vercel<sup>1</sup>；<b>Jaxson AI Space</b>，就是这个网站，有内容后台、向量检索和我这个 AI 分身<sup>2</sup>。</p>
           <div class="srcs" id="introSources">
             <a class="src" href="#works"><img src="./optimized/todo-memo-cover-900.765d77142054.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 1</span><b>待办备忘 Todo Memo</b></div></a>
             <a class="src" href="#works"><img src="./optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 2</span><b>Jaxson AI Space</b></div></a>
           </div>
-          <p class="q x2">RAG 是怎么实现的？</p>
-          <p class="a x2">先把问题同时做关键词检索（BM25）和向量检索（pgvector），合并排序后取最相关的几段公开资料，再交给 DeepSeek 生成回答。资料里没有的内容，我会直接说不知道。<span class="caret" aria-hidden="true"></span></p>
           </div>
           <div class="live" id="liveThread" aria-live="polite"></div>
         </div>
@@ -365,42 +417,21 @@
         </div>
       </section>
 
-      <aside class="panel trace" aria-labelledby="trace-title">
-        <div class="ph"><h2 id="trace-title">这个回答是怎么来的</h2><span class="badge">RAG</span></div>
-        <ol class="steps">
-          <li class="step"><i>1</i><div><b>理解问题</b><small>识别为“项目经历”类问题</small></div></li>
-          <li class="step"><i>2</i><div><b>关键词 + 向量双路检索</b><small class="mono">BM25 + pgvector 1536 维</small></div></li>
-          <li class="step"><i>3</i><div><b>挑出最相关的资料</b><small id="introHits">命中 2 篇项目档案</small></div></li>
-          <li class="step"><i>4</i><div><b>DeepSeek 生成回答</b><small>流式输出，附引用编号</small></div></li>
-        </ol>
-        <div class="kb" id="introKnowledge">
-          <h3>它的知识库（公开资料）</h3>
-          <p class="doc hit">待办备忘 Todo Memo<span>项目 · 命中</span></p>
-          <p class="doc hit">Jaxson AI Space<span>项目 · 命中</span></p>
-          <p class="doc">润喵云 开发实习<span>经历</span></p>
-          <p class="doc">深圳职业技术大学<span>教育</span></p>
-          <p class="doc">AI 应用开发<span>技能</span></p>
-          <p class="doc">前端与全栈开发<span>技能</span></p>
-          <p class="doc">技能竞赛<span>荣誉</span></p>
-        </div>
-      </aside>
     </section>
 
     <section class="chapter" id="works" aria-labelledby="works-title">
-      <div class="sh"><h2 id="works-title">作品</h2><p class="muted">精选在前，每个都能打开在线体验或源码核实</p></div>
+      <div class="sh"><h2 id="works-title">作品</h2><p class="muted">精选在前，点开卡片看演示和介绍</p></div>
       <div id="projectList" aria-live="polite"><p class="works-status">正在加载项目…</p></div>
     </section>
 
     <section class="chapter" id="bio" aria-labelledby="bio-title">
       <div class="sh"><h2 id="bio-title">履历</h2><p class="muted">实习、教育、竞赛和技术栈</p></div>
       <div class="bio">
-        <!-- Wording kept from the live page until the owner confirms the disputed facts
-             (internship end date, GPA rank, award counts): docs/独立审查报告-2026-10-21.md P1-1. -->
-        <div class="panel">
-          <div class="ph"><strong>经历</strong></div>
+        <div class="col">
+          <p class="col-title">经历</p>
           <div class="timeline">
             <article class="entry">
-              <p class="when">2026 年起</p>
+              <p class="when">2026.06 – 2026.08</p>
               <div>
                 <h3>开发实习生</h3>
                 <p class="org">广东润喵云科技有限公司</p>
@@ -417,7 +448,7 @@
                 <h3>大数据技术专业（专科），2027 届</h3>
                 <p class="org">深圳职业技术大学</p>
                 <ul>
-                  <li>GPA 3.85 / 4.0，专业排名前 3%。</li>
+                  <li>GPA 3.85 / 4.0，专业排名前 2%。</li>
                   <li>担任院学信委人工智能学院副主席、班级学习委员和甲骨文社团社长。</li>
                 </ul>
               </div>
@@ -428,7 +459,7 @@
                 <h3>技能竞赛</h3>
                 <p class="org">覆盖大数据开发、数据分析与网络安全</p>
                 <ul>
-                  <li>累计获得国家级奖项 5 项、省市级奖项 6 项。</li>
+                  <li>累计获得国家级奖项 3 项、省市级奖项 8 项。</li>
                   <li>广东省职业院校技能大赛 大数据应用开发赛项，一等奖（2025–2026）。</li>
                   <li>一带一路暨金砖国家技能大赛 企业信息系统安全国赛，二等奖。</li>
                 </ul>
@@ -436,19 +467,19 @@
             </article>
           </div>
         </div>
-        <div class="panel">
-          <div class="ph"><strong>技术栈</strong><span>蓝色为主力</span></div>
+        <div class="col">
+          <p class="col-title">技术栈</p>
           <div class="skills">
-            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>大模型 API 接入</li><li>Prompt 上下文工程</li><li>AI 编程（Cursor、Claude）</li></ul></div>
-            <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li class="key">Next.js 16</li><li>Vue 3</li><li>Tailwind CSS</li><li>Vite</li></ul></div>
-            <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li>Go</li><li>Python</li><li>MySQL</li><li>Supabase</li><li>RESTful API</li><li>分布式大数据</li></ul></div>
-            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li>Linux 运维</li><li>Git 与 GitHub</li><li>PM2</li><li>Cloudflare Tunnel</li><li>Vercel</li></ul></div>
+            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>BM25 + 向量混合检索</li><li>大模型 API 接入（DeepSeek）</li></ul><p class="also">也用：Embedding 向量化、SSE 流式输出、Prompt 上下文工程、引用溯源与防幻觉、AI 编程（Cursor、Claude）</p></div>
+            <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li>Next.js 16</li><li>Vue 3</li></ul><p class="also">也用：Tailwind CSS、Vite</p></div>
+            <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li class="key">Python</li><li>Go</li><li>MySQL</li></ul><p class="also">也用：Supabase、RESTful API、分布式大数据</p></div>
+            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li class="key">Linux 运维</li><li>Git 与 GitHub</li><li>Vercel</li></ul><p class="also">也用：PM2、Cloudflare Tunnel</p></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="panel contact" id="beyond" aria-labelledby="beyond-title">
+    <section class="contact" id="beyond" aria-labelledby="beyond-title">
       <div>
         <h2 id="beyond-title">想聊聊？</h2>
         <p>我在深圳，2027 届，可以线下到岗。邮箱 1822103245@qq.com</p>
@@ -460,6 +491,12 @@
       </div>
     </section>
   </main>
+
+  <!-- Filled from the card that opens it; CMS text is only ever set as text. -->
+  <dialog class="project-dialog" id="projectDialog" aria-labelledby="projectDialogTitle">
+    <button type="button" class="close" aria-label="关闭">×</button>
+    <div class="frame"><div class="media"></div><div class="info"></div></div>
+  </dialog>
 
   <footer class="site-footer">
     <div class="wrap">
@@ -480,6 +517,61 @@
     askForm.action = new URL('/ai', window.JAXSON_BACKEND_ORIGIN).href;
     askForm.elements.from.value = location.href;
 
+    // Projects and their screenshots, shared by the works chapter, the sample answer and live answers.
+    const published = [];
+    const media = (() => {
+      const covers = {
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
+        // The CMS still names the old screenshot; both names show the current home page.
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
+      };
+      // Small copies for source cards.
+      const thumbs = {
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
+      };
+      // This site is its own screenshot, even while its CMS record still names the stock image.
+      const bySlug = { 'jaxson-ai-space': 'jaxson-ai-space-home-20261022.png' };
+      // The feed names the stock dossier image when a project has no screenshot of its own.
+      const own = value => Boolean(value) && !/project-dossier-cover\.svg/.test(value) ? value.replace(/^\.\//, '') : '';
+      const url = name => covers[name] || (/^(https?:\/\/|\/)/.test(name) ? name : './' + name);
+      const imageOf = project => own(project.image) || bySlug[project.slug] || '';
+      return {
+        cover: project => imageOf(project) && url(imageOf(project)),
+        thumb: project => imageOf(project) && (thumbs[imageOf(project)] || url(imageOf(project))),
+      };
+    })();
+    const nameOf = project => project.shortTitle || project.title;
+    // One source under an answer: the project's screenshot, or the first character of the source's name.
+    const sourceCard = (number, name, project) => {
+      const card = document.createElement(project ? 'a' : 'div');
+      card.className = 'src';
+      if (project) card.href = '#works';
+      const image = project && media.thumb(project);
+      let thumb;
+      if (image) {
+        thumb = document.createElement('img');
+        thumb.src = image;
+        thumb.alt = '';
+        thumb.decoding = 'async';
+      } else {
+        thumb = document.createElement('span');
+        thumb.className = 'thumb';
+        thumb.textContent = Array.from(name)[0] || '';
+        thumb.setAttribute('aria-hidden', 'true');
+      }
+      const label = document.createElement('div');
+      const tag = document.createElement('span');
+      tag.textContent = `来源 ${number}`;
+      const title = document.createElement('b');
+      title.textContent = name;
+      label.append(tag, title);
+      card.append(thumb, label);
+      return card;
+    };
+
     // Ask the AI twin right here: the answer streams from the CMS, its sources fill the trace panel.
     // Answers are only ever set as text.
     (() => {
@@ -488,7 +580,6 @@
       const live = document.getElementById('liveThread');
       const field = askForm.elements.q;
       const send = askForm.querySelector('button');
-      const knowledge = document.getElementById('introKnowledge');
       const endpoint = new URL('/api/chat', window.JAXSON_BACKEND_ORIGIN).href;
       // Same budget as the API: at most 10 messages, 8000 characters, 2500 per message.
       const LIMITS = { messages: 10, total: 8000, each: 2500 };
@@ -512,29 +603,82 @@
         }
         return messages;
       };
-      // **bold** and "- " list lines; everything else is plain text.
+      // The cards under the answer already list the sources; drop an evidence list the model adds at the end.
+      const withoutEvidenceList = text => text.replace(/(\n\s*-{3,}\s*)?\n+[\s*#]*(引用|参考)[^\n]{0,8}证据[\s\S]*$/, '');
+      // [1], [1, 2] or 【1】 after a sentence.
+      const CITE = String.raw`\s?[[【]\d{1,2}(?:\s*[,，、]\s*\d{1,2})*[\]】]`;
+      const citedNumbers = text => (withoutEvidenceList(text).match(new RegExp(CITE, 'g')) || []).flatMap(mark => mark.match(/\d+/g).map(Number));
+      // **bold**, "- " list lines and [n] citations; everything else is plain text.
       const renderAnswer = (node, text) => {
-        node.replaceChildren(...text.split(/\n+/).filter(line => line.trim()).map(line => {
+        node.replaceChildren(...withoutEvidenceList(text).split(/\n+/).filter(line => line.trim() && !/^\s*-{3,}\s*$/.test(line)).map(line => {
           const item = /^\s*[-*]\s+/.test(line);
           const paragraph = make('p', item ? 'li' : '');
-          line.replace(/^\s*[-*]\s+/, '').split(/(\*\*[^*]+\*\*)/).forEach(part => {
+          line.replace(/^\s*[-*]\s+/, '').split(new RegExp(String.raw`(\*\*[^*]+\*\*|${CITE})`)).forEach(part => {
             if (part.startsWith('**') && part.endsWith('**') && part.length > 4) paragraph.append(make('b', '', part.slice(2, -2)));
+            else if (new RegExp(`^${CITE}$`).test(part)) part.match(/\d+/g).forEach(number => paragraph.append(make('sup', '', number)));
             else if (part) paragraph.append(part);
           });
           return paragraph;
         }));
       };
-      const showSources = (evidence, generator) => {
-        knowledge.querySelectorAll('.doc').forEach(row => row.remove());
-        knowledge.querySelector('h3').textContent = '这次回答用到的资料';
-        knowledge.querySelector('h3').after(...evidence.map(tag => {
-          const row = make('p', 'doc hit', tag);
-          row.append(make('span', '', '命中'));
-          return row;
+      // A card for each source the answer cites by number, or for every source when it cites none.
+      const sourceCards = (sources, text) => {
+        const cited = [...new Set(citedNumbers(text))].filter(number => number >= 1 && number <= sources.length).sort((a, b) => a - b);
+        const numbers = cited.length ? cited : sources.map((_, index) => index + 1);
+        const box = make('div', 'srcs');
+        box.append(...numbers.map(number => {
+          const source = sources[number - 1];
+          const project = published.find(item => item.slug === source.project) || published.find(item => source.tag.includes(item.title));
+          return sourceCard(number, project ? nameOf(project) : source.tag.replace(/^[^：:]{1,6}[：:]\s*/, ''), project);
         }));
-        document.getElementById('introHits').textContent = evidence.length ? `命中 ${evidence.length} 篇资料` : '没有找到相关的公开资料';
-        const writer = chat.ownerDocument.querySelectorAll('#hero .trace .step small')[3];
-        if (writer) writer.textContent = generator === 'local' ? '由公开资料直接整理' : '流式输出，附引用编号';
+        return box;
+      };
+      // Each answer's thinking: open with a moving label while it searches, folded away once the answer streams.
+      const thinkingFor = () => {
+        const box = make('details', 'thinking busy');
+        box.open = true;
+        const label = make('span', 'think-label', '正在检索公开资料…');
+        const meta = make('span', 'think-meta');
+        const summary = make('summary');
+        summary.append(label, meta);
+        const steps = make('ol', 'steps');
+        const step = (title, note) => {
+          const item = make('li', 'step');
+          const small = make('small', '', note);
+          item.append(make('b', '', title), small);
+          steps.append(item);
+          return small;
+        };
+        step('理解问题', '判断要查哪一类公开资料');
+        step('关键词 + 向量双路检索', 'BM25 + pgvector 1536 维');
+        const hits = step('挑出最相关的资料', '检索中…');
+        const writer = step('DeepSeek 生成回答', '等待检索结果');
+        const kb = make('div', 'kb');
+        const body = make('div', 'think-body');
+        body.append(steps, kb);
+        box.append(summary, body);
+        const started = performance.now();
+        return {
+          box,
+          found(evidence, generator) {
+            hits.textContent = evidence.length ? `命中 ${evidence.length} 篇资料` : '没有找到相关的公开资料';
+            writer.textContent = generator === 'local' ? '由公开资料直接整理' : '流式输出，附引用编号';
+            kb.replaceChildren(...evidence.map(tag => make('p', 'doc hit', tag)));
+            meta.textContent = evidence.length ? `命中 ${evidence.length} 篇` : '没有命中资料';
+            label.textContent = '正在组织回答…';
+          },
+          answering() {
+            if (!box.classList.contains('busy')) return;
+            box.classList.remove('busy');
+            box.open = false;
+            label.textContent = '已检索公开资料';
+            meta.textContent = [meta.textContent, `用时 ${((performance.now() - started) / 1000).toFixed(1)} 秒`].filter(Boolean).join(' · ');
+          },
+          stopped() {
+            box.classList.remove('busy');
+            label.textContent = '检索没有完成';
+          },
+        };
       };
       const scrollDown = () => { thread.scrollTop = thread.scrollHeight; };
       const goLive = () => {
@@ -542,7 +686,7 @@
         chat.dataset.live = 'true';
         chat.querySelector('.sample')?.remove();
         document.getElementById('chatBadge').textContent = '实时回答';
-        document.getElementById('greetSub').textContent = '回答只引用我公开的项目和经历，右边会列出这次用到的资料。';
+        document.getElementById('greetSub').textContent = '回答只引用我公开的项目和经历，每条回答上方可以展开看它查了哪些资料。';
       };
 
       const ask = async (question, round) => {
@@ -555,13 +699,19 @@
           round.append(make('p', 'q', question), make('div', 'a'));
           live.append(round);
         }
+        // How this answer was found sits between the question and the answer.
+        round.querySelector('.thinking')?.remove();
+        const thinking = thinkingFor();
+        round.querySelector('.q').after(thinking.box);
         const answer = round.querySelector('.a');
         round.querySelector('.status')?.remove();
         answer.className = 'a pending';
-        answer.textContent = '正在查找公开资料并生成回答…';
+        answer.textContent = '';
         scrollDown();
         let text = '';
+        let sources = [];
         const fail = (message, withLink) => {
+          thinking.stopped();
           if (!text) answer.remove();
           const status = make('p', 'status', message);
           if (withLink) {
@@ -595,9 +745,16 @@
             for (const block of events) {
               const type = /^event: (.+)$/m.exec(block)?.[1];
               const data = JSON.parse(/^data: (.*)$/m.exec(block)?.[1] || '{}');
-              if (type === 'meta') showSources(Array.isArray(data.evidence) ? data.evidence.filter(tag => typeof tag === 'string') : [], data.generator);
+              if (type === 'meta') {
+                const evidence = Array.isArray(data.evidence) ? data.evidence.filter(tag => typeof tag === 'string') : [];
+                // Older servers send only the tags.
+                sources = Array.isArray(data.sources) && data.sources.every(source => typeof source?.tag === 'string')
+                  ? data.sources : evidence.map(tag => ({ tag }));
+                thinking.found(evidence, data.generator);
+              }
               if (type === 'text' && typeof data.text === 'string') {
                 text += data.text;
+                thinking.answering();
                 answer.className = 'a';
                 renderAnswer(answer, text);
                 scrollDown();
@@ -607,6 +764,7 @@
           }
           if (finished === 'done' && text) {
             rounds.push([question, text]);
+            if (sources.length) answer.after(sourceCards(sources, text));
           } else {
             fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时没能生成回答，请重试。');
           }
@@ -656,24 +814,6 @@
     // Published projects come from the CMS through this origin's feed. CMS text is only ever set as text.
     (() => {
       const list = document.getElementById('projectList');
-      const covers = {
-        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
-        // The CMS still names the old screenshot; both names show the current home page.
-        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
-        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
-      };
-      // Small copies for the first screen's source cards.
-      const thumbs = {
-        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
-        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
-        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
-      };
-      // The feed names the stock dossier image when a project has no screenshot of its own.
-      const hasImage = value => Boolean(value) && !/project-dossier-cover\.svg/.test(value);
-      const imageUrl = value => {
-        const name = value.replace(/^\.\//, '');
-        return covers[name] || (/^(https?:\/\/|\/|\.\/)/.test(value) ? value : './' + value);
-      };
       const el = (tag, className, text) => {
         const node = document.createElement(tag);
         if (className) node.className = className;
@@ -681,7 +821,6 @@
         return node;
       };
       const status = text => list.replaceChildren(el('p', 'works-status', text));
-      const nameOf = project => project.shortTitle || project.title;
       // Featured projects lead (two at most); without any, the first two in the owner's order stand in.
       const pickFeatured = projects => {
         const flagged = projects.filter(project => project.featured);
@@ -699,11 +838,12 @@
         const answer = document.getElementById('introAnswer');
         const sources = document.getElementById('introSources');
         const knowledge = document.getElementById('introKnowledge');
-        knowledge.querySelectorAll('.doc.hit, .doc.more').forEach(row => row.remove());
+        knowledge.replaceChildren();
         if (!projects.length) {
           answer.textContent = '我正在整理项目，很快会公开。你可以先问问我的实习经历和技术栈。';
           sources.replaceChildren();
           document.getElementById('introHits').textContent = '还没有公开的项目档案';
+          document.getElementById('introThinkMeta').textContent = '没有命中资料';
           return;
         }
         const rest = projects.length - picks.length;
@@ -714,27 +854,10 @@
         });
         if (rest) parts.push(`其余 ${rest} 个在下面的作品区。`);
         answer.replaceChildren(...parts);
-        sources.replaceChildren(...picks.map((project, index) => {
-          const card = el('a', 'src');
-          card.href = '#works';
-          let thumb;
-          if (hasImage(project.image)) {
-            thumb = el('img');
-            thumb.src = thumbs[project.image.replace(/^\.\//, '')] || imageUrl(project.image);
-            thumb.alt = '';
-            thumb.decoding = 'async';
-          } else {
-            thumb = el('span', 'thumb', Array.from(nameOf(project))[0]);
-            thumb.setAttribute('aria-hidden', 'true');
-          }
-          const label = el('div');
-          label.append(el('span', '', `来源 ${index + 1}`), el('b', '', nameOf(project)));
-          card.append(thumb, label);
-          return card;
-        }));
+        sources.replaceChildren(...picks.map((project, index) => sourceCard(index + 1, nameOf(project), project)));
         const rows = picks.map(project => {
           const row = el('p', 'doc hit', nameOf(project));
-          row.append(el('span', '', '项目 · 命中'));
+          row.append(el('span', '', '项目'));
           return row;
         });
         if (rest) {
@@ -742,8 +865,9 @@
           more.append(el('span', '', '项目'));
           rows.push(more);
         }
-        knowledge.querySelector('h3').after(...rows);
+        knowledge.replaceChildren(...rows);
         document.getElementById('introHits').textContent = `命中 ${picks.length} 篇项目档案`;
+        document.getElementById('introThinkMeta').textContent = `命中 ${picks.length} 篇`;
       };
 
       const projectLinks = (project, className, primary) => {
@@ -759,14 +883,13 @@
         return links;
       };
 
-      // Featured projects tell the whole story: screenshot, problem, approach, result.
-      const projectCard = project => {
+      // A screenshot, or the project's initial and stack when it has none.
+      const coverOf = (project, src) => {
         const name = nameOf(project);
-        const card = el('article', 'panel project featured');
         const cover = el('div', 'cover');
-        if (hasImage(project.image)) {
+        if (src) {
           const img = el('img');
-          img.src = imageUrl(project.image);
+          img.src = src;
           img.alt = `${name}界面截图`;
           img.loading = 'lazy';
           img.decoding = 'async';
@@ -776,69 +899,116 @@
           cover.classList.add('placeholder');
           cover.setAttribute('aria-hidden', 'true');
           cover.append(el('b', '', Array.from(name)[0]));
-          if (project.technologies?.length) cover.append(el('span', '', project.technologies.slice(0, 4).join(' · ')));
+          if (project.technologies?.length) {
+            const stack = el('ul');
+            stack.append(...project.technologies.slice(0, 4).map(tech => el('li', '', tech)));
+            cover.append(stack);
+          }
         }
-        const body = el('div', 'wb');
-        body.append(el('h3', '', name));
+        return cover;
+      };
+      // Only a web address can be a video source; anything else from the CMS shows the screenshot instead.
+      const videoOf = project => {
+        try {
+          return /^https?:$/.test(new URL(project.video, location.href).protocol) && project.video ? project.video : '';
+        } catch { return ''; }
+      };
+
+      // The dialog: the demo (video, else screenshot) on the left; the story and links on the right.
+      const dialog = document.getElementById('projectDialog');
+      const dialogMedia = dialog.querySelector('.media');
+      const dialogInfo = dialog.querySelector('.info');
+      let opener = null;
+      const showProject = (project, button) => {
+        const name = nameOf(project);
+        const video = videoOf(project);
+        if (video) {
+          const player = el('video');
+          Object.assign(player, { src: video, controls: true, muted: true, defaultMuted: true, playsInline: true, loop: true, autoplay: true, preload: 'metadata' });
+          if (media.cover(project)) player.poster = media.cover(project);
+          player.setAttribute('aria-label', `${name}演示视频`);
+          dialogMedia.replaceChildren(player);
+        } else {
+          dialogMedia.replaceChildren(coverOf(project, media.cover(project)));
+        }
+        const title = el('h3', '', name);
+        title.id = 'projectDialogTitle';
+        const parts = [title];
         const role = [project.role, project.date].filter(Boolean).join('，');
-        if (role) body.append(el('p', 'work-role', role));
-        if (project.summary) body.append(el('p', 'summary', project.summary));
+        if (role) parts.push(el('p', 'work-role', role));
+        if (project.summary) parts.push(el('p', 'summary', project.summary));
         const story = el('dl', 'story');
         for (const [label, text] of [['难题', project.problem], ['做法', project.action], ['结果', project.outcome]]) {
           if (text) story.append(el('dt', '', label), el('dd', '', text));
         }
-        if (story.children.length) body.append(story);
+        if (story.children.length) parts.push(story);
         if (project.technologies?.length) {
-          const stack = el('ul', 'tags stack');
+          const stack = el('ul', 'tags');
           stack.append(...project.technologies.map(tech => el('li', '', tech)));
-          body.append(stack);
+          parts.push(stack);
         }
         const links = projectLinks(project, 'links', true);
-        if (links.children.length) body.append(links);
+        if (links.children.length) parts.push(links);
+        dialogInfo.replaceChildren(...parts);
+        dialogInfo.scrollTop = 0;
+        opener = button;
+        dialog.showModal();
+      };
+      dialog.querySelector('.close').addEventListener('click', () => dialog.close());
+      // A click on the dimmed backdrop lands on the dialog element itself.
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+      dialog.addEventListener('close', () => {
+        // Stop the video and give focus back to the card that opened the dialog.
+        dialogMedia.replaceChildren();
+        opener?.focus();
+      });
+
+      // Every project is one small card: screenshot, name, two lines of summary and the main stack.
+      const projectCard = project => {
+        const name = nameOf(project);
+        const card = el('article', 'panel project');
+        const cover = coverOf(project, media.thumb(project));
+        if (videoOf(project)) cover.append(el('span', 'badge', '演示视频'));
+        const body = el('div', 'card-body');
+        const open = el('button', 'open', name);
+        open.type = 'button';
+        open.setAttribute('aria-haspopup', 'dialog');
+        open.addEventListener('click', () => showProject(project, open));
+        const title = el('h3');
+        title.append(open);
+        body.append(title);
+        if (project.summary) body.append(el('p', 'summary', project.summary));
+        if (project.technologies?.length) {
+          const stack = el('ul', 'tags');
+          stack.append(...project.technologies.slice(0, 3).map(tech => el('li', '', tech)));
+          body.append(stack);
+        }
+        const more = el('span', 'more', videoOf(project) ? '看演示和介绍 →' : '查看介绍 →');
+        more.setAttribute('aria-hidden', 'true');
+        body.append(more);
         card.append(cover, body);
         return card;
       };
 
-      // Every other project is one row: name, one line of summary, its main stack and links.
-      const projectRow = project => {
-        const row = el('article', 'row');
-        const head = el('div');
-        head.append(el('h4', '', nameOf(project)));
-        const meta = [project.role, project.date].filter(Boolean).join('，');
-        if (meta) head.append(el('p', 'row-meta', meta));
-        const stack = el('ul', 'tags');
-        stack.append(...(project.technologies || []).slice(0, 3).map(tech => el('li', '', tech)));
-        row.append(head, el('p', 'summary', project.summary || ''), stack, projectLinks(project, 'row-links', false));
-        return row;
-      };
-
       const render = projects => {
+        published.splice(0, published.length, ...projects);
         const picks = pickFeatured(projects);
         renderIntro(projects, picks);
         if (!projects.length) return status('目前没有公开项目。');
-        const others = projects.filter(project => !picks.includes(project));
-        const featured = el('div', 'works featured-grid');
-        featured.append(...picks.map(projectCard));
-        const blocks = [featured];
-        if (others.length) {
-          const more = el('section', 'panel more-list');
-          more.setAttribute('aria-labelledby', 'more-title');
-          const head = el('div', 'ph');
-          head.append(Object.assign(el('h3', '', '更多项目'), { id: 'more-title' }), el('span', '', `${others.length} 个`));
-          const rows = el('div', 'rows');
-          rows.append(...others.slice(0, 6).map(projectRow));
-          more.append(head, rows);
-          if (others.length > 6) {
-            const all = el('button', 'btn show-all', `显示全部 ${projects.length} 个项目`);
-            all.type = 'button';
-            all.setAttribute('aria-expanded', 'false');
-            all.addEventListener('click', () => {
-              rows.append(...others.slice(6).map(projectRow));
-              all.remove();
-            });
-            more.append(all);
-          }
-          blocks.push(more);
+        // The projects the first screen cites lead; the rest follow in the owner's order.
+        const ordered = [...picks, ...projects.filter(project => !picks.includes(project))];
+        const grid = el('div', 'works');
+        grid.append(...ordered.slice(0, 6).map(projectCard));
+        const blocks = [grid];
+        if (ordered.length > 6) {
+          const all = el('button', 'btn show-all', `显示全部 ${projects.length} 个项目`);
+          all.type = 'button';
+          all.setAttribute('aria-expanded', 'false');
+          all.addEventListener('click', () => {
+            grid.append(...ordered.slice(6).map(projectCard));
+            all.remove();
+          });
+          blocks.push(all);
         }
         list.replaceChildren(...blocks);
       };

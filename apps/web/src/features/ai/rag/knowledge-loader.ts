@@ -95,6 +95,7 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
       evidenceTag: `项目档案：${p.title}`,
       keywords: [p.title, p.slug, p.category, ...p.technologies, p.status, ...(featured ? ['代表作', '精选'] : [])],
       featured,
+      project: p.slug,
       vectorScore: indexedScores.get(`proj-${p.slug}`),
       vectorSource: indexedScores.has(`proj-${p.slug}`) ? indexedSource : 'local',
     })

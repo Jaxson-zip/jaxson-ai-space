@@ -98,3 +98,16 @@ it('aborts a pending request on reset and ignores its late stream data', async (
   expect(screen.queryByText('旧会话回答')).toBeNull()
   expect(screen.queryByText('旧会话问题')).toBeNull()
 })
+
+it('shows [n] citations in an answer as numbered marks matching the numbered sources', async () => {
+  stubFetch(() => Promise.resolve(new Response(encoder.encode(
+    event('meta', { evidence: ['项目档案：待办备忘', '广东润喵云科技 · 开发实习生'], generator: 'external' }) +
+    event('text', { text: '我做过待办备忘[1]，也实习过[2]。' }) + event('done', {}),
+  ))))
+  render(React.createElement(AIPage))
+  send('你做过什么？')
+  const marks = await screen.findAllByText(/^[12]$/, { selector: 'sup' })
+  expect(marks.map((mark) => mark.textContent)).toEqual(['1', '2'])
+  expect(screen.queryByText(/\[1\]/)).toBeNull()
+  expect(screen.getByText('1. 项目档案：待办备忘')).toBeTruthy()
+})

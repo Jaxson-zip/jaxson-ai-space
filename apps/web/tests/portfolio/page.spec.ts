@@ -43,6 +43,17 @@ async function open(page: Page, viewport: { width: number, height: number }, pro
 const widths = [320, 375, 414, 768, 1024, 1366, 1440]
 
 test.describe('whole page', () => {
+  test('keeps everything in a centred column no wider than 1120px, with open margins on wide screens', async ({ page }) => {
+    for (const width of [1440, 1920]) {
+      await open(page, { width, height: 900 })
+      const boxes = await page.locator('#hero, #works, #bio, #beyond').evaluateAll(sections => sections.map(section => section.getBoundingClientRect().toJSON()))
+      for (const box of boxes) {
+        expect(box.width, `${width}px`).toBeLessThanOrEqual(1120)
+        expect(box.left, `${width}px`).toBeGreaterThanOrEqual((width - 1120) / 2 - 1)
+      }
+    }
+  })
+
   test('never scrolls sideways at any common width', async ({ page }) => {
     for (const width of widths) {
       await open(page, { width, height: 800 })
@@ -190,12 +201,58 @@ test.describe('first screen', () => {
     await expect(chat.locator('.a sup')).toHaveText(['1', '2'])
   })
 
-  test('trace: the four retrieval steps and the public knowledge base, hits marked', async ({ page }) => {
+  test('two things on the first screen: who I am, beside the conversation', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    const trace = page.locator('#hero .trace')
-    await expect(trace.locator('.step b')).toHaveText(['理解问题', '关键词 + 向量双路检索', '挑出最相关的资料', 'DeepSeek 生成回答'])
-    await expect(trace.locator('.doc.hit')).toHaveCount(2)
-    expect(await trace.locator('.doc').count()).toBeGreaterThanOrEqual(6)
+    await expect(page.locator('#hero > .panel')).toHaveCount(2)
+    await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)))
+    const [profile, chat] = await page.locator('#hero > .panel').evaluateAll(panels => panels.map(panel => panel.getBoundingClientRect().toJSON()))
+    expect(Math.round(profile.top)).toBe(Math.round(chat.top))
+    expect(chat.left).toBeGreaterThan(profile.right)
+  })
+
+  test('how the answer was found sits between question and answer, folded like a model’s thinking', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const thinking = page.locator('#hero .sample details.thinking')
+    await expect(thinking).toHaveCount(1)
+    await expect(thinking).not.toHaveAttribute('open', '')
+    await expect(thinking.locator('summary')).toContainText('已检索公开资料')
+    await expect(thinking.locator('summary')).toContainText('命中 2 篇')
+    await expect(thinking.locator('.step').first()).toBeHidden()
+    const [question, summary, answer] = await Promise.all(['#hero .sample .q', '#hero .thinking summary', '#introAnswer'].map(selector => page.locator(selector).first().evaluate(el => el.getBoundingClientRect().toJSON())))
+    expect(summary.top).toBeGreaterThanOrEqual(question.bottom)
+    expect(answer.top).toBeGreaterThanOrEqual(summary.bottom)
+    // A quiet line, not a box.
+    expect(await thinking.evaluate(el => [getComputedStyle(el).borderTopWidth, getComputedStyle(el).backgroundColor])).toEqual(['0px', 'rgba(0, 0, 0, 0)'])
+    await thinking.locator('summary').click()
+    await expect(thinking.locator('.step').first()).toBeVisible()
+  })
+
+  test('the thinking lists the four retrieval steps and the sources it hit', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const thinking = page.locator('#hero .thinking')
+    await expect(thinking.locator('.step b')).toHaveText(['理解问题', '关键词 + 向量双路检索', '挑出最相关的资料', 'DeepSeek 生成回答'])
+    await expect(thinking.locator('.doc.hit')).toHaveText([/待办备忘/, /Jaxson AI Space/])
+  })
+
+  test('a live answer thinks in the open, then folds the thinking away once it starts answering', async ({ page }) => {
+    await page.route('https://cms.example.test/api/chat', async route => {
+      await new Promise(resolve => setTimeout(resolve, 1200))
+      await route.fulfill({ contentType: 'text/event-stream', body: sse('meta', { evidence: ['项目档案：待办备忘', '广东润喵云科技 · 开发实习生'], generator: 'external' }) + sse('text', { text: '回答。' }) + sse('done', {}) })
+    })
+    await open(page, { width: 1440, height: 900 })
+    await page.locator('#hero .chips button').first().click()
+    const thinking = page.locator('#hero .live .round').last().locator('details.thinking')
+    await expect(thinking).toHaveAttribute('open', '')
+    await expect(thinking.locator('summary')).toContainText('正在检索公开资料')
+    await expect(page.locator('#hero .live .a').last()).toHaveText('回答。')
+    await expect(thinking).not.toHaveAttribute('open', '')
+    await expect(thinking.locator('summary')).toContainText('命中 2 篇')
+    await expect(thinking.locator('summary')).toContainText(/用时 \d+(\.\d)? 秒/)
+    await expect(thinking.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/, /开发实习生/])
+    // Every answer keeps its own thinking.
+    await page.locator('#hero .chips button').nth(1).click()
+    await expect(page.locator('#hero .live .a')).toHaveCount(2)
+    await expect(page.locator('#hero .live .round .thinking')).toHaveCount(2)
   })
 
   test('asking answers right here: the question, the streamed answer and its sources', async ({ page }) => {
@@ -212,10 +269,40 @@ test.describe('first screen', () => {
     await expect(chat).not.toContainText('示例对话')
     await expect(page).toHaveURL(/127\.0\.0\.1:4174/)
     expect(bodies[0]).toEqual({ messages: [{ role: 'user', content: '你会哪些技术？' }] })
-    const trace = page.locator('#hero .trace')
-    await expect(trace.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/])
-    await expect(trace.locator('.step small').nth(2)).toHaveText('命中 1 篇资料')
+    const thinking = page.locator('#hero .live .thinking')
+    await expect(thinking.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/])
+    await expect(thinking.locator('.step small').nth(2)).toHaveText('命中 1 篇资料')
     await expect(field).toHaveValue('')
+  })
+
+  test('a live answer cites like the sample: numbered marks, then a card for each cited source', async ({ page }) => {
+    await askable(page, [
+      sse('meta', { evidence: ['项目档案：待办备忘 (Todo Memo)', '广东润喵云科技 · 开发实习生', '没被引用的资料'], generator: 'external',
+        sources: [{ tag: '项目档案：待办备忘 (Todo Memo)', project: 'todo-memo' }, { tag: '广东润喵云科技 · 开发实习生' }, { tag: '没被引用的资料' }] }),
+      sse('text', { text: '我做过**待办备忘**[1]，也在润喵云实习过[2]。' }),
+      sse('text', { text: '\n\n---\n**引用事实证据**：事实证据 1、事实证据 2。' }),
+      sse('done', {}),
+    ])
+    await page.locator('.chips button').first().click()
+    const live = page.locator('#hero .live')
+    await expect(live.locator('.a sup')).toHaveText(['1', '2'])
+    await expect(live.locator('.a')).toHaveText('我做过待办备忘1，也在润喵云实习过2。')
+    await expect(live.locator('.src div span')).toHaveText(['来源 1', '来源 2'])
+    await expect(live.locator('.src b')).toHaveText(['待办备忘 (Todo Memo)', '广东润喵云科技 · 开发实习生'])
+    await expect(live.locator('.src').first().locator('img')).toHaveAttribute('src', /todo-memo-cover/)
+    await expect(live.locator('.src').first()).toHaveAttribute('href', '#works')
+    await expect(live.locator('.src').nth(1).locator('.thumb')).toHaveText('广')
+  })
+
+  test('without numbered marks every source gets a card; tags alone still find the project', async ({ page }) => {
+    await askable(page, [
+      sse('meta', { evidence: ['项目档案：Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', '张锦鹏个人履历'], generator: 'local' }),
+      sse('text', { text: '这是本站。' }), sse('done', {}),
+    ])
+    await page.locator('.chips button').first().click()
+    const live = page.locator('#hero .live')
+    await expect(live.locator('.src b')).toHaveText(['Jaxson AI Space', '张锦鹏个人履历'])
+    await expect(live.locator('.src').first().locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
   })
 
   test('a long answer scrolls inside the panel; the first screen keeps its size', async ({ page }) => {
@@ -235,7 +322,7 @@ test.describe('first screen', () => {
       const box = panel.getBoundingClientRect(), hero = document.getElementById('hero')!.getBoundingClientRect()
       return box.bottom <= hero.bottom + 1
     }))
-    expect(clipped).toEqual([true, true, true])
+    expect(clipped).toEqual([true, true])
   })
 
   test('a follow-up question carries the earlier round', async ({ page }) => {
@@ -249,7 +336,7 @@ test.describe('first screen', () => {
     expect(bodies[1].messages).toEqual([
       { role: 'user', content: '第一个问题' }, { role: 'assistant', content: '第一轮回答' }, { role: 'user', content: '追问' },
     ])
-    await expect(page.locator('#hero .trace .step small').nth(2)).toHaveText('没有找到相关的公开资料')
+    await expect(page.locator('#hero .thinking .step small').nth(2)).toHaveText('没有找到相关的公开资料')
   })
 
   test('suggested questions ask right away', async ({ page }) => {
@@ -301,7 +388,8 @@ test.describe('first screen', () => {
       await expect(page.locator('#hero .profile h1'), where).toBeInViewport({ ratio: 1 })
       await expect(page.getByRole('link', { name: '下载简历' }), where).toBeInViewport({ ratio: 1 })
       await expect(page.getByRole('textbox', { name: '问我的 AI 分身' }), where).toBeInViewport({ ratio: 1 })
-      await expect(page.locator('#hero .trace .step').first(), where).toBeInViewport({ ratio: 1 })
+      // On short windows the conversation scrolls; the fold line may sit below its fold.
+      if (viewport.height >= 768) await expect(page.locator('#hero .thinking summary'), where).toBeInViewport({ ratio: 1 })
       // Panels never cut their own content off.
       const clipped = await page.locator('#hero .panel').evaluateAll(panels => panels
         .filter(panel => panel.scrollHeight > panel.clientHeight + 1).map(panel => panel.className))
@@ -309,7 +397,7 @@ test.describe('first screen', () => {
     }
   })
 
-  test('phones stack profile, conversation and trace in one column', async ({ page }) => {
+  test('phones stack profile and conversation in one column', async ({ page }) => {
     await open(page, { width: 375, height: 812 })
     await expect(page.locator('#hero .profile h1')).toBeInViewport()
     const lefts = await page.locator('#hero .panel').evaluateAll(panels => panels.map(panel => Math.round(panel.getBoundingClientRect().left)))
@@ -327,10 +415,10 @@ test.describe('more than two projects', () => {
     await expect(chat.locator('.a').first()).toContainText('我一共公开了 5 个项目')
     await expect(chat.locator('.a').first()).toContainText('其余 3 个在下面的作品区')
     await expect(chat.locator('.src b')).toHaveText(['项目2', '项目4'])
-    const trace = page.locator('#hero .trace')
-    await expect(trace.locator('.doc.hit')).toHaveText([/项目2/, /项目4/])
-    await expect(trace.locator('.doc').nth(2)).toContainText('还有 3 篇项目档案')
-    await expect(trace.locator('.step small').nth(2)).toHaveText('命中 2 篇项目档案')
+    const thinking = page.locator('#hero .thinking')
+    await expect(thinking.locator('.doc.hit')).toHaveText([/项目2/, /项目4/])
+    await expect(thinking.locator('.doc').nth(2)).toContainText('还有 3 篇项目档案')
+    await expect(thinking.locator('.step small').nth(2)).toHaveText('命中 2 篇项目档案')
   })
 
   test('without featured projects the first two stand in, and long summaries are shortened', async ({ page }) => {
@@ -358,65 +446,58 @@ test.describe('more than two projects', () => {
     await expect(page.locator('#hero .src')).toHaveCount(2)
   })
 
-  test('featured projects get large cards; the rest are rows in one list, each on a single line', async ({ page }) => {
+  test('every project is the same small card; featured ones lead, the rest follow in CMS order', async ({ page }) => {
     await open(page, { width: 1440, height: 900 }, five)
-    await expect(page.locator('#works .project.featured h3')).toHaveText(['项目2', '项目4'])
-    const list = page.locator('#works .more-list')
-    await expect(list.getByRole('heading', { level: 3, name: '更多项目' })).toBeVisible()
-    await expect(list.locator('.row h4')).toHaveText(['项目0', '项目1', '项目3'])
-    await expect(list.locator('img, .cover')).toHaveCount(0)
-    await expect(list.locator('.row').first().locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
-    await expect(list.locator('.row').first().getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
-    // On wide screens name, summary, stack and links sit side by side.
-    const heights = await list.locator('.row').evaluateAll(rows => rows.map(row => Math.round(row.getBoundingClientRect().height)))
-    for (const height of heights) expect(height).toBeLessThan(110)
+    await expect(page.locator('#works .project h3')).toHaveText(['项目2', '项目4', '项目0', '项目1', '项目3'])
+    const sizes = await page.locator('#works .project').evaluateAll(cards => cards.map(card => {
+      const box = card.getBoundingClientRect()
+      return `${Math.round(box.width)}x${Math.round(box.height)}`
+    }))
+    expect(new Set(sizes.slice(0, 3)).size, sizes.join(' ')).toBe(1)
+    await expect(page.locator('#works .more-list, #works .row')).toHaveCount(0)
   })
 
-  test('the list stacks each row on phones without sideways scrolling', async ({ page }) => {
-    await open(page, { width: 375, height: 812 }, five)
-    const row = page.locator('#works .more-list .row').first()
-    const [name, summary] = await Promise.all(['h4', '.summary'].map(selector => row.locator(selector).evaluate(el => el.getBoundingClientRect().top)))
-    expect(summary).toBeGreaterThan(name)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+  test('three cards per row on wide screens, two on tablets, one on phones', async ({ page }) => {
+    for (const [width, perRow] of [[1440, 3], [768, 2], [375, 1]]) {
+      await open(page, { width, height: 900 }, five)
+      const tops = await page.locator('#works .project').evaluateAll(cards => cards.map(card => Math.round(card.getBoundingClientRect().top)))
+      expect(tops.filter(top => top === tops[0]).length, `${width}px`).toBe(perRow)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    }
   })
 
-  test('a single featured project spans the full width', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 }, five.map((item, index) => ({ ...item, featured: index === 2 })))
-    const [card, list] = await Promise.all([
-      page.locator('#works .project.featured').evaluate(el => el.getBoundingClientRect().width),
-      page.locator('#works').evaluate(el => el.querySelector('.works')!.getBoundingClientRect().width),
-    ])
-    expect(Math.abs(card - list)).toBeLessThanOrEqual(2)
-  })
-
-  test('without other projects there is no list', async ({ page }) => {
+  test('fewer than three projects share the whole row instead of leaving a gap', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    await expect(page.locator('#works .more-list')).toHaveCount(0)
+    const [grid, last] = await Promise.all([
+      page.locator('#works .works').evaluate(el => el.getBoundingClientRect().right),
+      page.locator('#works .project').last().evaluate(el => el.getBoundingClientRect().right),
+    ])
+    expect(Math.abs(grid - last)).toBeLessThanOrEqual(1)
   })
 
-  test('lists six more projects, then a button reveals the rest', async ({ page }) => {
+  test('shows six cards, then a button reveals the rest', async ({ page }) => {
     const twelve = Array.from({ length: 12 }, (_, index) => project(`p${index}`, `项目${index}`))
     await open(page, { width: 1440, height: 900 }, twelve)
-    await expect(page.locator('#works .more-list .row')).toHaveCount(6)
+    await expect(page.locator('#works .project')).toHaveCount(6)
     const more = page.getByRole('button', { name: '显示全部 12 个项目' })
     await expect(more).toHaveAttribute('aria-expanded', 'false')
     await more.click()
-    await expect(page.locator('#works .more-list .row')).toHaveCount(10)
+    await expect(page.locator('#works .project')).toHaveCount(12)
     await expect(more).toHaveCount(0)
   })
 
-  test('featured projects without a screenshot get a light cover with their initial and stack', async ({ page }) => {
+  test('projects without a screenshot get a light cover with their initial and stack', async ({ page }) => {
     await open(page, { width: 1440, height: 900 }, [
       project('a', '项目甲', { image: '', featured: true }),
       project('b', '项目乙', { image: 'project-dossier-cover.svg', featured: true }),
-      project('c', '项目丙'),
     ])
     const covers = page.locator('#works .cover')
     await expect(covers).toHaveCount(2)
     for (const index of [0, 1]) {
       await expect(covers.nth(index)).toHaveClass(/placeholder/)
       await expect(covers.nth(index).locator('b')).toHaveText('项')
-      await expect(covers.nth(index).locator('span')).toHaveText('React · TypeScript · Supabase')
+      await expect(covers.nth(index).locator('b')).toHaveCSS('opacity', '1')
+      await expect(covers.nth(index).locator('li')).toHaveText(['React', 'TypeScript', 'Supabase'])
       await expect(covers.nth(index).locator('img')).toHaveCount(0)
     }
     await expect(page.locator('#hero .src img')).toHaveCount(0)
@@ -432,35 +513,90 @@ test.describe('more than two projects', () => {
 })
 
 test.describe('works', () => {
-  test('shows each published project as a card with its evidence, in CMS order', async ({ page }) => {
+  test('each card shows the screenshot, name, summary and main stack, and opens its details', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     const cards = page.locator('#works .project')
     await expect(cards).toHaveCount(2)
     await expect(cards.locator('h3')).toHaveText(['待办备忘 (Todo Memo)', 'Jaxson AI Space'])
     const first = cards.first()
-    await expect(first.locator('.story dt')).toHaveText(['难题', '做法', '结果'])
     await expect(first.getByText('已上线的待办与备忘工具', { exact: false })).toBeVisible()
-    await expect(first.locator('.stack li')).toHaveText(['React', 'TypeScript', 'Supabase'])
-    await expect(first.getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
-    await expect(first.getByRole('link', { name: '源码' })).toHaveAttribute('href', 'https://github.com/example/todo')
-    await expect(first.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
+    await expect(first.locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
     await expect(first.locator('img')).toHaveAttribute('src', './optimized/todo-memo-cover-900.765d77142054.webp')
-    await expect(first.locator('img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
+    await expect(first.locator('.story, a')).toHaveCount(0)
+    const opener = first.getByRole('button', { name: /待办备忘 \(Todo Memo\)/ })
+    await expect(opener).toHaveAttribute('aria-haspopup', 'dialog')
+    await opener.click()
+    const dialog = page.getByRole('dialog', { name: '待办备忘 (Todo Memo)' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('.story dt')).toHaveText(['难题', '做法', '结果'])
+    await expect(dialog.locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
+    await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
+    await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
+    await expect(dialog.getByRole('link', { name: '源码' })).toHaveAttribute('href', 'https://github.com/example/todo')
+    await expect(dialog.locator('.media img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
   })
 
-  test('sits two cards per row on wide screens and one per row on phones', async ({ page }) => {
-    const tops = async () => page.locator('#works .project').evaluateAll(cards => cards.map(card => Math.round(card.getBoundingClientRect().top)))
-    await open(page, { width: 1440, height: 900 })
-    const [a, b] = await tops()
-    expect(a).toBe(b)
-    await open(page, { width: 375, height: 812 })
-    const [c, d] = await tops()
-    expect(d).toBeGreaterThan(c)
+  test('the dialog plays the demo video when the project has one, with the screenshot as its poster', async ({ page }) => {
+    await page.route('https://cms.example.test/media/**', route => route.fulfill({ status: 404 }))
+    await open(page, { width: 1440, height: 900 }, [project('demo', '演示项目', { video: 'https://cms.example.test/media/demo.mp4' }), project('still', '无视频项目')])
+    await page.locator('#works .project').first().getByRole('button').click()
+    const video = page.getByRole('dialog').locator('.media video')
+    await expect(video).toHaveAttribute('src', 'https://cms.example.test/media/demo.mp4')
+    await expect(video).toHaveAttribute('poster', './optimized/todo-memo-cover-900.765d77142054.webp')
+    expect(await video.evaluate((el: HTMLVideoElement) => [el.controls, el.muted, el.playsInline, el.loop])).toEqual([true, true, true, true])
+    await expect(page.locator('#works .project').first().locator('.badge')).toHaveText('演示视频')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('#projectDialog video')).toHaveCount(0)
+    await page.locator('#works .project').nth(1).getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('.media video')).toHaveCount(0)
+    await expect(page.getByRole('dialog').locator('.media img')).toBeVisible()
   })
 
-  test('has no carousel, automatic advance or archive dialog', async ({ page }) => {
+  test('the dialog closes by its button, Escape or a click outside, and hands focus back to the card', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    await expect(page.locator('#works button:not(.show-all), #works dialog, .coverflow-slide')).toHaveCount(0)
+    const card = page.locator('#works .project').first().getByRole('button')
+    const dialog = page.getByRole('dialog')
+    for (const close of [
+      () => dialog.getByRole('button', { name: '关闭' }).click(),
+      () => page.keyboard.press('Escape'),
+      () => page.mouse.click(8, 8),
+    ]) {
+      await card.click()
+      await expect(dialog).toBeVisible()
+      await close()
+      await expect(dialog).toBeHidden()
+      await expect(card).toBeFocused()
+    }
+  })
+
+  test('in the dialog the media sits left of the details on wide screens and above them on phones', async ({ page }) => {
+    for (const [width, height, beside] of [[1440, 900, true], [375, 812, false]] as const) {
+      await open(page, { width, height })
+      await page.locator('#works .project').first().getByRole('button').click()
+      const dialog = page.getByRole('dialog')
+      await dialog.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)))
+      const [media, info] = await Promise.all(['.media', '.info'].map(selector => dialog.locator(selector).evaluate(el => el.getBoundingClientRect().toJSON())))
+      if (beside) expect(info.left).toBeGreaterThanOrEqual(media.right - 1)
+      else expect(info.top).toBeGreaterThanOrEqual(media.bottom - 1)
+      const box = await dialog.evaluate(el => el.getBoundingClientRect().toJSON())
+      expect(box.width).toBeLessThanOrEqual(width)
+      expect(box.height).toBeLessThanOrEqual(height)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    }
+  })
+
+  test('this site gets its own screenshot even while the CMS still names the stock image', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const cover = page.locator('#works .project').nth(1).locator('.cover')
+    await expect(cover).not.toHaveClass(/placeholder/)
+    await expect(cover.locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
+    await expect(page.locator('#hero .src').nth(1).locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
+  })
+
+  test('has no carousel and nothing advances by itself', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    await expect(page.locator('.coverflow-slide')).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toBeHidden()
     const before = await page.locator('#works .project h3').allTextContents()
     await page.waitForTimeout(7000)
     expect(await page.locator('#works .project h3').allTextContents()).toEqual(before)
@@ -481,15 +617,20 @@ test.describe('works', () => {
       index % 2 ? { demoUrl: '', repoUrl: '', image: '' } : {}))
     await open(page, { width: 320, height: 568 }, many)
     await page.getByRole('button', { name: '显示全部 20 个项目' }).click()
-    await expect(page.locator('#works .project, #works .more-list .row')).toHaveCount(20)
+    await expect(page.locator('#works .project')).toHaveCount(20)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
-    await expect(page.locator('#works .project').nth(1).locator('.links')).toHaveCount(0)
     await expect(page.locator('#works .project').nth(1).locator('.cover.placeholder b')).toHaveText('S')
+    await page.locator('#works .project').nth(1).getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('.links')).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
   })
 
   test('renders CMS text as text, never as markup', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 }, [project('x', '<img src=x onerror="window.__pwned=1">标题')])
+    await open(page, { width: 1440, height: 900 }, [project('x', '<img src=x onerror="window.__pwned=1">标题', { video: 'javascript:alert(1)' })])
     await expect(page.locator('#works .project h3')).toHaveText('<img src=x onerror="window.__pwned=1">标题')
+    await page.locator('#works .project').getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('h3')).toHaveText('<img src=x onerror="window.__pwned=1">标题')
+    await expect(page.getByRole('dialog').locator('video')).toHaveCount(0)
     expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined()
   })
 })
@@ -500,7 +641,7 @@ test.describe('résumé', () => {
       await open(page, viewport)
       const bio = page.locator('#bio')
       await expect(bio.locator('.entry h3')).toHaveText(['开发实习生', '大数据技术专业（专科），2027 届', '技能竞赛'])
-      for (const text of ['广东润喵云科技有限公司', '深圳职业技术大学', 'GPA 3.85 / 4.0，专业排名前 3%', '一带一路暨金砖国家技能大赛']) {
+      for (const text of ['广东润喵云科技有限公司', '深圳职业技术大学', 'GPA 3.85 / 4.0，专业排名前 2%', '2026.06 – 2026.08', '国家级奖项 3 项、省市级奖项 8 项', '一带一路暨金砖国家技能大赛']) {
         await expect(bio.getByText(text, { exact: false }).first(), `${text} ${JSON.stringify(viewport)}`).toBeVisible()
       }
       await expect(bio.getByRole('button')).toHaveCount(0)
@@ -511,7 +652,28 @@ test.describe('résumé', () => {
   test('lists the four skill groups as tags, AI first', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     await expect(page.locator('#bio .skills h3')).toHaveText(['AI 应用开发', '前端开发', '后端与数据', '工程交付'])
-    for (const group of await page.locator('#bio .skills .group').all()) expect(await group.locator('li').count()).toBeGreaterThanOrEqual(4)
+    // Four main tools as tags per group; the rest in one quiet line.
+    for (const group of await page.locator('#bio .skills .group').all()) {
+      expect(await group.locator('li').count()).toBe(4)
+      await expect(group.locator('.also')).toHaveCount(1)
+    }
+  })
+
+  test('the AI group names the retrieval and generation pieces this site really uses', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const ai = page.locator('#bio .skills .group').first()
+    await expect(ai.locator('li')).toHaveText(['RAG 检索增强', 'pgvector 向量检索', 'BM25 + 向量混合检索', '大模型 API 接入（DeepSeek）'])
+    for (const item of ['Embedding 向量化', 'SSE 流式输出', '引用溯源与防幻觉']) await expect(ai.locator('.also')).toContainText(item)
+  })
+
+  test('the résumé sits on the page itself: no boxes around experience or skills', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    await expect(page.locator('#bio .panel')).toHaveCount(0)
+    const styles = await page.locator('#bio .bio > *').evaluateAll(columns => columns.map(column => {
+      const style = getComputedStyle(column)
+      return [style.borderTopWidth, style.backgroundColor, style.boxShadow].join(' ')
+    }))
+    expect(styles).toEqual(['0px rgba(0, 0, 0, 0) none', '0px rgba(0, 0, 0, 0) none'])
   })
 
   test('puts experience and skills side by side on wide screens, dates beside entries', async ({ page }) => {
@@ -521,7 +683,7 @@ test.describe('résumé', () => {
     })
     await open(page, { width: 1440, height: 900 })
     expect(await layout()).toBe('side')
-    const [timeline, skills] = await page.locator('#bio .panel').evaluateAll(panels => panels.map(panel => Math.round(panel.getBoundingClientRect().top)))
+    const [timeline, skills] = await page.locator('#bio .bio > *').evaluateAll(columns => columns.map(column => Math.round(column.getBoundingClientRect().top)))
     expect(timeline).toBe(skills)
     await open(page, { width: 375, height: 812 })
     expect(await layout()).toBe('above')
@@ -542,6 +704,11 @@ test.describe('contact and footer', () => {
     await expect(footer.getByRole('link', { name: '下载 PDF 简历' })).toHaveAttribute('href', '/resume/zhang-jinpeng-ai-product-builder.pdf')
   })
 
+  test('the page ends on an open line, not a dark block', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    expect(await page.locator('#beyond').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
+  })
+
   test('keeps old chapter links working and leaves none of the old page behind', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     for (const id of ['hero', 'bio', 'works', 'beyond']) await expect(page.locator(`#${id}`)).toHaveCount(1)
@@ -555,7 +722,7 @@ test.describe('motion and keyboard', () => {
   test('the first-screen panels fade in only when motion is allowed', async ({ page }, testInfo) => {
     await open(page, { width: 1440, height: 900 })
     const animations = await page.locator('#hero .panel').evaluateAll(panels => panels.map(panel => getComputedStyle(panel).animationName))
-    expect(animations).toEqual(Array(3).fill(testInfo.project.name === 'reduced-motion' ? 'none' : 'rise'))
+    expect(animations).toEqual(Array(2).fill(testInfo.project.name === 'reduced-motion' ? 'none' : 'rise'))
   })
 
   test('leaves the mouse wheel and paging keys to the browser', async ({ page }) => {

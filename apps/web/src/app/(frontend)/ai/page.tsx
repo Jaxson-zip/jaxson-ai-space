@@ -23,11 +23,12 @@ const INITIAL_MESSAGES: Message[] = [
 ]
 
 function renderInlineMarkdown(content: string) {
-  // Matches **bold** and `code`.
-  const parts = content.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
+  // Matches **bold**, `code` and [n] citations of the numbered sources.
+  const parts = content.split(/(\*\*[^*]+\*\*|`[^`]+`|\s?\[\d{1,2}\])/g)
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
     if (part.startsWith('`') && part.endsWith('`')) return <code key={i}>{part.slice(1, -1)}</code>
+    if (/^\s?\[\d{1,2}\]$/.test(part)) return <sup key={i} className="ai-cite">{part.trim().slice(1, -1)}</sup>
     return part
   })
 }
@@ -304,7 +305,7 @@ export default function AIPage() {
                     <div className="ai-sources">
                       <p>资料来源</p>
                       <ul className="jx-tags">
-                        {msg.evidence.map((tag, i) => <li key={i}>{tag}</li>)}
+                        {msg.evidence.map((tag, i) => <li key={i}>{`${i + 1}. ${tag}`}</li>)}
                       </ul>
                     </div>
                   )}

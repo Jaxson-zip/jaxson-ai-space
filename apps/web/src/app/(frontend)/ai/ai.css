@@ -38,6 +38,7 @@ body:has(.jx-ai) .jx-footer { display: none; }
 .md hr { border: 0; border-top: 1px solid var(--jx-line); }
 .md-gap { height: 2px; }
 .md strong { font-weight: 700; }
+.ai-cite { font: 700 13px/1 var(--jx-mono); color: var(--jx-accent); background: var(--jx-accent-bg); border-radius: 4px; padding: 1px 5px; margin-left: 2px; vertical-align: 3px; }
 .md code { font: 500 14px/1.4 var(--jx-mono); padding: 1px 6px; border-radius: 4px; background: var(--jx-chip); color: var(--jx-accent); }
 
 .ai-pending { color: var(--jx-faint); }

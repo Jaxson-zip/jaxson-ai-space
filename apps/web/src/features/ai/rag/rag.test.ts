@@ -26,7 +26,7 @@ const MOCK_CHUNKS: KnowledgeChunk[] = [
     id: 'profile-szpu',
     title: '教育与求职意向：深圳职业技术大学',
     category: 'education',
-    content: '深圳职业技术大学大数据技术专业 2027 届（GPA 3.85/4.0，专业前 3%），期望岗位为全栈与 AI 应用开发。',
+    content: '深圳职业技术大学大数据技术专业 2027 届（GPA 3.85/4.0，专业前 2%），期望岗位为全栈与 AI 应用开发。',
     evidenceTag: '张锦鹏在校成绩单与基本信息',
     keywords: ['深职大', '深圳职业技术大学', 'GPA', '大数据', '张锦鹏', '联系方式'],
   },
@@ -95,6 +95,19 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(prompt).toContain('张锦鹏')
     expect(prompt).toContain('真实检索事实')
     expect(prompt).toContain('广东润喵云科技有限公司实习证明')
+  })
+
+  it('asks for inline [n] citations instead of an evidence list at the end, since the page shows the sources', () => {
+    const prompt = buildSystemPrompt(hybridRetrieve('润喵云实习', MOCK_CHUNKS, 1), false)
+    expect(prompt).toContain('[1]')
+    expect(prompt).not.toContain('末尾，自动简要列出')
+  })
+
+  it('cites each fact of the local answer by its source number', () => {
+    const results = hybridRetrieve('润喵云实习', MOCK_CHUNKS, 2)
+    const answer = buildLocalRAGAnswer('润喵云实习', results)
+    expect(answer).toContain(`**${results[0].chunk.title}** [1]`)
+    expect(answer).not.toContain('来源：')
   })
 
   it('builds a dedicated JD matching system prompt when isJdMatch is true', () => {

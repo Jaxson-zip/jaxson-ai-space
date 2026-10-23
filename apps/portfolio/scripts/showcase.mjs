@@ -43,12 +43,14 @@ export function createShowcaseFeed() {
     if (data.source !== 'cms' || !Array.isArray(data.projects)) throw new Error('Invalid public feed')
     // Relative media links generated on the Docker network must stay public.
     for (const project of data.projects) {
-      if (typeof project.image !== 'string' || !/^https?:\/\//.test(project.image)) continue
-      const image = new URL(project.image)
-      if (image.host === upstreamOrigin.host || image.host === publicOrigin.host) {
-        image.protocol = publicOrigin.protocol
-        image.host = publicOrigin.host
-        project.image = image.href
+      for (const key of ['image', 'video']) {
+        if (typeof project[key] !== 'string' || !/^https?:\/\//.test(project[key])) continue
+        const media = new URL(project[key])
+        if (media.host === upstreamOrigin.host || media.host === publicOrigin.host) {
+          media.protocol = publicOrigin.protocol
+          media.host = publicOrigin.host
+          project[key] = media.href
+        }
       }
     }
     const body = JSON.stringify({ source: 'cms', projects: data.projects })

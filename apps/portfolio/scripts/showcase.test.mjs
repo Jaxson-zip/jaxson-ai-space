@@ -74,9 +74,10 @@ test('concurrent readers share a bounded cache; withdrawals expire and failed re
 test('uploaded cover URLs stay on the public CMS hostname and oversized feeds fail without retaining them', async t => {
   const { state, origin } = await fixture(t)
   // CMS URLs using its public host can still be generated as HTTP internally.
-  state.projects = [{ slug: 'media', image: 'http://cms.example.test/media/cover.webp' }]
-  const media = await fetch(`${origin}/api/showcase-projects`)
-  assert.equal((await media.json()).projects[0].image, 'https://cms.example.test/media/cover.webp')
+  state.projects = [{ slug: 'media', image: 'http://cms.example.test/media/cover.webp', video: 'http://cms.example.test/media/demo.mp4' }]
+  const media = (await (await fetch(`${origin}/api/showcase-projects`)).json()).projects[0]
+  assert.equal(media.image, 'https://cms.example.test/media/cover.webp')
+  assert.equal(media.video, 'https://cms.example.test/media/demo.mp4')
   await new Promise(resolve => setTimeout(resolve, 150))
   state.projects = [{ slug: 'oversized', summary: 'x'.repeat(2 * 1024 * 1024) }]
   assert.equal((await fetch(`${origin}/api/showcase-projects`)).status, 503)

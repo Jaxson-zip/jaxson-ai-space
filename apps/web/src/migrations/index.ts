@@ -2,6 +2,7 @@ import * as migration_20260909_051231_init from './20260909_051231_init';
 import * as migration_20260928_000000_cinematic_project_fields from './20260928_000000_cinematic_project_fields';
 import * as migration_20261007_000000_private_inbox_receipts from './20261007_000000_private_inbox_receipts';
 import * as migration_20261022_000000_project_home_order from './20261022_000000_project_home_order';
+import * as migration_20261024_000000_project_demo_video from './20261024_000000_project_demo_video';
 
 export const migrations = [
   {
@@ -23,5 +24,10 @@ export const migrations = [
     up: migration_20261022_000000_project_home_order.up,
     down: migration_20261022_000000_project_home_order.down,
     name: '20261022_000000_project_home_order'
+  },
+  {
+    up: migration_20261024_000000_project_demo_video.up,
+    down: migration_20261024_000000_project_demo_video.down,
+    name: '20261024_000000_project_demo_video'
   },
 ];

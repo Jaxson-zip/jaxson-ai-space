@@ -142,7 +142,7 @@ export interface Project {
   role: string;
   category: '工具应用 · 原型落地' | '求职工具 · 开源二次开发' | 'AI 产品 · 私有概念探索' | '全栈工程 · 真实交付';
   /**
-   * 勾选后在首页 AI 对话里被引用，并在作品区用大卡片展示。最多显示 2 个；都不勾选时取排在最前的 2 个。
+   * 勾选后在首页 AI 对话里被引用（最多 2 个；都不勾选时取排在最前的 2 个），并排在作品区最前面。
    */
   featured?: boolean | null;
   /**
@@ -152,13 +152,17 @@ export interface Project {
   visibility: 'public' | 'private';
   status: string;
   /**
-   * 首页 AI 对话只引用前 36 个字，更多项目列表里只显示一行；建议 30 字以内，说清做了什么。
+   * 首页 AI 对话只引用前 36 个字，作品卡片上最多显示两行；建议 30 字以内，说清做了什么。
    */
   summary: string;
   /**
-   * 精选项目的大卡片会显示它：建议上传 16:10 的真实界面截图（例如 1440×900），从左上角开始裁切。不上传时显示项目名首字和技术栈。
+   * 作品卡片和项目弹窗都会显示它：建议上传 16:10 的真实界面截图（例如 1440×900），从左上角开始裁切。不上传时显示项目名首字和技术栈。
    */
   coverImage?: (number | null) | Media;
+  /**
+   * 点开作品卡片后在弹窗左边静音循环播放，封面图作为加载前的画面。建议 16:10 的 mp4（H.264），1 分钟以内、30 MB 以下。不上传时弹窗显示封面图。
+   */
+  demoVideo?: (number | null) | Media;
   tags?:
     | {
         tag?: string | null;
@@ -442,6 +446,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   status?: T;
   summary?: T;
   coverImage?: T;
+  demoVideo?: T;
   tags?:
     | T
     | {
