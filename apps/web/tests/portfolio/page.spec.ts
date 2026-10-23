@@ -43,6 +43,17 @@ async function open(page: Page, viewport: { width: number, height: number }, pro
 const widths = [320, 375, 414, 768, 1024, 1366, 1440]
 
 test.describe('whole page', () => {
+  test('keeps everything in a centred column no wider than 1120px, with open margins on wide screens', async ({ page }) => {
+    for (const width of [1440, 1920]) {
+      await open(page, { width, height: 900 })
+      const boxes = await page.locator('#hero, #works, #bio, #beyond').evaluateAll(sections => sections.map(section => section.getBoundingClientRect().toJSON()))
+      for (const box of boxes) {
+        expect(box.width, `${width}px`).toBeLessThanOrEqual(1120)
+        expect(box.left, `${width}px`).toBeGreaterThanOrEqual((width - 1120) / 2 - 1)
+      }
+    }
+  })
+
   test('never scrolls sideways at any common width', async ({ page }) => {
     for (const width of widths) {
       await open(page, { width, height: 800 })
@@ -190,12 +201,58 @@ test.describe('first screen', () => {
     await expect(chat.locator('.a sup')).toHaveText(['1', '2'])
   })
 
-  test('trace: the four retrieval steps and the public knowledge base, hits marked', async ({ page }) => {
+  test('two things on the first screen: who I am, beside the conversation', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    const trace = page.locator('#hero .trace')
-    await expect(trace.locator('.step b')).toHaveText(['理解问题', '关键词 + 向量双路检索', '挑出最相关的资料', 'DeepSeek 生成回答'])
-    await expect(trace.locator('.doc.hit')).toHaveCount(2)
-    expect(await trace.locator('.doc').count()).toBeGreaterThanOrEqual(6)
+    await expect(page.locator('#hero > .panel')).toHaveCount(2)
+    await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)))
+    const [profile, chat] = await page.locator('#hero > .panel').evaluateAll(panels => panels.map(panel => panel.getBoundingClientRect().toJSON()))
+    expect(Math.round(profile.top)).toBe(Math.round(chat.top))
+    expect(chat.left).toBeGreaterThan(profile.right)
+  })
+
+  test('how the answer was found sits between question and answer, folded like a model’s thinking', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const thinking = page.locator('#hero .sample details.thinking')
+    await expect(thinking).toHaveCount(1)
+    await expect(thinking).not.toHaveAttribute('open', '')
+    await expect(thinking.locator('summary')).toContainText('已检索公开资料')
+    await expect(thinking.locator('summary')).toContainText('命中 2 篇')
+    await expect(thinking.locator('.step').first()).toBeHidden()
+    const [question, summary, answer] = await Promise.all(['#hero .sample .q', '#hero .thinking summary', '#introAnswer'].map(selector => page.locator(selector).first().evaluate(el => el.getBoundingClientRect().toJSON())))
+    expect(summary.top).toBeGreaterThanOrEqual(question.bottom)
+    expect(answer.top).toBeGreaterThanOrEqual(summary.bottom)
+    // A quiet line, not a box.
+    expect(await thinking.evaluate(el => [getComputedStyle(el).borderTopWidth, getComputedStyle(el).backgroundColor])).toEqual(['0px', 'rgba(0, 0, 0, 0)'])
+    await thinking.locator('summary').click()
+    await expect(thinking.locator('.step').first()).toBeVisible()
+  })
+
+  test('the thinking lists the four retrieval steps and the sources it hit', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const thinking = page.locator('#hero .thinking')
+    await expect(thinking.locator('.step b')).toHaveText(['理解问题', '关键词 + 向量双路检索', '挑出最相关的资料', 'DeepSeek 生成回答'])
+    await expect(thinking.locator('.doc.hit')).toHaveText([/待办备忘/, /Jaxson AI Space/])
+  })
+
+  test('a live answer thinks in the open, then folds the thinking away once it starts answering', async ({ page }) => {
+    await page.route('https://cms.example.test/api/chat', async route => {
+      await new Promise(resolve => setTimeout(resolve, 1200))
+      await route.fulfill({ contentType: 'text/event-stream', body: sse('meta', { evidence: ['项目档案：待办备忘', '广东润喵云科技 · 开发实习生'], generator: 'external' }) + sse('text', { text: '回答。' }) + sse('done', {}) })
+    })
+    await open(page, { width: 1440, height: 900 })
+    await page.locator('#hero .chips button').first().click()
+    const thinking = page.locator('#hero .live .round').last().locator('details.thinking')
+    await expect(thinking).toHaveAttribute('open', '')
+    await expect(thinking.locator('summary')).toContainText('正在检索公开资料')
+    await expect(page.locator('#hero .live .a').last()).toHaveText('回答。')
+    await expect(thinking).not.toHaveAttribute('open', '')
+    await expect(thinking.locator('summary')).toContainText('命中 2 篇')
+    await expect(thinking.locator('summary')).toContainText(/用时 \d+(\.\d)? 秒/)
+    await expect(thinking.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/, /开发实习生/])
+    // Every answer keeps its own thinking.
+    await page.locator('#hero .chips button').nth(1).click()
+    await expect(page.locator('#hero .live .a')).toHaveCount(2)
+    await expect(page.locator('#hero .live .round .thinking')).toHaveCount(2)
   })
 
   test('asking answers right here: the question, the streamed answer and its sources', async ({ page }) => {
@@ -212,9 +269,9 @@ test.describe('first screen', () => {
     await expect(chat).not.toContainText('示例对话')
     await expect(page).toHaveURL(/127\.0\.0\.1:4174/)
     expect(bodies[0]).toEqual({ messages: [{ role: 'user', content: '你会哪些技术？' }] })
-    const trace = page.locator('#hero .trace')
-    await expect(trace.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/])
-    await expect(trace.locator('.step small').nth(2)).toHaveText('命中 1 篇资料')
+    const thinking = page.locator('#hero .live .thinking')
+    await expect(thinking.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/])
+    await expect(thinking.locator('.step small').nth(2)).toHaveText('命中 1 篇资料')
     await expect(field).toHaveValue('')
   })
 
@@ -265,7 +322,7 @@ test.describe('first screen', () => {
       const box = panel.getBoundingClientRect(), hero = document.getElementById('hero')!.getBoundingClientRect()
       return box.bottom <= hero.bottom + 1
     }))
-    expect(clipped).toEqual([true, true, true])
+    expect(clipped).toEqual([true, true])
   })
 
   test('a follow-up question carries the earlier round', async ({ page }) => {
@@ -279,7 +336,7 @@ test.describe('first screen', () => {
     expect(bodies[1].messages).toEqual([
       { role: 'user', content: '第一个问题' }, { role: 'assistant', content: '第一轮回答' }, { role: 'user', content: '追问' },
     ])
-    await expect(page.locator('#hero .trace .step small').nth(2)).toHaveText('没有找到相关的公开资料')
+    await expect(page.locator('#hero .thinking .step small').nth(2)).toHaveText('没有找到相关的公开资料')
   })
 
   test('suggested questions ask right away', async ({ page }) => {
@@ -331,7 +388,8 @@ test.describe('first screen', () => {
       await expect(page.locator('#hero .profile h1'), where).toBeInViewport({ ratio: 1 })
       await expect(page.getByRole('link', { name: '下载简历' }), where).toBeInViewport({ ratio: 1 })
       await expect(page.getByRole('textbox', { name: '问我的 AI 分身' }), where).toBeInViewport({ ratio: 1 })
-      await expect(page.locator('#hero .trace .step').first(), where).toBeInViewport({ ratio: 1 })
+      // On short windows the conversation scrolls; the fold line may sit below its fold.
+      if (viewport.height >= 768) await expect(page.locator('#hero .thinking summary'), where).toBeInViewport({ ratio: 1 })
       // Panels never cut their own content off.
       const clipped = await page.locator('#hero .panel').evaluateAll(panels => panels
         .filter(panel => panel.scrollHeight > panel.clientHeight + 1).map(panel => panel.className))
@@ -339,7 +397,7 @@ test.describe('first screen', () => {
     }
   })
 
-  test('phones stack profile, conversation and trace in one column', async ({ page }) => {
+  test('phones stack profile and conversation in one column', async ({ page }) => {
     await open(page, { width: 375, height: 812 })
     await expect(page.locator('#hero .profile h1')).toBeInViewport()
     const lefts = await page.locator('#hero .panel').evaluateAll(panels => panels.map(panel => Math.round(panel.getBoundingClientRect().left)))
@@ -357,10 +415,10 @@ test.describe('more than two projects', () => {
     await expect(chat.locator('.a').first()).toContainText('我一共公开了 5 个项目')
     await expect(chat.locator('.a').first()).toContainText('其余 3 个在下面的作品区')
     await expect(chat.locator('.src b')).toHaveText(['项目2', '项目4'])
-    const trace = page.locator('#hero .trace')
-    await expect(trace.locator('.doc.hit')).toHaveText([/项目2/, /项目4/])
-    await expect(trace.locator('.doc').nth(2)).toContainText('还有 3 篇项目档案')
-    await expect(trace.locator('.step small').nth(2)).toHaveText('命中 2 篇项目档案')
+    const thinking = page.locator('#hero .thinking')
+    await expect(thinking.locator('.doc.hit')).toHaveText([/项目2/, /项目4/])
+    await expect(thinking.locator('.doc').nth(2)).toContainText('还有 3 篇项目档案')
+    await expect(thinking.locator('.step small').nth(2)).toHaveText('命中 2 篇项目档案')
   })
 
   test('without featured projects the first two stand in, and long summaries are shortened', async ({ page }) => {
@@ -594,23 +652,28 @@ test.describe('résumé', () => {
   test('lists the four skill groups as tags, AI first', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     await expect(page.locator('#bio .skills h3')).toHaveText(['AI 应用开发', '前端开发', '后端与数据', '工程交付'])
-    for (const group of await page.locator('#bio .skills .group').all()) expect(await group.locator('li').count()).toBeGreaterThanOrEqual(4)
-  })
-
-  test('experience and skills end on the same line, leaving no empty strip under either', async ({ page }) => {
-    for (const width of [1024, 1280, 1440]) {
-      await open(page, { width, height: 900 })
-      const [experience, skills] = await page.locator('#bio .bio > .panel').evaluateAll(panels => panels.map(panel => panel.getBoundingClientRect().bottom))
-      expect(Math.abs(experience - skills), `${width}px`).toBeLessThanOrEqual(1)
+    // Four main tools as tags per group; the rest in one quiet line.
+    for (const group of await page.locator('#bio .skills .group').all()) {
+      expect(await group.locator('li').count()).toBe(4)
+      await expect(group.locator('.also')).toHaveCount(1)
     }
   })
 
   test('the AI group names the retrieval and generation pieces this site really uses', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    const ai = page.locator('#bio .skills .group').first().locator('li')
-    for (const item of ['RAG 检索增强', 'pgvector 向量检索', 'BM25 + 向量混合检索', 'Embedding 向量化', 'SSE 流式输出', '引用溯源与防幻觉']) {
-      await expect(ai.filter({ hasText: item })).toHaveCount(1)
-    }
+    const ai = page.locator('#bio .skills .group').first()
+    await expect(ai.locator('li')).toHaveText(['RAG 检索增强', 'pgvector 向量检索', 'BM25 + 向量混合检索', '大模型 API 接入（DeepSeek）'])
+    for (const item of ['Embedding 向量化', 'SSE 流式输出', '引用溯源与防幻觉']) await expect(ai.locator('.also')).toContainText(item)
+  })
+
+  test('the résumé sits on the page itself: no boxes around experience or skills', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    await expect(page.locator('#bio .panel')).toHaveCount(0)
+    const styles = await page.locator('#bio .bio > *').evaluateAll(columns => columns.map(column => {
+      const style = getComputedStyle(column)
+      return [style.borderTopWidth, style.backgroundColor, style.boxShadow].join(' ')
+    }))
+    expect(styles).toEqual(['0px rgba(0, 0, 0, 0) none', '0px rgba(0, 0, 0, 0) none'])
   })
 
   test('puts experience and skills side by side on wide screens, dates beside entries', async ({ page }) => {
@@ -620,7 +683,7 @@ test.describe('résumé', () => {
     })
     await open(page, { width: 1440, height: 900 })
     expect(await layout()).toBe('side')
-    const [timeline, skills] = await page.locator('#bio .panel').evaluateAll(panels => panels.map(panel => Math.round(panel.getBoundingClientRect().top)))
+    const [timeline, skills] = await page.locator('#bio .bio > *').evaluateAll(columns => columns.map(column => Math.round(column.getBoundingClientRect().top)))
     expect(timeline).toBe(skills)
     await open(page, { width: 375, height: 812 })
     expect(await layout()).toBe('above')
@@ -641,6 +704,11 @@ test.describe('contact and footer', () => {
     await expect(footer.getByRole('link', { name: '下载 PDF 简历' })).toHaveAttribute('href', '/resume/zhang-jinpeng-ai-product-builder.pdf')
   })
 
+  test('the page ends on an open line, not a dark block', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    expect(await page.locator('#beyond').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
+  })
+
   test('keeps old chapter links working and leaves none of the old page behind', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     for (const id of ['hero', 'bio', 'works', 'beyond']) await expect(page.locator(`#${id}`)).toHaveCount(1)
@@ -654,7 +722,7 @@ test.describe('motion and keyboard', () => {
   test('the first-screen panels fade in only when motion is allowed', async ({ page }, testInfo) => {
     await open(page, { width: 1440, height: 900 })
     const animations = await page.locator('#hero .panel').evaluateAll(panels => panels.map(panel => getComputedStyle(panel).animationName))
-    expect(animations).toEqual(Array(3).fill(testInfo.project.name === 'reduced-motion' ? 'none' : 'rise'))
+    expect(animations).toEqual(Array(2).fill(testInfo.project.name === 'reduced-motion' ? 'none' : 'rise'))
   })
 
   test('leaves the mouse wheel and paging keys to the browser', async ({ page }) => {
