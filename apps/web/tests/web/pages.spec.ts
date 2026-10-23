@@ -132,3 +132,20 @@ test.describe('/projects/[slug]', () => {
     await expect(page.getByRole('link', { name: '回到作品集' })).toHaveAttribute('href', `${portfolio}/`)
   })
 })
+
+test.describe('names and greeting', () => {
+  test('page titles use the same name as the home page, with a site icon', async ({ page }) => {
+    for (const [path, title] of [['/ai', '问我的 AI 分身 · 张锦鹏 Jaxson'], ['/resume', '简历 · 张锦鹏 Jaxson'], ['/projects/todo-memo', /^待办备忘.* · 张锦鹏 Jaxson$/]] as const) {
+      await open(page, path)
+      await expect(page).toHaveTitle(title)
+      expect(await page.locator('link[rel="icon"]').count()).toBeGreaterThan(0)
+    }
+  })
+
+  test('the AI greets visitors in plain words', async ({ page }) => {
+    await open(page, '/ai')
+    const greeting = page.locator('.ai-message.assistant').first()
+    await expect(greeting).toContainText('张锦鹏')
+    await expect(greeting).not.toContainText('后台')
+  })
+})

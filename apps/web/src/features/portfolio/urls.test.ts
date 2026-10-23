@@ -8,4 +8,9 @@ describe('published project links', () => {
     expect(safeExternalUrl('data:text/html,<script>alert(1)</script>')).toBe('')
     expect(safeExternalUrl('/relative-path')).toBe('')
   })
+
+  it('sends links on the retired space.jaxson.bond host to the live site', () => {
+    expect(safeExternalUrl('http://space.jaxson.bond/')).toBe('https://jaxson.bond/')
+    expect(safeExternalUrl('https://space.jaxson.bond/#works')).toBe('https://jaxson.bond/#works')
+  })
 })

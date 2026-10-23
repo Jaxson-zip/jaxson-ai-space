@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
@@ -12,6 +13,13 @@ interface ProjectPageProps {
 }
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const { projects } = await getHydratedPortfolioData({ allowStaticFallback: false, projectSlug: slug })
+  const project = projects.find((p) => p.slug === slug)
+  return project ? { title: project.title, description: project.summary } : { title: '页面未找到' }
+}
 
 /** The home page's featured card, at full width: screenshot and story on the left, role, stack and links on the right. */
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {

@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>张锦鹏 Jaxson · AI 应用与全栈开发作品集</title>
   <meta name="description" content="张锦鹏，深圳职业技术大学大数据技术专业 2027 届，求职 AI 应用与全栈开发。可以直接向他的 AI 分身提问，回答都标明出处。" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#F3F4F7" />
+  <!-- Link previews in chat apps and social sites. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="张锦鹏 Jaxson" />
+  <meta property="og:title" content="张锦鹏 Jaxson · AI 应用与全栈开发" />
+  <meta property="og:description" content="2027 届，求职 AI 应用与全栈开发。直接问我的 AI 分身，回答都标明出处。" />
+  <meta property="og:url" content="https://jaxson.bond/" />
+  <meta property="og:image" content="https://jaxson.bond/optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta name="twitter:card" content="summary_large_image" />
 
   <!-- Local fonts only: first paint never waits on a third-party stylesheet. -->
   <link rel="preload" href="./fonts/plus-jakarta-sans-700.704be0308e53.woff2" as="font" type="font/woff2" crossorigin>
@@ -155,6 +167,9 @@
     .doc.hit { font-weight: 700; }
     .doc.hit span { background: var(--hit-bg); color: var(--hit); }
 
+    /* Below the desktop layout the page scrolls, so a long conversation scrolls inside its panel
+       and the composer stays right under the latest answer. */
+    @media (max-width: 1199px) { .thread { max-height: min(62svh, 560px); } }
     /* Tablet: profile beside the conversation, the trace below with its two halves side by side. */
     @media (min-width: 760px) {
       .hero { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); }
@@ -340,7 +355,7 @@
           <div class="chips">
             <button type="button">你的实习做了什么？</button>
             <button type="button">你会哪些技术？</button>
-            <button type="button">帮我做岗位匹配</button>
+            <button type="button">你最有代表性的项目是什么？</button>
           </div>
           <form id="askForm" action="/ai" method="get">
             <input type="text" id="ask" name="q" aria-label="问我的 AI 分身" placeholder="问任何关于张锦鹏的问题……" maxlength="200" required autocomplete="off" />

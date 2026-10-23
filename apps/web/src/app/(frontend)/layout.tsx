@@ -9,8 +9,8 @@ import './site.css'
 
 export const metadata: Metadata = {
   title: {
-    default: '张锦鹏 (Jaxson) · 全栈开发与 AI 应用落地作品集',
-    template: '%s · 张锦鹏 (Jaxson)',
+    default: '张锦鹏 Jaxson · AI 应用与全栈开发',
+    template: '%s · 张锦鹏 Jaxson',
   },
   description:
     '张锦鹏的个人工程师作品集与 AI 数字分身。深圳职业技术大学大数据技术专业（GPA 3.85，专业前 3%），主修 React 19、TypeScript、Vue 3 全栈开发与 RAG 智能应用落地。',
@@ -30,16 +30,16 @@ export const metadata: Metadata = {
   authors: [{ name: '张锦鹏 (Jaxson)', url: 'https://github.com/Jaxson-zip' }],
   creator: '张锦鹏 (Jaxson)',
   openGraph: {
-    title: '张锦鹏 (Jaxson) · 全栈开发与 AI 应用作品集',
+    title: '张锦鹏 Jaxson · AI 应用与全栈开发',
     description:
       '探索张锦鹏的真实上线项目（Jaxson AI Space、Todo Memo PWA）、广东润喵云实习经历与 AI 数字分身岗位智能匹配。',
     type: 'website',
     locale: 'zh_CN',
-    siteName: 'Jaxson AI Space',
+    siteName: '张锦鹏 Jaxson',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '张锦鹏 (Jaxson) · 全栈开发与 AI 应用作品集',
+    title: '张锦鹏 Jaxson · AI 应用与全栈开发',
     description: '深职大大数据技术（GPA 3.85，专业前 3%），国家级二等奖、省级一等奖，全栈交付与 AI 应用落地。',
   },
 }

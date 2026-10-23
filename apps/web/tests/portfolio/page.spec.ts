@@ -594,3 +594,46 @@ test.describe('navigation', () => {
     }
   })
 })
+
+test.describe('polish', () => {
+  test('has a site icon and link-preview details for sharing', async ({ page, request }) => {
+    await open(page, { width: 1440, height: 900 })
+    const icon = await page.locator('link[rel="icon"]').getAttribute('href')
+    expect(icon).toBeTruthy()
+    expect((await request.get(icon!)).status()).toBe(200)
+    expect((await request.get('/favicon.ico')).status()).toBe(200)
+    for (const [property, pattern] of [['og:title', /张锦鹏/], ['og:description', /AI/], ['og:image', /^https:\/\/jaxson\.bond\/.+\.(webp|png)$/], ['og:url', /^https:\/\/jaxson\.bond\/$/]] as const) {
+      await expect(page.locator(`meta[property="${property}"]`)).toHaveAttribute('content', pattern)
+    }
+    const image = await page.locator('meta[property="og:image"]').getAttribute('content')
+    expect((await request.get(new URL(image!).pathname)).status()).toBe(200)
+  })
+
+  test('an unknown address gets a real 404 page that leads home', async ({ page }) => {
+    const response = await page.goto('/no-such-page')
+    expect(response?.status()).toBe(404)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('页面未找到')
+    await expect(page.getByRole('link', { name: '回到首页' })).toHaveAttribute('href', '/')
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(243, 244, 247)')
+  })
+
+  test('suggested questions are ones the AI can answer without more input', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const chips = await page.locator('#hero .chips button').allTextContents()
+    expect(chips).toContain('你最有代表性的项目是什么？')
+    expect(chips.join(' ')).not.toMatch(/岗位匹配/)
+  })
+
+  test('on phones a long answer keeps the composer close by', async ({ page }) => {
+    const long = Array.from({ length: 60 }, (_, index) => `第 ${index + 1} 行回答内容`).join('\n')
+    await page.route('https://cms.example.test/api/chat', route => route.fulfill({ contentType: 'text/event-stream', body: sse('text', { text: long }) + sse('done', {}) }))
+    await open(page, { width: 375, height: 812 })
+    const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
+    await field.scrollIntoViewIfNeeded()
+    await field.fill('长一点的回答')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#hero .live .a').last()).toContainText('第 60 行回答内容')
+    await field.scrollIntoViewIfNeeded()
+    await expect(page.locator('#hero .live .a').last().getByText('第 60 行回答内容')).toBeInViewport()
+  })
+})
