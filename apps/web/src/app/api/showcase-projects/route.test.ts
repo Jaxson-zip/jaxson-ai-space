@@ -47,6 +47,17 @@ describe('public showcase projects', () => {
     expect(findMock.mock.calls[0][0].sort).toBe('createdAt')
   })
 
+  it('sends the uploaded demo video as an absolute URL, or an empty string without one', async () => {
+    const doc = (slug: string, extra: Record<string, unknown> = {}) => ({ slug, title: slug, role: 'r', category: 'c', status: 's', summary: 's', ...extra })
+    findMock.mockResolvedValue({ docs: [
+      doc('with-video', { demoVideo: { url: '/api/media/file/demo.mp4', mimeType: 'video/mp4' } }),
+      doc('without-video', { demoVideo: 7 }),
+      doc('not-a-video', { demoVideo: { url: '/api/media/file/shot.png', mimeType: 'image/png' } }),
+    ] })
+    const { projects } = await (await GET(new Request('http://localhost:3001/api/showcase-projects'))).json()
+    expect(projects.map((project: { video: string }) => project.video)).toEqual(['http://localhost:3001/api/media/file/demo.mp4', '', ''])
+  })
+
   it('allows the configured public hostname to fetch projects across origins', async () => {
     process.env.NEXT_PUBLIC_PORTFOLIO_URL = 'https://portfolio.testsite.net'
     const response = await OPTIONS(new Request('https://cms.testsite.net/api/showcase-projects', {

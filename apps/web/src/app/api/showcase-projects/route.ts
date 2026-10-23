@@ -36,6 +36,10 @@ export async function GET(request: Request) {
         typeof doc.coverImage === 'object' && doc.coverImage?.url
           ? new URL(doc.coverImage.url, request.url).href
           : null
+      const video =
+        typeof doc.demoVideo === 'object' && doc.demoVideo?.url && doc.demoVideo.mimeType?.startsWith('video/')
+          ? new URL(doc.demoVideo.url, request.url).href
+          : ''
       return {
         slug: doc.slug,
         title: doc.title,
@@ -52,6 +56,7 @@ export async function GET(request: Request) {
         note: doc.editorialNote || '',
         technologies: (doc.tags || []).map((entry) => entry.tag).filter(Boolean),
         image: uploadedImage || coverBySlug.get(doc.slug) || 'project-dossier-cover.svg',
+        video,
         demoUrl: safeExternalUrl(doc.demoUrl),
         repoUrl: safeExternalUrl(doc.repoUrl),
       }
