@@ -141,9 +141,23 @@ export interface Project {
   slug: string;
   role: string;
   category: '工具应用 · 原型落地' | '求职工具 · 开源二次开发' | 'AI 产品 · 私有概念探索' | '全栈工程 · 真实交付';
+  /**
+   * 勾选后在首页 AI 对话里被引用，并在作品区用大卡片展示。最多显示 2 个；都不勾选时取排在最前的 2 个。
+   */
+  featured?: boolean | null;
+  /**
+   * 数字小的排在前面；留空的排在最后，按创建时间先后。
+   */
+  sortOrder?: number | null;
   visibility: 'public' | 'private';
   status: string;
+  /**
+   * 首页 AI 对话只引用前 36 个字，更多项目列表里只显示一行；建议 30 字以内，说清做了什么。
+   */
   summary: string;
+  /**
+   * 精选项目的大卡片会显示它：建议上传 16:10 的真实界面截图（例如 1440×900），从左上角开始裁切。不上传时显示项目名首字和技术栈。
+   */
   coverImage?: (number | null) | Media;
   tags?:
     | {
@@ -422,6 +436,8 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   role?: T;
   category?: T;
+  featured?: T;
+  sortOrder?: T;
   visibility?: T;
   status?: T;
   summary?: T;

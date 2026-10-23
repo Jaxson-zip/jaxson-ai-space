@@ -1,6 +1,7 @@
 import pg from 'pg'
 import { embedIndexText, getIndexEmbeddingConfig } from './lib/index-embedding.mjs'
 import { isLatestIndexTask } from './lib/index-task-state.mjs'
+import { markTaskFailed, readIndexHealth } from './lib/index-health.mjs'
 
 const { Pool } = pg
 const embeddingConfig = getIndexEmbeddingConfig()
@@ -93,11 +94,7 @@ async function processTask(task) {
     await client.query('COMMIT')
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {})
-    await pool.query(
-      `UPDATE owner.outbox_events SET status = CASE WHEN attempts >= 5 THEN 'failed' ELSE 'pending' END,
-       available_at = NOW() + INTERVAL '30 seconds', last_error = $2 WHERE id = $1`,
-      [task.id, String(error instanceof Error ? error.message : error)],
-    )
+    await markTaskFailed(pool, task, error)
   } finally {
     client.release()
   }
@@ -116,7 +113,19 @@ async function run() {
   }
 }
 
-run().catch((error) => {
+// `--health` prints the queue state as JSON and exits 1 when tasks have failed or the queue is stuck:
+//   docker compose exec worker node apps/web/scripts/run-index-worker.mjs --health
+async function health() {
+  try {
+    const report = await readIndexHealth(pool)
+    console.log(JSON.stringify(report, null, 2))
+    process.exitCode = report.ok ? 0 : 1
+  } finally {
+    await pool.end()
+  }
+}
+
+;(process.argv.includes('--health') ? health() : run()).catch((error) => {
   console.error('[index-worker] fatal error:', error)
   process.exitCode = 1
 })

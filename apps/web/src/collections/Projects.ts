@@ -14,7 +14,7 @@ export const Projects: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'category', 'status', 'visibility', 'updatedAt'],
+    defaultColumns: ['title', 'featured', 'sortOrder', 'status', 'visibility', 'updatedAt'],
   },
   access: {
     read: ({ req }) => {
@@ -76,6 +76,25 @@ export const Projects: CollectionConfig = {
       required: true,
     },
     {
+      name: 'featured',
+      label: '首页精选',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: '勾选后在首页 AI 对话里被引用，并在作品区用大卡片展示。最多显示 2 个；都不勾选时取排在最前的 2 个。',
+      },
+    },
+    {
+      name: 'sortOrder',
+      label: '排序',
+      type: 'number',
+      admin: {
+        position: 'sidebar',
+        description: '数字小的排在前面；留空的排在最后，按创建时间先后。',
+      },
+    },
+    {
       name: 'visibility',
       label: '公开属性',
       type: 'select',
@@ -97,12 +116,18 @@ export const Projects: CollectionConfig = {
       label: '一句话简介',
       type: 'textarea',
       required: true,
+      admin: {
+        description: '首页 AI 对话只引用前 36 个字，更多项目列表里只显示一行；建议 30 字以内，说清做了什么。',
+      },
     },
     {
       name: 'coverImage',
       label: '项目封面图',
       type: 'upload',
       relationTo: 'media',
+      admin: {
+        description: '精选项目的大卡片会显示它：建议上传 16:10 的真实界面截图（例如 1440×900），从左上角开始裁切。不上传时显示项目名首字和技术栈。',
+      },
     },
     {
       name: 'tags',

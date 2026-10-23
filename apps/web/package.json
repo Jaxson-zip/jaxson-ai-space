@@ -11,7 +11,6 @@
     "lint": "eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start -p 3001",
-    "sync:cinematic": "node scripts/sync-cinematic-portfolio.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

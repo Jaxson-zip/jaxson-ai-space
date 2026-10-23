@@ -8,15 +8,15 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 test('first-screen local images fit a 750 KiB cold-load budget', async () => {
   const html = await readFile(resolve(root, 'index.html'), 'utf8')
-  const hero = html.match(/<img\s[^>]*id="heroAvatarImg"[^>]*>/)?.[0]
-  assert.ok(hero, 'hero image exists')
-  const portrait = hero.match(/src="\.\/([^"]+)"/)[1]
-  const walls = [...html.matchAll(/url\('\.\/([^']+\.webp)'\)/g)].map(match => match[1])
-  const wallBytes = walls.length ? Math.max(...await Promise.all(walls.map(async path =>
-    (await stat(resolve(root, 'public', path))).size))) :
-    (await stat(resolve(root, 'public', 'jaxson_studio_wall_plate_v2.png'))).size
-  const bytes = (await stat(resolve(root, 'public', portrait))).size +
-    wallBytes
+  const hero = html.match(/<section class="hero"[\s\S]*?<\/section>\s*<section/)?.[0]
+  assert.ok(hero?.includes('id="heroAvatarImg"'), 'hero section with portrait exists')
+  // Every eagerly loaded image in the first screen, plus any image the stylesheet paints.
+  const images = [...hero.matchAll(/<img\s[^>]*>/g)].map(([tag]) => tag).filter(tag => !/loading="lazy"/.test(tag))
+    .map(tag => tag.match(/src="\.\/([^"]+)"/)[1])
+  const painted = [...html.matchAll(/url\('\.\/([^']+\.(?:webp|png|jpe?g))'\)/g)].map(match => match[1])
+  const sizes = await Promise.all([...new Set([...images, ...painted])].map(async path => (await stat(resolve(root, 'public', path))).size))
+  const bytes = sizes.reduce((sum, size) => sum + size, 0)
+  assert.ok(images.length >= 1, 'first-screen images found')
   assert.ok(bytes < 750 * 1024, `first-screen images are ${bytes} bytes`)
 })
 

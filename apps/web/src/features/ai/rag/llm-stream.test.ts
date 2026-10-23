@@ -128,3 +128,34 @@ it('uses the selected DeepSeek model in non-thinking mode and identifies externa
   expect(output).toContain('基于公开资料的回答')
   expect(output).not.toContain('test-only-key')
 })
+
+it('answers from the retrieved facts when the model fails before saying anything', async () => {
+  vi.stubEnv('DEEPSEEK_API_KEY', 'test-only-key')
+  for (const upstream of [
+    () => new Response(''), // ends at once
+    () => new Response('data: [DONE]\n\n'), // completes empty
+    () => new Response(new ReadableStream({ start(controller) { controller.error(new Error('reset')) } })), // drops
+  ]) {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(upstream()))
+    const output = await new Response(await createRAGStream(config)).text()
+    expect(output).toContain('"generator":"local"')
+    expect(output).toContain('A real published project')
+    expect(output).toContain('event: done')
+    expect(output).not.toContain('event: error')
+  }
+})
+
+it('falls back to the facts when the first token never arrives', async () => {
+  vi.useFakeTimers()
+  vi.stubEnv('DEEPSEEK_API_KEY', 'test-only-key')
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(new ReadableStream())))
+  const reader = (await createRAGStream(config)).getReader()
+  const decoder = new TextDecoder()
+  let output = ''
+  const read = (async () => { while (true) { const item = await reader.read(); if (item.done) break; output += decoder.decode(item.value) } })()
+  await vi.advanceTimersByTimeAsync(20001)
+  await read
+  expect(output).toContain('"generator":"local"')
+  expect(output).toContain('event: done')
+  expect(output).not.toContain('first_token_timeout')
+})

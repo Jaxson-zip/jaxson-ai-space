@@ -1,5 +1,16 @@
 import { generateLocalEmbedding, tokenize } from './embedder'
-import type { KnowledgeChunk, RetrievalResult } from './types'
+import type { ChunkCategory, KnowledgeChunk, RetrievalResult } from './types'
+
+// Short questions such as "你现在在哪里实习？" share only the topic word with the
+// record. Experience and award records are not in the semantic index, so the
+// topic itself must be enough to consider records of that category.
+const TOPIC_CATEGORIES: [RegExp, ChunkCategory[]][] = [
+  [/实习|工作经历|任职/, ['internship']],
+  [/学校|学历|专业|毕业|gpa|绩点|成绩|读书|教育/i, ['education']],
+  [/竞赛|获奖|奖项|荣誉|拿过.*奖|什么奖/, ['award']],
+  [/技能|技术栈|擅长/, ['skill']],
+  [/校园|社团|学生会|学信委/, ['campus']],
+]
 
 /**
  * Compute Cosine Similarity between two normalized vectors
@@ -121,17 +132,34 @@ export function hybridRetrieve(
   return results.slice(0, topK)
 }
 
+function inLoaderOrder(results: RetrievalResult[], chunks: KnowledgeChunk[]): RetrievalResult[] {
+  const position = new Map(chunks.map((chunk, index) => [chunk.id, index]))
+  return [...results].sort((a, b) => (position.get(a.chunk.id) ?? 0) - (position.get(b.chunk.id) ?? 0))
+}
+
 /** The local hash projection is not semantic evidence by itself. */
 export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5): RetrievalResult[] {
+  const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
+  // "Best work" questions get the projects the home page leads with.
+  const wantsHighlights = /代表|最好|最满意|拿得出手|精选|主推|得意/.test(query) && /项目|作品/.test(query)
+  const highlights = projectChunks.filter((chunk) => chunk.featured)
+  if (wantsHighlights && highlights.length > 0) {
+    return inLoaderOrder(hybridRetrieve(query, highlights, highlights.length), highlights)
+  }
   const wantsProjectList = /项目|作品/.test(query) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(query)
   if (wantsProjectList) {
-    const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
-    return hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length))
+    // Every project, in the loader's (home page) order rather than by score.
+    return inLoaderOrder(hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length)), projectChunks)
   }
+
+  const topics = new Set(TOPIC_CATEGORIES.flatMap(([pattern, categories]) => pattern.test(query) ? categories : []))
+  const topicResults = topics.size > 0
+    ? hybridRetrieve(query, chunks.filter((chunk) => topics.has(chunk.category)), topK)
+    : []
 
   const queryTokens = new Set(tokenize(query))
   const minimumMatches = queryTokens.size >= 3 ? 2 : 1
-  return hybridRetrieve(query, chunks, topK).filter((result) => {
+  const evidenceResults = hybridRetrieve(query, chunks, topK).filter((result) => {
     if (result.chunk.vectorSource === 'semantic' && result.vectorScore >= 0.8) return true
     if (result.bm25Score <= 0) return false
     const evidenceTokens = new Set(tokenize(
@@ -144,4 +172,7 @@ export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK =
     }
     return false
   })
+
+  const topicIds = new Set(topicResults.map((result) => result.chunk.id))
+  return [...topicResults, ...evidenceResults.filter((result) => !topicIds.has(result.chunk.id))].slice(0, topK)
 }

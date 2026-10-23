@@ -121,6 +121,12 @@ describe('portfolio content', () => {
     }
   })
 
+  it('never links to the retired space.jaxson.bond host', () => {
+    // space.jaxson.bond no longer serves TLS; the live site is jaxson.bond.
+    const hrefs = typedProjects.flatMap((project) => project.links.map((link) => link.href))
+    for (const href of hrefs) expect(new NodeUrl(href).hostname, href).not.toBe('space.jaxson.bond')
+  })
+
   it('references public assets that exist on disk', () => {
     for (const project of typedProjects) {
       if (project.image !== null) {

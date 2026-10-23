@@ -42,8 +42,12 @@ async function enqueuePublicIndexEvent(kind: PublicIndexKind, doc: Record<string
 }
 
 export const createPublicIndexChangeHook = (kind: PublicIndexKind): CollectionAfterChangeHook => {
-  return async ({ doc, req }) => {
+  return async ({ doc, previousDoc, req }) => {
     try {
+      // The index is keyed by slug; a rename must retire rows under the old key.
+      if (previousDoc?.slug && doc.slug && previousDoc.slug !== doc.slug) {
+        await enqueuePublicIndexEvent(kind, previousDoc, true)
+      }
       await enqueuePublicIndexEvent(kind, doc)
     } catch (err) {
       req.payload.logger.warn(`[Public Index] Failed to enqueue ${kind} change: ${err}`)

@@ -1,6 +1,6 @@
 import { createServer } from 'node:http'
 import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { dirname, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { browserConfig } from './config.mjs'
@@ -23,6 +23,7 @@ const mime = {
   '.webp': 'image/webp',
   '.pdf': 'application/pdf',
   '.woff2': 'font/woff2',
+  '.ico': 'image/x-icon',
 }
 
 createServer(async (request, response) => {
@@ -77,7 +78,10 @@ createServer(async (request, response) => {
     if (request.method === 'HEAD') response.end()
     else createReadStream(file).on('error', () => response.destroy()).pipe(response)
   } catch {
-    response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }).end('Not found')
+    // Unknown addresses get the styled 404 page; plain text only if that page itself is missing.
+    const page = await readFile(resolve(files, '404.html')).catch(() => null)
+    if (page) response.writeHead(404, { 'Content-Type': mime['.html'], 'Cache-Control': 'no-store' }).end(request.method === 'HEAD' ? undefined : page)
+    else response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }).end('Not found')
   }
 }).listen(port, host, () => {
   console.log(`Portfolio listening at http://${host}:${port} (${production ? 'dist' : 'source'})`)

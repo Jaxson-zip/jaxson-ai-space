@@ -31,6 +31,22 @@ describe('public showcase projects', () => {
     log.mockRestore()
   })
 
+  it('marks featured projects and orders by the sort number, blanks last, ties in CMS order', async () => {
+    const doc = (slug: string, extra: Record<string, unknown> = {}) => ({ slug, title: slug, role: 'r', category: 'c', status: 's', summary: 's', ...extra })
+    findMock.mockResolvedValue({ docs: [
+      doc('a'),
+      doc('b', { sortOrder: 2, featured: true }),
+      doc('c', { sortOrder: 1 }),
+      doc('d', { featured: null }),
+      doc('e', { sortOrder: 2 }),
+    ] })
+    const response = await GET(new Request('http://localhost:3001/api/showcase-projects'))
+    const { projects } = await response.json()
+    expect(projects.map((project: { slug: string }) => project.slug)).toEqual(['c', 'b', 'e', 'a', 'd'])
+    expect(projects.map((project: { featured: boolean }) => project.featured)).toEqual([false, true, false, false, false])
+    expect(findMock.mock.calls[0][0].sort).toBe('createdAt')
+  })
+
   it('allows the configured public hostname to fetch projects across origins', async () => {
     process.env.NEXT_PUBLIC_PORTFOLIO_URL = 'https://portfolio.testsite.net'
     const response = await OPTIONS(new Request('https://cms.testsite.net/api/showcase-projects', {

@@ -1,0 +1,118 @@
+/* Cool white and cobalt, shared with the home page (apps/portfolio/index.html).
+   Public pages put `.jx-page` on their root; the private studio keeps styles.css. */
+
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-display: swap; src: url('/fonts/plus-jakarta-sans-400.fe50da3fe955.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-display: swap; src: url('/fonts/plus-jakarta-sans-600.6d5c91ed9433.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-display: swap; src: url('/fonts/plus-jakarta-sans-700.704be0308e53.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 800; font-display: swap; src: url('/fonts/plus-jakarta-sans-800.ca987f604ad6.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 500; font-display: swap; src: url('/fonts/jetbrains-mono-500.0c647dbd8727.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 700; font-display: swap; src: url('/fonts/jetbrains-mono-700.a177e629e7b9.woff2') format('woff2'); }
+
+:root {
+  --jx-bg: #F3F4F7; --jx-panel: #FFFFFF; --jx-card: #F8F9FB; --jx-chip: #EEF0F5; --jx-line: #E2E5EC;
+  --jx-ink: #0E1526; --jx-on-ink: #FFFFFF; --jx-sub: #4B5468; --jx-faint: #6B7385;
+  --jx-accent: #2952E3; --jx-accent-hover: #2246C7; --jx-accent-bg: #E6ECFF; --jx-hit: #A84E14; --jx-hit-bg: #FCEBDD;
+  --jx-cover: linear-gradient(160deg, #E8EDFB, #D9E0EE);
+  --jx-shadow: 0 1px 2px rgba(14,21,38,.04), 0 10px 30px -14px rgba(14,21,38,.12);
+  /* Every Chinese glyph comes from one system sans; Latin-only faces list it before the generic family,
+     or Windows draws Chinese in NSimSun (a Song serif). */
+  --jx-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', 'Noto Sans CJK SC';
+  --jx-text: 'Plus Jakarta Sans', var(--jx-cjk), system-ui, sans-serif;
+  --jx-mono: 'JetBrains Mono', var(--jx-cjk), monospace;
+  --jx-header: 64px; --jx-radius: 16px;
+}
+
+html:has(.jx-page) { background: var(--jx-bg); color-scheme: light; }
+body:has(.jx-page) { background: var(--jx-bg); color: var(--jx-ink); font: 400 16px/1.7 var(--jx-text); }
+body:has(.jx-page) :focus-visible { outline: 2px solid var(--jx-accent); outline-offset: 2px; border-radius: 6px; }
+
+.jx-wrap { max-width: 1400px; margin: 0 auto; padding-inline: 16px; }
+@media (min-width: 640px) { .jx-wrap { padding-inline: 20px; } }
+.jx-panel { background: var(--jx-panel); border: 1px solid var(--jx-line); border-radius: var(--jx-radius); box-shadow: var(--jx-shadow); }
+.jx-muted { color: var(--jx-sub); }
+.jx-badge { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 6px 10px; border-radius: 999px;
+  background: var(--jx-accent-bg); color: var(--jx-accent); font: 700 14px/1.2 var(--jx-text); }
+.jx-tags { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; }
+.jx-tags li { font: 500 14px/1 var(--jx-mono); padding: 6px 9px; border-radius: 6px; background: var(--jx-chip); color: var(--jx-sub); }
+
+.jx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 10px;
+  font: 700 15px/1 var(--jx-text); border: 1px solid var(--jx-line); background: var(--jx-panel); color: var(--jx-ink); text-decoration: none; cursor: pointer;
+  transition: background-color .15s, border-color .15s; }
+.jx-btn:hover { border-color: #C9CEDA; }
+.jx-btn-primary { background: var(--jx-accent); border-color: var(--jx-accent); color: var(--jx-on-ink); }
+.jx-btn-primary:hover { background: var(--jx-accent-hover); border-color: var(--jx-accent-hover); }
+
+/* Header: the same navigation as the home page; section links go back to the portfolio. */
+.jx-header { position: sticky; top: 0; z-index: 20; height: var(--jx-header); background: rgba(243,244,247,.88);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); font-family: var(--jx-text); }
+.jx-header .jx-wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.jx-brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 800; font-size: 17px; color: var(--jx-ink); white-space: nowrap; }
+.jx-brand::before { content: ''; width: 10px; height: 10px; border-radius: 3px; background: var(--jx-accent); }
+.jx-nav { display: flex; align-items: center; gap: 2px; }
+.jx-nav a:not(.jx-btn) { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: var(--jx-sub); font-size: 15px; white-space: nowrap; }
+.jx-nav a:not(.jx-btn):hover { color: var(--jx-ink); background: rgba(14,21,38,.05); }
+.jx-nav .jx-btn { margin-left: 6px; padding: 0 14px; }
+/* Same specificity as the link rule above, so phones really hide the section links. */
+.jx-nav a.jx-section { display: none; }
+@media (min-width: 800px) { .jx-nav a.jx-section { display: inline-flex; } }
+
+.jx-footer { padding: 28px 0 32px; color: var(--jx-sub); font: 400 14px/1.6 var(--jx-text); }
+.jx-footer .jx-wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.jx-footer nav { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.jx-footer a { display: inline-flex; align-items: center; min-height: 44px; color: var(--jx-sub); }
+.jx-footer a:hover { color: var(--jx-ink); }
+
+/* Résumé download */
+.jx-resume { padding: 40px 0 24px; }
+.jx-resume-grid { display: grid; gap: 14px; }
+@media (min-width: 900px) { .jx-resume-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: stretch; } }
+.jx-resume-card { padding: clamp(28px, 5vw, 56px); display: grid; gap: 20px; align-content: start; }
+.jx-resume-card h1 { font-size: clamp(36px, 5vw, 56px); line-height: 1.15; font-weight: 800; letter-spacing: -.01em; }
+.jx-resume-card h1 em { font-style: normal; color: var(--jx-accent); }
+.jx-resume-card .jx-lead { font-size: 18px; color: var(--jx-sub); max-width: 30em; }
+.jx-resume-card .jx-btn { min-height: 52px; padding: 0 24px; font-size: 16px; width: fit-content; }
+.jx-resume-note { padding-top: 18px; border-top: 1px solid var(--jx-line); color: var(--jx-sub); font-size: 15px; }
+.jx-resume-note a { display: inline-flex; align-items: center; min-height: 44px; color: var(--jx-accent); font-weight: 700; }
+.jx-resume-contents { padding: 28px; display: grid; gap: 14px; align-content: start; }
+.jx-resume-contents h2 { font-size: 15px; font-weight: 700; color: var(--jx-sub); }
+.jx-resume-contents ol { list-style: none; display: grid; gap: 0; counter-reset: part; }
+.jx-resume-contents li { counter-increment: part; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 4px 12px; padding: 12px 0; border-bottom: 1px dashed var(--jx-line); }
+.jx-resume-contents li:last-child { border-bottom: 0; }
+.jx-resume-contents li::before { content: counter(part, decimal-leading-zero); font: 700 14px/1.7 var(--jx-mono); color: var(--jx-accent); }
+.jx-resume-contents b { display: block; font-size: 16px; }
+.jx-resume-contents span { display: block; grid-column: 2; color: var(--jx-sub); font-size: 15px; }
+
+/* Project detail: the featured card's story at full width */
+.jx-project { padding: 24px 0; }
+.jx-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--jx-sub); font-weight: 600; }
+.jx-back:hover { color: var(--jx-ink); }
+.jx-project-head { padding: 12px 0 24px; display: grid; gap: 12px; max-width: 54em; }
+.jx-project-head h1 { font-size: clamp(30px, 4vw, 44px); line-height: 1.2; font-weight: 800; overflow-wrap: anywhere; }
+.jx-project-head .jx-lead { font-size: 18px; color: var(--jx-sub); }
+.jx-project-kicker { display: flex; flex-wrap: wrap; gap: 8px; }
+.jx-project-grid { display: grid; gap: 14px; align-items: start; }
+@media (min-width: 960px) { .jx-project-grid { grid-template-columns: minmax(0, 1fr) 340px; } }
+.jx-project-main { overflow: hidden; }
+.jx-project-cover { aspect-ratio: 16 / 10; background: var(--jx-card); border-bottom: 1px solid var(--jx-line); }
+.jx-project-cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.jx-project-body { padding: clamp(20px, 3vw, 32px); display: grid; gap: 24px; }
+.jx-project-body section { display: grid; gap: 8px; }
+.jx-project-body h2 { font-size: 20px; font-weight: 800; }
+.jx-project-body p { color: var(--jx-sub); font-size: 16px; overflow-wrap: anywhere; }
+.jx-private { padding: 14px 16px; border-radius: 12px; background: var(--jx-hit-bg); color: var(--jx-hit); display: grid; gap: 4px; font-size: 15px; }
+.jx-private strong { font-size: 16px; }
+.jx-project-side { padding: 22px; display: grid; gap: 20px; position: sticky; top: calc(var(--jx-header) + 14px); }
+.jx-project-side dl { display: grid; gap: 4px; }
+.jx-project-side dt, .jx-project-side h3 { font-size: 14px; font-weight: 400; color: var(--jx-faint); }
+.jx-project-side dd { font-weight: 700; }
+.jx-project-side h3 { margin-bottom: 8px; }
+.project-links { display: grid; gap: 8px; }
+.project-links .jx-btn { width: 100%; }
+
+/* 404 */
+.jx-404 { padding: 64px 0; }
+.jx-404-card { max-width: 640px; margin: 0 auto; padding: clamp(28px, 5vw, 48px); display: grid; gap: 16px; }
+.jx-404-card h1 { font-size: clamp(30px, 4vw, 40px); font-weight: 800; line-height: 1.2; }
+.jx-404-card .jx-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) { .jx-btn { transition: none; } }

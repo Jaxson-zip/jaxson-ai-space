@@ -2,129 +2,76 @@
 
 import React, { useState, useRef, useLayoutEffect, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import {
-  Sparkles,
-  Bot,
-  User,
-  Send,
-  RotateCcw,
-  ArrowLeft,
-  ShieldCheck,
-  CheckCircle2,
-  FileCheck2,
-  Layers,
-  ChevronDown,
-} from 'lucide-react'
-import './ai-cinematic.css'
+import { Send, RotateCcw, ArrowLeft, ShieldCheck, ChevronDown } from 'lucide-react'
+import './ai.css'
+import { portfolioOrigin } from '@/components/public-site/links'
 import { buildChatHistory, CHAT_LIMITS, type ConversationMessage as Message } from '@/features/ai/chat-history'
 import { consumeChatStream } from '@/features/ai/chat-stream'
+import { buildSuggestions, type Suggestion } from '@/features/ai/suggestions'
+import { initialQuestion } from '@/features/ai/initial-question'
 
 const INITIAL_MESSAGES: Message[] = [
   {
     id: '1',
     role: 'assistant',
-    content: `你好！我会依据后台已公开的项目和知识条目回答问题，并在回答中列出资料来源。
+    content: `你好！我是张锦鹏的 AI 分身，只根据他公开的项目、经历和技能回答，并标明出处。
 
-你可以先问我**有哪些公开项目**，再进一步了解某个项目的背景、工作与结果。
+可以先问我**做过哪些项目**，再追问某个项目的难题、做法和结果。
 
-你也可以粘贴岗位要求，让我仅根据现有资料做对照；未收录的信息我会明确说明。`,
+也可以粘贴岗位要求，我会对照公开资料说明哪些地方匹配；资料里没有的，我会直接说不知道。`,
   },
 ]
 
 function renderInlineMarkdown(content: string) {
-  // Matches **bold**, `code`, etc.
+  // Matches **bold** and `code`.
   const parts = content.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
   return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return (
-        <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
-          {part.slice(2, -2)}
-        </strong>
-      )
-    }
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code
-          key={i}
-          style={{
-            background: 'var(--bg-root)',
-            border: '1px solid var(--border-subtle)',
-            padding: '1px 5px',
-            borderRadius: '4px',
-            fontSize: '0.85em',
-            color: 'var(--accent-blue)',
-            fontFamily: 'monospace',
-          }}
-        >
-          {part.slice(1, -1)}
-        </code>
-      )
-    }
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
+    if (part.startsWith('`') && part.endsWith('`')) return <code key={i}>{part.slice(1, -1)}</code>
     return part
   })
 }
 
 function FormattedContent({ text, isUser }: { text: string; isUser?: boolean }) {
-  if (isUser) {
-    return (
-      <p style={{ fontSize: '0.92rem', color: '#ffffff', lineHeight: '1.65', margin: 0, fontWeight: 500 }}>
-        {text}
-      </p>
-    )
-  }
+  if (isUser) return <p className="md-p">{text}</p>
 
-  const lines = text.split('\n')
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-      {lines.map((line, idx) => {
+    <div className="md">
+      {text.split('\n').map((line, idx) => {
         const trimmed = line.trim()
-        if (trimmed.startsWith('### ')) {
-          return (
-            <h3 key={idx} style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.4rem 0 0.2rem' }}>
-              {renderInlineMarkdown(trimmed.replace('### ', ''))}
-            </h3>
-          )
-        }
-        if (trimmed.startsWith('#### ')) {
-          return (
-            <h4 key={idx} style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-blue)', margin: '0.3rem 0 0.1rem' }}>
-              {renderInlineMarkdown(trimmed.replace('#### ', ''))}
-            </h4>
-          )
-        }
+        if (trimmed.startsWith('### ')) return <h3 key={idx}>{renderInlineMarkdown(trimmed.replace('### ', ''))}</h3>
+        if (trimmed.startsWith('#### ')) return <h4 key={idx}>{renderInlineMarkdown(trimmed.replace('#### ', ''))}</h4>
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          return (
-            <div key={idx} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', paddingLeft: '4px' }}>
-              <span style={{ color: 'var(--accent-blue)', fontWeight: 700 }}>•</span>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                {renderInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''))}
-              </span>
-            </div>
-          )
+          return <p key={idx} className="md-li">{renderInlineMarkdown(trimmed.replace(/^[-*]\s+/, ''))}</p>
         }
-        if (trimmed === '---') {
-          return <hr key={idx} style={{ borderColor: 'var(--border-subtle)', margin: '0.4rem 0' }} />
-        }
-        if (!trimmed) {
-          return <div key={idx} style={{ height: '0.25rem' }} />
-        }
-        return (
-          <p key={idx} style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.65' }}>
-            {renderInlineMarkdown(line)}
-          </p>
-        )
+        if (trimmed === '---') return <hr key={idx} />
+        if (!trimmed) return <div key={idx} className="md-gap" />
+        return <p key={idx} className="md-p">{renderInlineMarkdown(line)}</p>
       })}
     </div>
   )
 }
 
 export default function AIPage() {
-  const portfolioUrl = process.env.NEXT_PUBLIC_PORTFOLIO_URL || '/'
+  const portfolioUrl = `${portfolioOrigin}/`
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false)
   const [inputError, setInputError] = useState('')
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(() => buildSuggestions([]))
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/showcase-projects', { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.projects)) setSuggestions(buildSuggestions(data.projects))
+      })
+      // Without the list, the general questions remain.
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const backLinkRef = useRef<HTMLAnchorElement>(null)
@@ -136,6 +83,19 @@ export default function AIPage() {
     activeRequestRef.current?.abort()
     activeRequestRef.current = null
     requestGenerationRef.current++
+  }, [])
+
+  // A question typed on the portfolio arrives prefilled; the visitor still sends it.
+  const composerRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const question = initialQuestion(window.location.search)
+    if (!question) return
+    // After hydration, so the server-rendered empty field matches the first client render.
+    const frame = requestAnimationFrame(() => {
+      setInput(question)
+      composerRef.current?.focus()
+    })
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   useEffect(() => {
@@ -284,185 +244,89 @@ export default function AIPage() {
   }
 
   return (
-    <div className="ai-workspace-layout">
-      {/* Scrollable Main Area */}
-      <div
-        className="ai-messages-scroll-area"
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-      >
-        <div className="ai-content-centered">
-          {/* Top Bar */}
-          <div className="ai-page-top-bar">
-            <Link ref={backLinkRef} href={portfolioUrl} className="ai-back-link">
-              <ArrowLeft size={14} />
+    <div className="jx-page jx-ai">
+      <div className="ai-scroll" ref={scrollContainerRef} onScroll={handleScroll}>
+        <div className="ai-column">
+          <div className="ai-top">
+            <Link ref={backLinkRef} href={portfolioUrl} className="ai-back">
+              <ArrowLeft size={16} aria-hidden="true" />
               <span>返回作品集</span>
             </Link>
-            <button type="button" className="ai-reset-btn" onClick={handleResetChat} title="清空对话">
-              <RotateCcw size={13} />
+            <button type="button" className="ai-reset" onClick={handleResetChat}>
+              <RotateCcw size={15} aria-hidden="true" />
               <span>清空记录</span>
             </button>
           </div>
 
-          {/* Main Header */}
-          <div className="ai-page-header">
-            <div className="ai-privacy-badge">
-              <ShieldCheck size={13} />
-              <span>仅依据已公开的后台资料回答</span>
-            </div>
-            <p className="ai-page-kicker">JAXSON / ASK ME ANYTHING</p>
-            <h1 className="ai-page-title">有问题，直接问我<span>的 AI 分身</span>。</h1>
-            <p className="ai-page-subtitle">
-              想了解项目细节或岗位契合点？从一个问题开始。回答会标明来源，未收录的事实会明确说明。
-            </p>
+          <header className="ai-intro">
+            <p className="jx-badge"><ShieldCheck size={15} aria-hidden="true" />只引用公开资料回答</p>
+            <h1>别只看简历，<em>直接问我的 AI 分身。</em></h1>
+            <p className="jx-muted">想了解项目细节或岗位契合点？从一个问题开始。回答会标明出处，没有收录的事实会直接说明。</p>
+          </header>
+
+          {/* Project questions follow the published list. */}
+          <div className="ai-chips">
+            {suggestions.map((suggestion) => (
+              <button key={suggestion.prompt} type="button" onClick={() => handlePresetClick(suggestion.prompt)}>
+                {suggestion.label}
+              </button>
+            ))}
           </div>
 
-          {/* Prompt Chips */}
-          <div className="ai-preset-chips-wrap">
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('📋 请帮我做一下针对前端/全栈开发岗位的 JD 匹配分析')}
-            >
-              <FileCheck2 size={13} />
-              <span>岗位 JD 匹配</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('你有哪些公开项目？')}
-            >
-              <Layers size={13} />
-              <span>全部公开项目</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('📱 介绍一下 Todo Memo PWA 项目的核心架构与交付状态')}
-            >
-              <Layers size={13} />
-              <span>Todo Memo 项目</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('锐历简历项目做了什么？')}
-            >
-              <FileCheck2 size={13} />
-              <span>锐历简历工作台</span>
-            </button>
-            <button
-              type="button"
-              className="prompt-chip-btn"
-              onClick={() => handlePresetClick('Nutrinet 个性化膳食营养系统项目做了什么？')}
-            >
-              <Layers size={13} />
-              <span>Nutrinet 项目</span>
-            </button>
-          </div>
-
-          {/* Chat Stream */}
-          <div className="ai-chat-stream">
+          <div className="ai-thread">
             {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`chat-bubble-row ${msg.role === 'user' ? 'bubble-user-row' : 'bubble-assistant-row'}`}
-              >
-                <div className="bubble-header">
-                  {msg.role === 'user' ? (
-                    <>
-                      <User size={13} />
-                      <span>您</span>
-                    </>
-                  ) : (
-                    <>
-                      <Bot size={13} />
-                      <span>张锦鹏 AI 分身</span>
-                      {msg.isJdMatch && (
-                        <span
-                          style={{
-                            marginLeft: '4px',
-                            fontSize: '0.72rem',
-                            padding: '1px 6px',
-                            background: 'rgba(183, 199, 171, 0.1)',
-                            border: '1px solid rgba(183, 199, 171, 0.3)',
-                            borderRadius: '4px',
-                            color: 'var(--accent-blue)',
-                          }}
-                        >
-                          🎯 岗位匹配模式
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="bubble-body">
+              <div key={msg.id} className={`ai-message ${msg.role}`}>
+                <p className="ai-meta">
+                  {msg.role === 'user' ? '你' : '张锦鹏的 AI 分身'}
+                  {msg.role === 'assistant' && msg.isJdMatch && <span className="ai-mode">岗位匹配</span>}
+                </p>
+                <div className="ai-bubble">
                   {msg.content ? (
                     <FormattedContent text={msg.content} isUser={msg.role === 'user'} />
                   ) : msg.status === 'streaming' ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-                      <Sparkles size={14} className="db-pulse" />
-                      <span>正在查找公开资料并生成回答…</span>
-                    </div>
+                    <p className="ai-pending">正在查找公开资料并生成回答…</p>
                   ) : null}
 
                   {(msg.status === 'interrupted' || msg.status === 'error') && (
-                    <div className="chat-response-status" role="status">
+                    <div className="ai-status" role="status">
                       <span>{msg.status === 'interrupted' ? '回答中断，已收到的内容保留在上方。' : '暂时未能生成回答，请重试。'}</span>
-                      <button type="button" disabled={isLoading} onClick={() => {
+                      <button type="button" className="jx-btn" disabled={isLoading} onClick={() => {
                         const question = messages.find((message) => message.id === msg.replyTo)
                         if (question) void handleSendMessage(question.content, question.id)
                       }}>重试回答</button>
                     </div>
                   )}
                   {msg.generator === 'local' && msg.status === 'completed' && (
-                    <p className="chat-response-status">此回答由公开资料直接整理。</p>
+                    <p className="ai-status">此回答由公开资料直接整理。</p>
                   )}
 
                   {msg.evidence && msg.evidence.length > 0 && (
-                    <div className="bubble-evidence-box">
-                      <div className="evidence-title">
-                        <CheckCircle2 size={12} />
-                        <span>资料来源</span>
-                      </div>
-                      <div className="evidence-tags-row">
-                        {msg.evidence.map((tag, i) => (
-                          <span key={i} className="evidence-tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                    <div className="ai-sources">
+                      <p>资料来源</p>
+                      <ul className="jx-tags">
+                        {msg.evidence.map((tag, i) => <li key={i}>{tag}</li>)}
+                      </ul>
                     </div>
                   )}
                 </div>
               </div>
             ))}
-            {/* Scroll bottom spacer */}
-            <div style={{ height: '24px' }} />
           </div>
         </div>
       </div>
 
-      {/* Floating Scroll-to-Bottom Button */}
       {showScrollBottomBtn && (
-        <button
-          type="button"
-          className="btn-scroll-bottom"
-          onClick={() => scrollToBottom(true)}
-          title="滚动到底部"
-        >
-          <ChevronDown size={16} />
+        <button type="button" className="jx-btn ai-to-bottom" onClick={() => scrollToBottom(true)}>
+          <ChevronDown size={16} aria-hidden="true" />
           <span>回到底部</span>
         </button>
       )}
 
-      {/* Fixed Bottom Dock Composer */}
-      <div className="ai-bottom-dock">
-        <div className="ai-composer-container">
-          {inputError && <p className="chat-input-error" role="alert">{inputError}</p>}
+      <div className="ai-dock">
+        <div className="ai-column">
+          {inputError && <p className="ai-input-error" role="alert">{inputError}</p>}
           <form
-            className="composer-form"
+            className="ai-composer"
             onSubmit={(e) => {
               e.preventDefault()
               handleSendMessage()
@@ -470,19 +334,14 @@ export default function AIPage() {
           >
             <input
               type="text"
-              className="composer-input-field"
+              ref={composerRef}
               placeholder="向 AI 分身提问，或直接粘贴贵司岗位 JD 需求..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}
             />
-            <button
-              type="submit"
-              className="composer-send-btn"
-              disabled={isLoading || !input.trim()}
-              aria-label="发送消息"
-            >
-              <Send size={15} />
+            <button type="submit" disabled={isLoading || !input.trim()} aria-label="发送消息">
+              <Send size={17} aria-hidden="true" />
             </button>
           </form>
         </div>

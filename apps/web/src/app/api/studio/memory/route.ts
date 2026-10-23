@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { studioTransaction } from '@/features/studio/transaction'
+import { isPrivateRequestAuthorized } from '@/features/studio/private-access'
 import {
   extractCandidateMemories,
   type ReflectionInput,
@@ -10,7 +11,11 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+// Same response as the middleware, so the route's existence is not revealed.
+const notFound = () => NextResponse.json({ error: 'Not Found' }, { status: 404 })
+
+export async function GET(req: NextRequest) {
+  if (!(await isPrivateRequestAuthorized(req))) return notFound()
   try {
     const payload = await getPayload({ config: configPromise })
     const [reflections, memories] = await Promise.all([
@@ -39,6 +44,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await isPrivateRequestAuthorized(req))) return notFound()
   try {
     const body = await req.json()
     const action = body.action || 'submit_reflection'

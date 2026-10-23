@@ -1,31 +1,19 @@
 import Link from 'next/link'
-import { ArrowLeft, Compass } from 'lucide-react'
+import { portfolioLink } from '@/components/public-site/links'
 
 export default function NotFound() {
   return (
-    <div className="not-found-page-root">
-      <div className="container not-found-container">
-        <div className="not-found-card">
-          <div className="not-found-badge">
-            <Compass size={16} />
-            <span>404 NOT FOUND</span>
+    <div className="jx-page jx-404">
+      <div className="jx-wrap">
+        <section className="jx-panel jx-404-card">
+          <p className="jx-badge">404</p>
+          <h1>页面未找到</h1>
+          <p className="jx-muted">这个地址不存在，可能已经移动，或者是不公开的页面。</p>
+          <div className="jx-actions">
+            <a className="jx-btn jx-btn-primary" href={portfolioLink()}>回到作品集</a>
+            <Link className="jx-btn" href="/ai">问我的 AI</Link>
           </div>
-
-          <h1 className="not-found-title">页面未找到</h1>
-          <p className="not-found-desc">
-            抱歉，您访问的页面不存在、已被移动，或者该地址为私有受保护路径。
-          </p>
-
-          <div className="not-found-actions">
-            <Link href="/" className="btn-not-found-home">
-              <ArrowLeft size={16} />
-              <span>返回前台主页</span>
-            </Link>
-            <Link href="/ai" className="btn-not-found-ai">
-              <span>与 AI 分身聊聊 ➔</span>
-            </Link>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   )

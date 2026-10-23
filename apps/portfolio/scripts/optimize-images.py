@@ -10,11 +10,9 @@ output = public / "optimized"
 output.mkdir(exist_ok=True)
 assets = {}
 for stem, widths in {
-    "jaxson_studio_wall_plate_v2": [840, 1672],
-    "jaxson_character_olive_v1": [512, 1024],
-    "jaxson_bio_gesture_matched_v2": [960, 1672],
-    "portfolio-actual-20260928": [900, 1440],
+    "jaxson_character_navy_v1": [512, 1024],
     "todo-memo-cover": [900],
+    "jaxson-ai-space-home-20261022": [900, 1440],
 }.items():
     with Image.open(public / f"{stem}.png") as original:
         variants = []

@@ -90,7 +90,18 @@ export async function createRAGStream(config: StreamResponseConfig): Promise<Rea
           clearTimeout(timer)
           upstreamSignal.removeEventListener('abort', onAbort)
           if (!cancelled) {
-            if (!signal?.aborted) emit(code ? 'error' : 'done', code ? { code } : {})
+            if (signal?.aborted) {
+              // The visitor left; nothing more to send.
+            } else if (code && !hasText) {
+              // The model failed before its first word (cold start, dropped connection, empty reply):
+              // answer from the retrieved facts instead of showing an error.
+              console.warn('[RAG] External LLM failed before answering; using local generator:', code)
+              emit('meta', { evidence: evidenceTags, isJdMatch, generator: 'local' })
+              emit('text', { text: buildLocalRAGAnswer(userMessage, retrievalResults, isJdMatch) })
+              emit('done', {})
+            } else {
+              emit(code ? 'error' : 'done', code ? { code } : {})
+            }
             controller.close()
           }
           void upstreamReader.cancel().catch(() => {})

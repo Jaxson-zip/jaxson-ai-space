@@ -2,30 +2,17 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import fallbackProjects from '@/features/portfolio/cinematic-projects.json'
 import { safeExternalUrl } from '@/features/portfolio/urls'
+import { orderProjects } from '@/features/portfolio/project-order'
+import { allowPortfolioOrigin, portfolioPreflight } from '@/features/portfolio/cors'
 
 export const dynamic = 'force-dynamic'
 
 const coverBySlug = new Map(fallbackProjects.map((project) => [project.slug, project.image]))
 
-function headersFor(origin: string | null) {
-  const headers = new Headers({ 'Cache-Control': 'no-store' })
-  const portfolioOrigin = process.env.NEXT_PUBLIC_PORTFOLIO_URL
-  const allowedOrigins = new Set([
-    portfolioOrigin ? new URL(portfolioOrigin).origin : '',
-    'http://localhost:4174',
-    'http://127.0.0.1:4174',
-  ])
-  if (origin && allowedOrigins.has(origin)) {
-    headers.set('Access-Control-Allow-Origin', origin)
-    headers.set('Vary', 'Origin')
-  }
-  return headers
-}
+const headersFor = (origin: string | null) => allowPortfolioOrigin(new Headers({ 'Cache-Control': 'no-store' }), origin)
 
 export async function OPTIONS(request: Request) {
-  const headers = headersFor(request.headers.get('origin'))
-  headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  return new Response(null, { status: 204, headers })
+  return portfolioPreflight(request, 'GET, OPTIONS')
 }
 
 export async function GET(request: Request) {
@@ -41,7 +28,10 @@ export async function GET(request: Request) {
       where: { visibility: { equals: 'public' } },
     })
 
-    const projects = result.docs.map((doc) => {
+    // Sorted here rather than in the query because SQLite and PostgreSQL place empty values differently.
+    const ordered = orderProjects(result.docs)
+
+    const projects = ordered.map((doc) => {
       const uploadedImage =
         typeof doc.coverImage === 'object' && doc.coverImage?.url
           ? new URL(doc.coverImage.url, request.url).href
@@ -50,6 +40,7 @@ export async function GET(request: Request) {
         slug: doc.slug,
         title: doc.title,
         shortTitle: doc.shortTitle || doc.title,
+        featured: doc.featured === true,
         category: doc.category,
         role: doc.role,
         date: doc.projectDate || '',
