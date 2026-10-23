@@ -80,7 +80,7 @@
     .profile { display: grid; overflow: hidden; }
     .shot { position: relative; overflow: hidden; background: var(--shot); height: 300px; }
     .shot img { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: auto; max-width: none; height: 200%; }
-    .status { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+    .shot .status { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
       background: var(--panel); color: var(--accent); font-size: 14px; font-weight: 700; }
     .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2E9E4F; }
     .pbody { padding: 18px; display: grid; gap: 14px; align-content: start; }
@@ -91,8 +91,23 @@
     .facts dt { color: var(--faint); }
     .ctas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    .chat { display: flex; flex-direction: column; }
-    .thread { flex: 1; min-height: 0; padding: 22px 30px 8px; display: flex; flex-direction: column; gap: 16px; }
+    /* min-height: 0 lets the thread scroll inside the panel instead of stretching the first screen. */
+    .chat { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .thread { flex: 1; min-height: 0; padding: 22px 30px 8px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .sample { display: contents; }
+    .chat .ph { padding-block: 0; }
+    .ph-tools { display: flex; align-items: center; gap: 8px; }
+    .ph-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--accent); font-size: 14px; font-weight: 700; }
+    /* The live conversation: questions on the right, answers as text, failures with a retry. */
+    .live { display: flex; flex-direction: column; gap: 16px; }
+    .live:empty { display: none; }
+    .round { display: flex; flex-direction: column; gap: 12px; }
+    .live .a p + p { margin-top: 8px; }
+    .live .a .li { position: relative; padding-left: 16px; }
+    .live .a .li::before { content: ''; position: absolute; left: 2px; top: .8em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .live .a.pending { color: var(--faint); }
+    .live .status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--sub); font-size: 14px; }
+    .live .status a { color: var(--accent); font-weight: 700; }
     .greet { font-size: clamp(26px, 2.4vw, 34px); line-height: 1.3; font-weight: 800; }
     .greet em { font-style: normal; color: var(--accent); }
     .greet-sub { margin-top: 6px; }
@@ -112,8 +127,10 @@
     .src b { display: block; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
     .composer { padding: 12px 30px 20px; }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    .chips a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--sub); font-size: 14px; }
-    .chips a:hover { border-color: var(--accent); color: var(--accent); }
+    .chips button { cursor: pointer; font-family: var(--font-text); }
+    .chips a, .chips button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--sub); font-size: 14px; }
+    .chips a:hover, .chips button:hover { border-color: var(--accent); color: var(--accent); }
+    #askForm button:disabled { background: #C3CBDE; cursor: not-allowed; }
     #askForm { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px 0 4px; border-radius: 14px; background: var(--panel);
       border: 1.5px solid var(--accent); box-shadow: 0 0 0 4px var(--accent-bg); }
     #askForm input { flex: 1; min-width: 0; height: 48px; border: 0; background: none; padding: 0 12px; font: 400 16px var(--font-text); color: var(--ink); }
@@ -149,7 +166,7 @@
     }
     /* Desktop: three panels fill the first screen. */
     @media (min-width: 1200px) {
-      .hero { grid-template-columns: minmax(280px, 330px) minmax(0, 1fr) minmax(300px, 340px); height: min(calc(100svh - var(--header) - 16px), 920px); min-height: 560px; }
+      .hero { grid-template-columns: minmax(280px, 330px) minmax(0, 1fr) minmax(300px, 340px); height: min(calc(100svh - var(--header) - 16px), 920px); min-height: 560px; grid-template-rows: minmax(0, 1fr); }
       .trace { grid-column: auto; display: flex; }
       .kb { border-left: 0; border-top: 1px solid var(--line); }
       .shot img { height: 640px; top: 6px; }
@@ -265,7 +282,7 @@
         <a class="nav-section" href="#bio">履历</a>
         <a class="nav-section" href="#beyond">联系</a>
         <a href="/resume/zhang-jinpeng-ai-product-builder.pdf" download="张锦鹏_简历.pdf">简历 PDF</a>
-        <a class="btn btn-primary" href="/ai" data-ai-link>问我的 AI</a>
+        <a class="btn btn-primary" href="#ask">问我的 AI</a>
       </nav>
     </div>
   </header>
@@ -299,12 +316,14 @@
       </aside>
 
       <section class="panel chat" aria-labelledby="chat-title">
-        <div class="ph"><h2 id="chat-title">和我的 AI 分身聊聊</h2><span class="badge">示例对话</span></div>
+        <div class="ph"><h2 id="chat-title">和我的 AI 分身聊聊</h2><div class="ph-tools"><span class="badge" id="chatBadge">示例对话</span><a class="ph-link" href="/ai" data-ai-link>全屏对话</a></div></div>
         <div class="thread">
           <div>
             <p class="greet">别只看简历，<br /><em>直接问我的 AI 分身。</em></p>
-            <p class="greet-sub muted">它只引用我公开的项目和经历，回答都标明出处。下面是一段示例。</p>
+            <p class="greet-sub muted" id="greetSub">它只引用我公开的项目和经历，回答都标明出处。下面是一段示例，在下面直接提问就行。</p>
           </div>
+          <!-- Replaced by the live conversation once the visitor asks. -->
+          <div class="sample">
           <p class="q">你做过哪些项目？</p>
           <!-- Rewritten from the project feed; this default stays true for any number of projects. -->
           <p class="a" id="introAnswer">我做过的项目里，最有代表性的两个是：<b>待办备忘 Todo Memo</b>，离线可用、多端同步的待办工具，部署在 Vercel<sup>1</sup>；<b>Jaxson AI Space</b>，就是这个网站，有内容后台、向量检索和我这个 AI 分身<sup>2</sup>。</p>
@@ -314,15 +333,17 @@
           </div>
           <p class="q x2">RAG 是怎么实现的？</p>
           <p class="a x2">先把问题同时做关键词检索（BM25）和向量检索（pgvector），合并排序后取最相关的几段公开资料，再交给 DeepSeek 生成回答。资料里没有的内容，我会直接说不知道。<span class="caret" aria-hidden="true"></span></p>
+          </div>
+          <div class="live" id="liveThread" aria-live="polite"></div>
         </div>
         <div class="composer">
           <div class="chips">
-            <a href="/ai" data-ai-link>你的实习做了什么？</a>
-            <a href="/ai" data-ai-link>你会哪些技术？</a>
-            <a href="/ai" data-ai-link>帮我做岗位匹配</a>
+            <button type="button">你的实习做了什么？</button>
+            <button type="button">你会哪些技术？</button>
+            <button type="button">帮我做岗位匹配</button>
           </div>
           <form id="askForm" action="/ai" method="get">
-            <input type="text" name="q" aria-label="问我的 AI 分身" placeholder="问任何关于张锦鹏的问题……" maxlength="200" required autocomplete="off" />
+            <input type="text" id="ask" name="q" aria-label="问我的 AI 分身" placeholder="问任何关于张锦鹏的问题……" maxlength="200" required autocomplete="off" />
             <input type="hidden" name="from" />
             <button type="submit">提问</button>
           </form>
@@ -419,7 +440,7 @@
       </div>
       <div class="links">
         <a class="btn btn-primary" href="mailto:1822103245@qq.com">发邮件</a>
-        <a class="btn" href="/ai" data-ai-link>问 AI 分身</a>
+        <a class="btn" href="#ask">问 AI 分身</a>
         <a class="btn ext" href="https://github.com/Jaxson-zip" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </section>
@@ -433,19 +454,171 @@
   </footer>
 
   <script>
-    // AI links go to the CMS origin and say where to come back to; suggested questions arrive prefilled there.
-    const aiUrl = question => {
-      const target = new URL('/ai', window.JAXSON_BACKEND_ORIGIN);
-      if (question) target.searchParams.set('q', question);
-      target.searchParams.set('from', location.href);
-      return target.href;
-    };
+    // The full-screen AI page lives on the CMS origin and says where to come back to.
     document.querySelectorAll('[data-ai-link]').forEach(link => {
-      link.href = aiUrl(link.closest('.chips') ? link.textContent.trim() : '');
+      const target = new URL('/ai', window.JAXSON_BACKEND_ORIGIN);
+      target.searchParams.set('from', location.href);
+      link.href = target.href;
     });
+    // Without JavaScript the form still opens the AI page with the question filled in.
     const askForm = document.getElementById('askForm');
     askForm.action = new URL('/ai', window.JAXSON_BACKEND_ORIGIN).href;
     askForm.elements.from.value = location.href;
+
+    // Ask the AI twin right here: the answer streams from the CMS, its sources fill the trace panel.
+    // Answers are only ever set as text.
+    (() => {
+      const chat = document.querySelector('#hero .chat');
+      const thread = chat.querySelector('.thread');
+      const live = document.getElementById('liveThread');
+      const field = askForm.elements.q;
+      const send = askForm.querySelector('button');
+      const knowledge = document.getElementById('introKnowledge');
+      const endpoint = new URL('/api/chat', window.JAXSON_BACKEND_ORIGIN).href;
+      // Same budget as the API: at most 10 messages, 8000 characters, 2500 per message.
+      const LIMITS = { messages: 10, total: 8000, each: 2500 };
+      const rounds = [];
+      let busy = false;
+
+      const make = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      };
+      const request = question => {
+        const messages = [{ role: 'user', content: question }];
+        let total = question.length;
+        for (const [asked, answered] of [...rounds].reverse()) {
+          if (asked.length > LIMITS.each || answered.length > LIMITS.each) continue;
+          if (messages.length + 2 > LIMITS.messages || total + asked.length + answered.length > LIMITS.total) break;
+          messages.unshift({ role: 'user', content: asked }, { role: 'assistant', content: answered });
+          total += asked.length + answered.length;
+        }
+        return messages;
+      };
+      // **bold** and "- " list lines; everything else is plain text.
+      const renderAnswer = (node, text) => {
+        node.replaceChildren(...text.split(/\n+/).filter(line => line.trim()).map(line => {
+          const item = /^\s*[-*]\s+/.test(line);
+          const paragraph = make('p', item ? 'li' : '');
+          line.replace(/^\s*[-*]\s+/, '').split(/(\*\*[^*]+\*\*)/).forEach(part => {
+            if (part.startsWith('**') && part.endsWith('**') && part.length > 4) paragraph.append(make('b', '', part.slice(2, -2)));
+            else if (part) paragraph.append(part);
+          });
+          return paragraph;
+        }));
+      };
+      const showSources = (evidence, generator) => {
+        knowledge.querySelectorAll('.doc').forEach(row => row.remove());
+        knowledge.querySelector('h3').textContent = '这次回答用到的资料';
+        knowledge.querySelector('h3').after(...evidence.map(tag => {
+          const row = make('p', 'doc hit', tag);
+          row.append(make('span', '', '命中'));
+          return row;
+        }));
+        document.getElementById('introHits').textContent = evidence.length ? `命中 ${evidence.length} 篇资料` : '没有找到相关的公开资料';
+        const writer = chat.ownerDocument.querySelectorAll('#hero .trace .step small')[3];
+        if (writer) writer.textContent = generator === 'local' ? '由公开资料直接整理' : '流式输出，附引用编号';
+      };
+      const scrollDown = () => { thread.scrollTop = thread.scrollHeight; };
+      const goLive = () => {
+        if (chat.dataset.live) return;
+        chat.dataset.live = 'true';
+        chat.querySelector('.sample')?.remove();
+        document.getElementById('chatBadge').textContent = '实时回答';
+        document.getElementById('greetSub').textContent = '回答只引用我公开的项目和经历，右边会列出这次用到的资料。';
+      };
+
+      const ask = async (question, round) => {
+        if (busy) return;
+        busy = true;
+        send.disabled = true;
+        goLive();
+        if (!round) {
+          round = make('div', 'round');
+          round.append(make('p', 'q', question), make('div', 'a'));
+          live.append(round);
+        }
+        const answer = round.querySelector('.a');
+        round.querySelector('.status')?.remove();
+        answer.className = 'a pending';
+        answer.textContent = '正在查找公开资料并生成回答…';
+        scrollDown();
+        let text = '';
+        const fail = (message, withLink) => {
+          if (!text) answer.remove();
+          const status = make('p', 'status', message);
+          if (withLink) {
+            const link = make('a', '', '去完整对话页试试');
+            link.href = document.querySelector('[data-ai-link]').href;
+            status.append(link);
+          }
+          const retry = make('button', 'btn', '重试');
+          retry.type = 'button';
+          retry.addEventListener('click', () => {
+            if (!round.querySelector('.a')) round.querySelector('.q').after(make('div', 'a'));
+            ask(question, round);
+          });
+          status.append(retry);
+          round.append(status);
+        };
+        try {
+          const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: request(question) }) });
+          if (response.status === 429) return fail('提问太频繁，请过一分钟再试。');
+          if (!response.ok || !response.body) return fail('暂时连不上 AI，请稍后重试。', true);
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let finished = false;
+          while (!finished) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const events = buffer.split('\n\n');
+            buffer = events.pop();
+            for (const block of events) {
+              const type = /^event: (.+)$/m.exec(block)?.[1];
+              const data = JSON.parse(/^data: (.*)$/m.exec(block)?.[1] || '{}');
+              if (type === 'meta') showSources(Array.isArray(data.evidence) ? data.evidence.filter(tag => typeof tag === 'string') : [], data.generator);
+              if (type === 'text' && typeof data.text === 'string') {
+                text += data.text;
+                answer.className = 'a';
+                renderAnswer(answer, text);
+                scrollDown();
+              }
+              if (type === 'done' || type === 'error') { finished = type; break; }
+            }
+          }
+          if (finished === 'done' && text) {
+            rounds.push([question, text]);
+          } else {
+            fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时没能生成回答，请重试。');
+          }
+        } catch {
+          fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时连不上 AI，请稍后重试。', !text);
+        } finally {
+          busy = false;
+          send.disabled = false;
+          scrollDown();
+        }
+      };
+
+      askForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const question = field.value.trim();
+        if (!question || busy) return;
+        field.value = '';
+        ask(question);
+      });
+      chat.querySelectorAll('.chips button').forEach(chip => chip.addEventListener('click', () => ask(chip.textContent.trim())));
+      // "问我的 AI" anywhere on the page brings you to the composer instead of another site.
+      document.querySelectorAll('a[href="#ask"]').forEach(link => link.addEventListener('click', event => {
+        event.preventDefault();
+        chat.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+        field.focus({ preventScroll: true });
+      }));
+    })();
 
     // Older shared links used #folder for the works chapter, on load or while already on the page.
     const aliasOldHash = () => {
@@ -457,7 +630,7 @@
     aliasOldHash();
 
     // Mark the chapter currently under the header in the navigation.
-    const navLinks = [...document.querySelectorAll('.site-nav a[href^="#"]')];
+    const navLinks = [...document.querySelectorAll('.site-nav a.nav-section')];
     const chapters = navLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
     const markCurrent = () => {
       const line = document.querySelector('.site-header').getBoundingClientRect().bottom + 1;
@@ -506,6 +679,8 @@
 
       // The first screen's sample answer, its sources and the knowledge base follow the published projects.
       const renderIntro = (projects, picks) => {
+        // Once the visitor has asked, the panels show the real conversation.
+        if (document.querySelector('#hero .chat').dataset.live) return;
         const answer = document.getElementById('introAnswer');
         const sources = document.getElementById('introSources');
         const knowledge = document.getElementById('introKnowledge');

@@ -17,6 +17,19 @@ const twoProjects = [
   project('jaxson-ai-space', 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', { shortTitle: 'Jaxson AI Space', image: 'project-dossier-cover.svg' }),
 ]
 
+const sse = (event: string, data: object) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+
+/** Opens the page with the chat API answering every question with `events`; returns the request bodies. */
+async function askable(page: Page, events: string[]) {
+  const bodies: { messages: { role: string, content: string }[] }[] = []
+  await page.route('https://cms.example.test/api/chat', route => {
+    bodies.push(route.request().postDataJSON())
+    return route.fulfill({ contentType: 'text/event-stream', body: events.join('') })
+  })
+  await open(page, { width: 1440, height: 900 })
+  return bodies
+}
+
 async function open(page: Page, viewport: { width: number, height: number }, projects: object[] = twoProjects) {
   await page.route('**/api/showcase-projects', route => route.fulfill({ json: { source: 'cms', projects } }))
   await page.setViewportSize(viewport)
@@ -133,15 +146,25 @@ test.describe('header', () => {
     await expect(nav.getByRole('link', { name: '简历 PDF' })).toBeInViewport({ ratio: 1 })
   })
 
-  test('AI links go to the CMS AI page and carry the page to return to', async ({ page }) => {
+  test('the full-screen AI page link carries the page to return to', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
-    for (const href of await page.locator('[data-ai-link]').evaluateAll(links => links.map(link => (link as HTMLAnchorElement).href))) {
+    const links = page.locator('[data-ai-link]')
+    expect(await links.count()).toBeGreaterThanOrEqual(1)
+    for (const href of await links.evaluateAll(all => all.map(link => (link as HTMLAnchorElement).href))) {
       const url = new URL(href)
       expect(url.origin).toBe('https://cms.example.test')
       expect(url.pathname).toBe('/ai')
       expect(url.searchParams.get('from')).toContain('http://127.0.0.1:4174/')
     }
-    expect(await page.locator('[data-ai-link]').count()).toBeGreaterThanOrEqual(3)
+  })
+
+  test('“问我的 AI” takes you to the conversation on this page, not to another site', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight))
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '问我的 AI' }).click()
+    await expect(page).toHaveURL(/127\.0\.0\.1:4174/)
+    await expect(page.getByRole('textbox', { name: '问我的 AI 分身' })).toBeFocused()
+    await expect(page.getByRole('textbox', { name: '问我的 AI 分身' })).toBeInViewport()
   })
 })
 
@@ -175,30 +198,100 @@ test.describe('first screen', () => {
     expect(await trace.locator('.doc').count()).toBeGreaterThanOrEqual(6)
   })
 
-  test('asking sends the question to the AI page, without sending it automatically', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 })
-    await page.route('https://cms.example.test/**', route => route.fulfill({ contentType: 'text/html', body: '<title>AI</title>' }))
+  test('asking answers right here: the question, the streamed answer and its sources', async ({ page }) => {
+    const bodies = await askable(page, [sse('meta', { evidence: ['项目档案：待办备忘'], generator: 'external' }), sse('text', { text: '我会 **React**' }), sse('text', { text: ' 和 TypeScript。' }), sse('done', {})])
     const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
     await expect(field).toHaveAttribute('maxlength', '200')
-    await expect(field).toHaveAttribute('required', '')
     await field.fill('你会哪些技术？')
     await page.locator('#askForm button').click()
-    await page.waitForURL('https://cms.example.test/**')
-    const url = new URL(page.url())
-    expect(url.pathname).toBe('/ai')
-    expect(url.searchParams.get('q')).toBe('你会哪些技术？')
-    expect(url.searchParams.get('from')).toContain('http://127.0.0.1:4174/')
+    const chat = page.locator('#hero .chat')
+    await expect(chat.locator('.live .q')).toHaveText(['你会哪些技术？'])
+    await expect(chat.locator('.live .a').last()).toHaveText('我会 React 和 TypeScript。')
+    await expect(chat.locator('.live .a b')).toHaveText('React')
+    await expect(chat.locator('.sample')).toHaveCount(0)
+    await expect(chat).not.toContainText('示例对话')
+    await expect(page).toHaveURL(/127\.0\.0\.1:4174/)
+    expect(bodies[0]).toEqual({ messages: [{ role: 'user', content: '你会哪些技术？' }] })
+    const trace = page.locator('#hero .trace')
+    await expect(trace.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/])
+    await expect(trace.locator('.step small').nth(2)).toHaveText('命中 1 篇资料')
+    await expect(field).toHaveValue('')
   })
 
-  test('suggested questions link to the AI page with the question filled in', async ({ page }) => {
-    await open(page, { width: 1440, height: 900 })
-    const chips = page.locator('#hero .chips a')
+  test('a long answer scrolls inside the panel; the first screen keeps its size', async ({ page }) => {
+    const long = Array.from({ length: 60 }, (_, index) => `第 ${index + 1} 行回答内容`).join('\n')
+    await askable(page, [sse('text', { text: long }), sse('done', {})])
+    const before = await page.evaluate(() => ({ hero: document.getElementById('hero')!.getBoundingClientRect().height, works: document.getElementById('works')!.getBoundingClientRect().top }))
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('长一点的回答')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#hero .live .a').last()).toContainText('第 60 行回答内容')
+    const after = await page.evaluate(() => ({ hero: document.getElementById('hero')!.getBoundingClientRect().height, works: document.getElementById('works')!.getBoundingClientRect().top }))
+    expect(after).toEqual(before)
+    await expect(page.locator('#hero .live .a').last().getByText('第 60 行回答内容')).toBeInViewport()
+    await expect(page.getByRole('textbox', { name: '问我的 AI 分身' })).toBeInViewport({ ratio: 1 })
+    // Measure after the panels' entrance animation.
+    await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)))
+    const clipped = await page.locator('#hero .panel').evaluateAll(panels => panels.map(panel => {
+      const box = panel.getBoundingClientRect(), hero = document.getElementById('hero')!.getBoundingClientRect()
+      return box.bottom <= hero.bottom + 1
+    }))
+    expect(clipped).toEqual([true, true, true])
+  })
+
+  test('a follow-up question carries the earlier round', async ({ page }) => {
+    const bodies = await askable(page, [sse('meta', { evidence: [] }), sse('text', { text: '第一轮回答' }), sse('done', {})])
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('第一个问题')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#hero .live .a')).toHaveText(['第一轮回答'])
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('追问')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#hero .live .q')).toHaveText(['第一个问题', '追问'])
+    expect(bodies[1].messages).toEqual([
+      { role: 'user', content: '第一个问题' }, { role: 'assistant', content: '第一轮回答' }, { role: 'user', content: '追问' },
+    ])
+    await expect(page.locator('#hero .trace .step small').nth(2)).toHaveText('没有找到相关的公开资料')
+  })
+
+  test('suggested questions ask right away', async ({ page }) => {
+    const bodies = await askable(page, [sse('text', { text: '答案' }), sse('done', {})])
+    const chips = page.locator('#hero .chips button')
     expect(await chips.count()).toBeGreaterThanOrEqual(3)
-    for (const chip of await chips.all()) {
-      const url = new URL((await chip.getAttribute('href'))!)
-      expect(url.pathname).toBe('/ai')
-      expect(url.searchParams.get('q')).toBe((await chip.textContent())!.trim())
-    }
+    const label = (await chips.first().textContent())!.trim()
+    await chips.first().click()
+    await expect(page.locator('#hero .live .q')).toHaveText([label])
+    expect(bodies[0].messages).toEqual([{ role: 'user', content: label }])
+  })
+
+  test('explains failures and offers a retry; keeps a partial answer when the stream breaks', async ({ page }) => {
+    let call = 0
+    await page.route('https://cms.example.test/api/chat', route => {
+      call++
+      if (call === 1) return route.fulfill({ status: 503, json: { error: 'down' } })
+      if (call === 2) return route.fulfill({ status: 429, json: { error: 'slow down' } })
+      if (call === 3) return route.fulfill({ contentType: 'text/event-stream', body: sse('text', { text: '说到一半' }) + sse('error', { code: 'upstream_interrupted' }) })
+      return route.fulfill({ contentType: 'text/event-stream', body: sse('text', { text: '重试成功' }) + sse('done', {}) })
+    })
+    await open(page, { width: 1440, height: 900 })
+    const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
+    await field.fill('问题')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#hero .live .status').last()).toContainText('暂时连不上 AI')
+    await page.locator('#hero .live').getByRole('button', { name: '重试' }).last().click()
+    await expect(page.locator('#hero .live .status').last()).toContainText('提问太频繁')
+    await page.locator('#hero .live').getByRole('button', { name: '重试' }).last().click()
+    await expect(page.locator('#hero .live .a').last()).toHaveText('说到一半')
+    await expect(page.locator('#hero .live .status').last()).toContainText('回答中断')
+    await page.locator('#hero .live').getByRole('button', { name: '重试' }).last().click()
+    await expect(page.locator('#hero .live .a').last()).toHaveText('重试成功')
+    await expect(page.locator('#hero .live .q')).toHaveText(['问题'])
+  })
+
+  test('renders the answer as text, never as markup', async ({ page }) => {
+    await askable(page, [sse('text', { text: '<img src=x onerror="window.__pwned=1">' }), sse('done', {})])
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('试试')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#hero .live .a').last()).toHaveText('<img src=x onerror="window.__pwned=1">')
+    expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined()
   })
 
   test('the whole first screen fits on desktop and laptop windows', async ({ page }) => {
@@ -442,7 +535,7 @@ test.describe('contact and footer', () => {
     await expect(contact.getByRole('heading', { level: 2 })).toHaveText('想聊聊？')
     await expect(contact).toContainText('1822103245@qq.com')
     await expect(contact.getByRole('link', { name: '发邮件' })).toHaveAttribute('href', 'mailto:1822103245@qq.com')
-    await expect(contact.locator('[data-ai-link]')).toHaveCount(1)
+    await expect(contact.getByRole('link', { name: '问 AI 分身' })).toHaveAttribute('href', '#ask')
     await expect(contact.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/Jaxson-zip')
     const footer = page.locator('footer')
     await expect(footer).toContainText('© 2026 张锦鹏')

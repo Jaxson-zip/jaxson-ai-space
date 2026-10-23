@@ -53,7 +53,7 @@ flowchart TB
 
 图里省略了两条运维线路：GitHub Actions 通过 SSH 发布新版本（见第 4 节）；站长电脑用 `docker/windows-pull-backup.py` 拉取加密备份，用 `docker/windows-monitor.py` 做在线监测。
 
-- **jaxson.bond**：`portfolio` 容器用 `apps/portfolio/scripts/serve.mjs` 提供静态首页，只把 `/api/showcase-projects` 代理到 web（`showcase.mjs`）。
+- **jaxson.bond**：`portfolio` 容器用 `apps/portfolio/scripts/serve.mjs` 提供静态首页，只把 `/api/showcase-projects` 代理到 web（`showcase.mjs`）。首页的对话框由访客浏览器直接请求 `api.jaxson.bond/api/chat`，这样限流拿到的是访客自己的 IP；CORS 只允许作品集的域名（`apps/web/src/features/portfolio/cors.ts`）。`/ai` 保留为全屏对话页。
 - **api.jaxson.bond**：`web` 容器包含 Payload 后台 `/admin`、AI 对话 `/ai` 与 `/api/chat`、简历 `/resume`、项目详情 `/projects/[slug]`、私人工作台 `/studio`。
 - **私人页面**：`/studio`、`/api/studio/memory` 和后台由 `apps/web/src/middleware.ts` 加 Cloudflare Access 保护，路由内部也会再检查一次（`features/studio/private-access.ts`）。`/api/studio/inbox` 只接受 OpenClaw 的口令和白名单发送者。
 
@@ -118,6 +118,7 @@ Caddyfile 和 `production.env` 沿用服务器上当前版本的副本，不随�
 | 症状 | 先看哪里 | 相关文件 | 检查方法 |
 | --- | --- | --- | --- |
 | 首页打不开或样式错乱 | portfolio 容器、Caddy | `apps/portfolio/index.html`、`scripts/serve.mjs`、`docker/Caddyfile` | 本地 `pnpm dev:portfolio`；`pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.config.ts` |
+| 首页提问没反应，或一直显示“暂时连不上 AI” | 浏览器到 `/api/chat` 的跨域请求 | `apps/portfolio/index.html`（对话脚本）、`features/portfolio/cors.ts`、`app/api/chat/route.ts` | 浏览器开发者工具看 `/api/chat` 的预检请求是否返回 204 和 `Access-Control-Allow-Origin`；`NEXT_PUBLIC_PORTFOLIO_URL` 是否是作品集域名 |
 | `/ai`、简历页或项目页样式错乱 | 共用样式与页头 | `apps/web/src/app/(frontend)/site.css`、`ai/ai.css`、`components/public-site/` | `pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts` |
 | 首页显示“项目暂时无法加载” | 作品接口代理 → web | `apps/portfolio/scripts/showcase.mjs`、`apps/web/src/app/api/showcase-projects/route.ts` | 打开 `https://api.jaxson.bond/api/showcase-projects` |
 | 后台改了内容，网页没变 | 是否改到同一条记录；缓存刷新 | `collections/Projects.ts`、`features/cms/revalidate-hook.ts` | 对比 `/api/projects?depth=0` 的 `id` 和 `updatedAt` |

@@ -3,6 +3,7 @@ import { loadKnowledgeChunks } from '@/features/ai/rag/knowledge-loader'
 import { groundedRetrieve } from '@/features/ai/rag/retriever'
 import { createRAGStream } from '@/features/ai/rag/llm-stream'
 import { clientIpFrom } from '@/features/ai/client-ip'
+import { allowPortfolioOrigin, portfolioPreflight } from '@/features/portfolio/cors'
 
 import { z } from 'zod'
 
@@ -47,7 +48,18 @@ const chatRequestSchema = z.object({
   isJdMatch: z.boolean().optional(),
 })
 
+// The home page on jaxson.bond asks from the browser, so the visitor's own IP still reaches the rate limit.
+export async function OPTIONS(req: NextRequest) {
+  return portfolioPreflight(req, 'POST, OPTIONS')
+}
+
 export async function POST(req: NextRequest) {
+  const response = await answer(req)
+  allowPortfolioOrigin(response.headers, req.headers.get('origin'))
+  return response
+}
+
+async function answer(req: NextRequest): Promise<Response> {
   let stage = 'validation'
   const started = performance.now()
   try {
