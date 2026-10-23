@@ -26,7 +26,7 @@ const MOCK_CHUNKS: KnowledgeChunk[] = [
     id: 'profile-szpu',
     title: '教育与求职意向：深圳职业技术大学',
     category: 'education',
-    content: '深圳职业技术大学大数据技术专业 2027 届（GPA 3.85/4.0，专业前 3%），期望岗位为全栈与 AI 应用开发。',
+    content: '深圳职业技术大学大数据技术专业 2027 届（GPA 3.85/4.0，专业前 2%），期望岗位为全栈与 AI 应用开发。',
     evidenceTag: '张锦鹏在校成绩单与基本信息',
     keywords: ['深职大', '深圳职业技术大学', 'GPA', '大数据', '张锦鹏', '联系方式'],
   },

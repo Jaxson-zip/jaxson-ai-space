@@ -500,7 +500,7 @@ test.describe('résumé', () => {
       await open(page, viewport)
       const bio = page.locator('#bio')
       await expect(bio.locator('.entry h3')).toHaveText(['开发实习生', '大数据技术专业（专科），2027 届', '技能竞赛'])
-      for (const text of ['广东润喵云科技有限公司', '深圳职业技术大学', 'GPA 3.85 / 4.0，专业排名前 3%', '一带一路暨金砖国家技能大赛']) {
+      for (const text of ['广东润喵云科技有限公司', '深圳职业技术大学', 'GPA 3.85 / 4.0，专业排名前 2%', '2026.06 – 2026.08', '国家级奖项 3 项、省市级奖项 8 项', '一带一路暨金砖国家技能大赛']) {
         await expect(bio.getByText(text, { exact: false }).first(), `${text} ${JSON.stringify(viewport)}`).toBeVisible()
       }
       await expect(bio.getByRole('button')).toHaveCount(0)
