@@ -33,6 +33,14 @@ function renderInlineMarkdown(content: string) {
   })
 }
 
+/** The sources the answer cites by [n], keeping their numbers; every source while it cites none yet. */
+function citedSources(content: string, evidence: readonly string[]) {
+  const cited = new Set([...content.matchAll(/\[(\d{1,2})\]/g)].map((match) => Number(match[1])))
+  const all = evidence.map((tag, index) => ({ number: index + 1, tag }))
+  const kept = all.filter(({ number }) => cited.has(number))
+  return kept.length ? kept : all
+}
+
 function FormattedContent({ text, isUser }: { text: string; isUser?: boolean }) {
   if (isUser) return <p className="md-p">{text}</p>
 
@@ -305,7 +313,7 @@ export default function AIPage() {
                     <div className="ai-sources">
                       <p>资料来源</p>
                       <ul className="jx-tags">
-                        {msg.evidence.map((tag, i) => <li key={i}>{`${i + 1}. ${tag}`}</li>)}
+                        {citedSources(msg.content, msg.evidence).map(({ number, tag }) => <li key={number}>{`${number}. ${tag}`}</li>)}
                       </ul>
                     </div>
                   )}

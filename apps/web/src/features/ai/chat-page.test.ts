@@ -111,3 +111,15 @@ it('shows [n] citations in an answer as numbered marks matching the numbered sou
   expect(screen.queryByText(/\[1\]/)).toBeNull()
   expect(screen.getByText('1. 项目档案：待办备忘')).toBeTruthy()
 })
+
+it('lists only the sources the answer cites, keeping their numbers', async () => {
+  stubFetch(() => Promise.resolve(new Response(encoder.encode(
+    event('meta', { evidence: ['项目档案：待办备忘', '没被引用的资料', '广东润喵云科技 · 开发实习生'], generator: 'external' }) +
+    event('text', { text: '我做过待办备忘[1]，也实习过[3]。' }) + event('done', {}),
+  ))))
+  render(React.createElement(AIPage))
+  send('你做过什么？')
+  await screen.findByText('3. 广东润喵云科技 · 开发实习生')
+  expect(screen.getByText('1. 项目档案：待办备忘')).toBeTruthy()
+  expect(screen.queryByText(/没被引用的资料/)).toBeNull()
+})
