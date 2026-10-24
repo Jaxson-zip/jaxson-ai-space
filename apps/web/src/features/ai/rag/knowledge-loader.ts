@@ -7,6 +7,41 @@ import { embedIndexText, getIndexEmbeddingConfig, LOCAL_MODEL_KEY } from '../../
 import { getPgPool } from './db-pool'
 import type { ChunkCategory, KnowledgeChunk } from './types'
 
+const normalize = (text: string) => text.toLowerCase().replace(/[\s·・_-]+/g, ' ').trim()
+
+/** Ways a knowledge entry may name a record: the whole name, each bracketed part, the slug in words. */
+function namesOf(name: string, alias = ''): string[] {
+  const parts = [name, ...name.split(/[()（）]/), alias.replace(/-/g, ' ')]
+  return [...new Set(parts.map(normalize).filter((part) => part.length >= 4))]
+}
+
+/**
+ * A knowledge entry written about exactly one published project or experience joins that record's chunk,
+ * so the answer has one source for it instead of two competing ones that it cites side by side.
+ * Entries naming several records, or none, stay on their own.
+ */
+function foldEntriesIntoRecords(chunks: KnowledgeChunk[], records: { id: string; names: string[] }[]) {
+  const byId = new Map(chunks.map((chunk) => [chunk.id, chunk]))
+  const folded = new Set<string>()
+  for (const entry of chunks) {
+    if (!entry.id.startsWith('cms-')) continue
+    const label = normalize(`${entry.title} ${entry.evidenceTag}`)
+    const matches = records.filter((record) => byId.has(record.id) && record.names.some((name) => label.includes(name)))
+    if (matches.length !== 1) continue
+    const record = byId.get(matches[0].id)!
+    record.content += `\n【补充资料】${entry.content}`
+    record.keywords = [...record.keywords, ...entry.keywords]
+    if (entry.vectorScore !== undefined && (record.vectorScore === undefined || entry.vectorScore > record.vectorScore)) {
+      record.vectorScore = entry.vectorScore
+      record.vectorSource = entry.vectorSource
+    }
+    folded.add(entry.id)
+  }
+  for (let index = chunks.length - 1; index >= 0; index -= 1) {
+    if (folded.has(chunks[index].id)) chunks.splice(index, 1)
+  }
+}
+
 export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChunk[]> {
   const chunks: KnowledgeChunk[] = []
   const indexedScores = new Map<string, number>()
@@ -118,6 +153,11 @@ export async function loadKnowledgeChunks(query?: string): Promise<KnowledgeChun
       keywords: [exp.organization, exp.role, exp.period, exp.kind, kindLabel, ...exp.technologies, ...exp.bullets],
     })
   }
+
+  foldEntriesIntoRecords(chunks, [
+    ...publicProjects.map((p) => ({ id: `project-${p.slug}`, names: namesOf(p.title, p.slug) })),
+    ...experiences.map((exp) => ({ id: `exp-${exp.id}`, names: namesOf(exp.organization, exp.organization.replace(/(股份)?有限公司$|公司$/, '')) })),
+  ])
 
   // 5. Add Awards & Honor Chunks
   if (awards.length > 0) {

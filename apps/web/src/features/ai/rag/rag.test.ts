@@ -103,6 +103,13 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(prompt).not.toContain('末尾，自动简要列出')
   })
 
+  it('asks for a short answer: a direct reply, then one-line points, each cited once', () => {
+    const prompt = buildSystemPrompt(hybridRetrieve('润喵云实习', MOCK_CHUNKS, 1), false)
+    expect(prompt).toContain('250 字以内')
+    expect(prompt).toContain('每个要点末尾')
+    expect(prompt).not.toContain('要详细')
+  })
+
   it('cites each fact of the local answer by its source number', () => {
     const results = hybridRetrieve('润喵云实习', MOCK_CHUNKS, 2)
     const answer = buildLocalRAGAnswer('润喵云实习', results)
