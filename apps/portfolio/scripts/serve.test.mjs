@@ -37,7 +37,19 @@ test('repeat asset requests return 304 without bytes; entry pages remain fresh',
   const head = await fetch(origin + path, { method: 'HEAD' })
   assert.equal(head.headers.get('etag'), etag)
   assert.equal((await head.arrayBuffer()).byteLength, 0)
-  for (const page of ['/', '/index.html', '/config.js', '/resume/zhang-jinpeng-ai-product-builder.pdf']) {
-    assert.equal((await fetch(origin + page)).headers.get('cache-control'), 'no-store')
+  // The home page: browsers check every visit (a 304 when unchanged), Cloudflare's edge keeps it two minutes,
+  // so visitors skip the trip through the tunnel and a release shows within two minutes.
+  for (const page of ['/', '/index.html', '/config.js']) {
+    const fresh = await fetch(origin + page)
+    assert.equal(fresh.headers.get('cache-control'), 'public, max-age=0, must-revalidate', page)
+    assert.equal(fresh.headers.get('cdn-cache-control'), 'max-age=120', page)
+    const again = await fetch(origin + page, { headers: { 'If-None-Match': fresh.headers.get('etag') } })
+    assert.equal(again.status, 304, page)
   }
+  const resume = await fetch(origin + '/resume/zhang-jinpeng-ai-product-builder.pdf')
+  assert.equal(resume.headers.get('cache-control'), 'no-store')
+  assert.equal(resume.headers.get('cdn-cache-control'), null)
+  const missing = await fetch(origin + '/no-such-page')
+  assert.equal(missing.headers.get('cache-control'), 'no-store')
+  assert.equal(missing.headers.get('cdn-cache-control'), null)
 })

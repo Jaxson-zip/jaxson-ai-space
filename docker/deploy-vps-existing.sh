@@ -70,4 +70,6 @@ mkdir -p /opt/jaxson-release-tools
 ln -s "$release_tools" "$tools_link_tmp"
 mv -Tf -- "$tools_link_tmp" /opt/jaxson-release-tools/current
 finished=1
+# Every release adds about 4.6 GB of images and packages; keep only the live and rollback ones.
+python3 "$release_tools/lib/release_retention.py" "$commit" "$(basename -- "$old_release")" >&2 || printf '%s\n' 'Old release cleanup failed; the release itself is healthy' >&2
 printf '%s\n' "Release healthy: $candidate; rollback release: $old_release; complete backup: $backup"

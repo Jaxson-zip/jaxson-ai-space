@@ -57,18 +57,22 @@ createServer(async (request, response) => {
     }
     const info = await stat(file)
     if (!info.isFile()) throw new Error('Not a file')
-    const entryPage = pathname === '/' || pathname === '/index.html' || pathname === '/config.js' || pathname.startsWith('/resume/')
+    // The home page is checked on every visit; Cloudflare's edge may keep it two minutes, so visitors skip
+    // the trip through the tunnel and a release shows within two minutes. The résumé PDF is never kept.
+    const homePage = pathname === '/' || pathname === '/index.html' || pathname === '/config.js'
+    const resume = pathname.startsWith('/resume/')
     const versionedAsset = /\.[a-f0-9]{12}\.(webp|woff2)$/.test(pathname)
     const etag = `W/"${info.size.toString(16)}-${Math.trunc(info.mtimeMs).toString(16)}"`
     const headers = {
       'Content-Type': mime[extname(file).toLowerCase()] || 'application/octet-stream',
       'Content-Length': info.size,
-      'Cache-Control': !production || entryPage ? 'no-store' : versionedAsset
-        ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+      'Cache-Control': !production || resume ? 'no-store' : homePage ? 'public, max-age=0, must-revalidate'
+        : versionedAsset ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
       ETag: etag,
     }
+    if (production && homePage) headers['CDN-Cache-Control'] = 'max-age=120'
     const ifNoneMatch = request.headers['if-none-match']
-    if (!entryPage && ifNoneMatch?.split(',').some(value =>
+    if (!resume && ifNoneMatch?.split(',').some(value =>
       value.trim() === '*' || value.trim().replace(/^W\//, '') === etag.replace(/^W\//, ''))) {
       delete headers['Content-Length']
       response.writeHead(304, headers).end()
