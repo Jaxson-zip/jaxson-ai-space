@@ -18,7 +18,7 @@ export default function ResumePage() {
           <p className="jx-lead">两页 A4 PDF，包含求职方向、项目、实习、教育与技能。</p>
           <a className="jx-btn jx-btn-primary" href={resumePdf} download="张锦鹏_简历.pdf">下载 PDF 简历</a>
           <p className="jx-resume-note">
-            这份简历是 2026 年 8 月的版本，部分项目还没有更新。
+            履历事实已于 2026 年 10 月 24 日校准；项目介绍沿用原版。
             <a href={portfolioLink('#works')}>查看最新作品</a>
           </p>
         </section>

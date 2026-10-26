@@ -2,10 +2,10 @@ import type { Award, Experience, Profile, Project, SkillGroup } from './types'
 
 export const profile = {
   name: '张锦鹏',
-  title: '全栈开发 · AI 应用开发',
+  title: 'AI 应用开发 · 全栈交付',
   location: '深圳',
   availability: '2027 届 · 大专在读 · 深圳 (可线下到岗)',
-  summary: '专注于现代 Web 全栈与 AI 应用工程落地，喜欢把想法和业务痛点转化为可靠、高可用的交付产品。',
+  summary: 'AI 应用开发为主，全栈开发为辅。围绕真实使用场景设计产品，通过 AI 协作持续迭代应用。',
   phone: '15347640609',
   email: '1822103245@qq.com',
   github: 'https://github.com/Jaxson-zip',
@@ -45,16 +45,17 @@ export const experiences = [
 export const projects = [
   {
     slug: 'jaxson-ai-space',
-    title: 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)',
+    title: 'Jaxson AI Space（电子简历与 AI 分身）',
     category: '全栈工程 · 生产交付',
     sourceVisibility: 'public',
-    status: '已全量上线',
-    role: '独立全栈架构与开发',
-    summary: '真正生产交付的现代化工程师数字分身空间，集成第一人称 RAG 向量知识库检索、Payload CMS 无头内容管理与双 Schema 数据隔离。',
+    status: '已部署 · 持续迭代',
+    featured: true,
+    role: '产品设计与 AI 协作开发',
+    summary: '面向招聘方的个人电子简历与 AI 分身，通过公开经历和项目资料回答招聘问题，支持查看回答来源；已部署，持续完善中。',
     problem: '传统个人作品集为纯静态单向展示，招聘方无法深度交互探索候选人技术栈；个人知识碎片与真实案例缺少动态易维护的后端体系。',
-    approach: '基于 Next.js 16 + React 19 构建流式交互界面，嵌入 Payload CMS 3.x 动态管理内容；后端基于 PostgreSQL 17 + pgvector 构建知识切片余弦相似度检索与物理权限隔离。',
-    outcome: '项目已完整部署至外网生产环境（结合 Docker、PM2 与 Cloudflare Tunnel），实现毫秒级首屏加载与稳定第一人称防幻觉 RAG 问答流。',
-    technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker', 'Cloudflare Tunnel'],
+    approach: '本人发现旧版首页用途表达不清，重新组织信息层级，将 AI 对话放在首屏，通过 AI 协作迭代界面与功能。实现使用 Next.js 16 + React 19、Payload CMS 3.x 与 PostgreSQL 17 + pgvector，提供流式回答、内容维护与知识检索。',
+    outcome: '项目已部署至外网生产环境，使用 Docker Compose 管理服务、Caddy 提供反向代理与 HTTPS，并接入 Cloudflare；作品站与后台分别通过 jaxson.bond 和 api.jaxson.bond 访问，提供流式 AI 问答与证据来源。',
+    technologies: ['Next.js 16', 'React 19', 'TypeScript', 'Payload CMS 3.x', 'PostgreSQL 17', 'pgvector', 'Docker Compose', 'Caddy', 'Cloudflare'],
     image: '/assets/jaxson-ai-space-cover.png',
     links: [
       { label: '在线体验', href: 'https://jaxson.bond/', kind: 'live' },
@@ -100,7 +101,7 @@ export const skillGroups = [
   {
     id: 'engineering',
     title: '工程交付与工具',
-    items: ['Docker & 镜像制作', 'Linux 运维', 'Git & GitHub', 'PM2 进程守护', 'Cloudflare Tunnel', 'Vercel 自动化部署'],
+    items: ['Docker & 镜像制作', 'Linux 运维', 'Git & GitHub', 'Cloudflare Tunnel', 'Vercel 自动化部署'],
   },
 ] as const satisfies readonly SkillGroup[]
 

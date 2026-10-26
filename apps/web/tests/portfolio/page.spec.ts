@@ -179,12 +179,43 @@ test.describe('header', () => {
   })
 })
 
+test.describe('recruiter entry', () => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
+    test(`introduces the role through the first suggested question at ${viewport.width}px`, async ({ page }, testInfo) => {
+      const question = '你的求职方向和技能是什么？'
+      const bodies: unknown[] = []
+      await page.route('https://cms.example.test/api/chat', route => {
+        bodies.push(route.request().postDataJSON())
+        return route.fulfill({ contentType: 'text/event-stream', body: [
+          sse('meta', { evidence: ['技术栈与工程能力图谱'], sources: [{ tag: '技术栈与工程能力图谱' }], generator: 'external' }),
+          sse('text', { text: '我的求职方向以 AI 应用开发为主，全栈开发为辅。[1]' }), sse('done', {}),
+        ].join('') })
+      })
+      await open(page, viewport)
+      await expect(page.locator('#hero .role')).toHaveText('AI 应用开发')
+      await expect(page.locator('#hero .facts')).toContainText('AI 应用开发为主，全栈开发为辅')
+      await expect(page.locator('#greetSub')).toContainText('点一个问题')
+      expect(bodies).toHaveLength(0)
+      const first = page.locator('#hero .chips button').first()
+      await expect(first).toHaveText(question)
+      await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)))
+      await page.screenshot({ path: `../../scratch/recruiter-entry/first-screen-${viewport.width}-${testInfo.project.name}.png` })
+      await first.click()
+      await expect(page.locator('#hero .live .q')).toHaveText(question)
+      await expect(page.locator('#hero .live .a')).toContainText('AI 应用开发为主')
+      await expect(page.locator('#hero .live .src b')).toHaveText('技术栈与工程能力图谱')
+      expect(bodies).toEqual([{ messages: [{ role: 'user', content: question }] }])
+      await expect(page.locator('#hero .sample')).toHaveCount(0)
+    })
+  }
+})
+
 test.describe('first screen', () => {
   test('profile: name, role, portrait, four facts and the résumé and email actions', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     const profile = page.locator('#hero .profile')
     await expect(profile.getByRole('heading', { level: 1 })).toHaveText('张锦鹏')
-    await expect(profile).toContainText('AI 应用与全栈开发')
+    await expect(profile).toContainText('AI 应用开发为主，全栈开发为辅')
     await expect(page.locator('#heroAvatarImg')).toBeVisible()
     await expect(profile.locator('.facts dt')).toHaveText(['在读', '实习', '方向', '地点'])
     await expect(profile.getByRole('link', { name: '下载简历' })).toHaveAttribute('href', '/resume/zhang-jinpeng-ai-product-builder.pdf')

@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath, URL as NodeUrl } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { awards, experiences } from './content'
+import { awards, experiences, profile, projects, skillGroups } from './content'
 
 // The owner confirmed these on 2026-10-23. Every public copy must say the same thing; the CMS records and the
-// résumé PDF are edited separately (docs/部署交接-2026-10-22.md §8).
+// downloadable résumés are checked separately (docs/事实口径统一-2026-10-24.md).
 const root = fileURLToPath(new NodeUrl('../../../../../', import.meta.url))
 const publicSources = [
   'apps/portfolio/index.html',
@@ -40,5 +40,38 @@ describe('résumé facts', () => {
     expect(education.summary).toContain('专业前 2%')
     expect(education.bullets.join(' ')).toContain('国家级奖项 3 项、省市级奖项 8 项')
     expect(awards.map((award) => award.level).join(' ')).toContain('专业前 2%')
+  })
+
+  it('does not claim PM2 practice in public skills or project descriptions', () => {
+    for (const file of ['apps/portfolio/index.html', 'apps/web/src/features/portfolio/content.ts', 'apps/web/public/assets/jaxson-ai-space-cover.svg']) {
+      expect(readFileSync(join(root, file), 'utf8'), file).not.toContain('PM2')
+    }
+    expect(skillGroups.flatMap((group) => [...group.items])).toContain('Cloudflare Tunnel')
+  })
+
+  it('describes the current site deployment separately from general tool experience', () => {
+    const site = projects.find((project) => project.slug === 'jaxson-ai-space')!
+    expect(site.outcome).toContain('Docker Compose')
+    expect(site.outcome).toContain('Caddy')
+    expect(site.technologies).not.toContain('Cloudflare Tunnel')
+    expect(site.technologies).toContain('Caddy')
+    expect(readFileSync(join(root, 'apps/portfolio/index.html'), 'utf8')).toContain('Cloudflare Tunnel')
+  })
+
+  it('presents AI application development as the main role and full stack as supporting delivery', () => {
+    expect(profile.title).toBe('AI 应用开发 · 全栈交付')
+    const home = readFileSync(join(root, 'apps/portfolio/index.html'), 'utf8')
+    expect(home).toContain('AI 应用开发为主，全栈开发为辅')
+    expect(home).not.toContain('AI 应用与全栈开发</p>')
+  })
+
+  it('credits the confirmed product decisions and AI collaboration without claiming a completed solo build', () => {
+    const site = projects.find((project) => project.slug === 'jaxson-ai-space')!
+    expect(site.role).toBe('产品设计与 AI 协作开发')
+    expect(site.status).toBe('已部署 · 持续迭代')
+    expect(site.featured).toBe(true)
+    expect(site.approach).toContain('旧版首页用途')
+    expect(site.approach).toContain('AI 对话')
+    expect(site.approach).toContain('AI 协作')
   })
 })

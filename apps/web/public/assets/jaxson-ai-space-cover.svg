@@ -82,12 +82,12 @@
   <text x="574" y="210" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">余弦距离检索 · 毫秒级匹配</text>
 
   <rect x="560" y="235" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
-  <text x="574" y="257" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Docker + PM2 进程守护</text>
-  <text x="574" y="275" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">自动化构建 · 零中断平滑重载</text>
+  <text x="574" y="257" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Docker Compose 服务管理</text>
+  <text x="574" y="275" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">镜像发布 · 容器重启策略</text>
 
   <rect x="560" y="300" width="188" height="50" rx="6" fill="#27272a" fill-opacity="0.5" stroke="#3f3f46" stroke-width="1" />
-  <text x="574" y="322" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Cloudflare Tunnel 隧道</text>
-  <text x="574" y="340" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">边缘加速 · 全站端到端 HTTPS</text>
+  <text x="574" y="322" fill="#e4e4e7" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">Caddy + Cloudflare</text>
+  <text x="574" y="340" fill="#a1a1aa" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10">反向代理 · HTTPS 入口</text>
 
   <!-- Connectors -->
   <line x1="256" y1="240" x2="290" y2="240" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="3,3" />

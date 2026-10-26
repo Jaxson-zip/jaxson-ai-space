@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>张锦鹏 Jaxson · AI 应用与全栈开发作品集</title>
-  <meta name="description" content="张锦鹏，深圳职业技术大学大数据技术专业 2027 届，求职 AI 应用与全栈开发。可以直接向他的 AI 分身提问，回答都标明出处。" />
+  <title>张锦鹏 Jaxson · AI 应用开发电子简历</title>
+  <meta name="description" content="张锦鹏，深圳职业技术大学大数据技术专业 2027 届，AI 应用开发为主，全栈开发为辅。向他的 AI 分身提问，了解真实经历、项目与个人贡献，回答附资料来源。" />
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="alternate icon" href="/favicon.ico" />
   <meta name="theme-color" content="#F3F4F7" />
   <!-- Link previews in chat apps and social sites. -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="张锦鹏 Jaxson" />
-  <meta property="og:title" content="张锦鹏 Jaxson · AI 应用与全栈开发" />
-  <meta property="og:description" content="2027 届，求职 AI 应用与全栈开发。直接问我的 AI 分身，回答都标明出处。" />
+  <meta property="og:title" content="张锦鹏 Jaxson · AI 应用开发电子简历" />
+  <meta property="og:description" content="2027 届，AI 应用开发为主，全栈开发为辅。我的简历，可以直接问。" />
   <meta property="og:url" content="https://jaxson.bond/" />
   <meta property="og:image" content="https://jaxson.bond/optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp" />
   <meta property="og:locale" content="zh_CN" />
@@ -143,6 +143,7 @@
     .chips button { cursor: pointer; font-family: var(--font-text); }
     .chips a, .chips button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--sub); font-size: 14px; }
     .chips a:hover, .chips button:hover { border-color: var(--accent); color: var(--accent); }
+    .chips .primary-question { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 700; }
     #askForm button:disabled { background: #C3CBDE; cursor: not-allowed; }
     #askForm { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px 0 4px; border-radius: 14px; background: var(--panel);
       border: 1.5px solid var(--accent); box-shadow: 0 0 0 4px var(--accent-bg); }
@@ -352,13 +353,13 @@
         <div class="pbody">
           <div>
             <h1>张锦鹏</h1>
-            <p class="role">AI 应用与全栈开发</p>
+            <p class="role">AI 应用开发</p>
           </div>
-          <!-- Facts kept as on the live page until the owner confirms them (see docs/独立审查报告-2026-10-21.md P1-1). -->
+          <!-- Public facts and role confirmed by the owner; see docs/逐项验收-2026-10-25.md. -->
           <dl class="facts">
             <div><dt>在读</dt><dd>深圳职业技术大学 大数据技术专业</dd></div>
             <div><dt>实习</dt><dd>广东润喵云科技，开发实习生</dd></div>
-            <div><dt>方向</dt><dd>RAG 应用、AI 产品、全栈开发</dd></div>
+            <div><dt>方向</dt><dd>AI 应用开发为主，全栈开发为辅</dd></div>
             <div><dt>地点</dt><dd>深圳，可线下到岗</dd></div>
           </dl>
           <div class="ctas">
@@ -372,8 +373,8 @@
         <div class="ph"><h2 id="chat-title">和我的 AI 分身聊聊</h2><div class="ph-tools"><span class="badge" id="chatBadge">示例对话</span><a class="ph-link" href="/ai" data-ai-link>全屏对话</a></div></div>
         <div class="thread">
           <div>
-            <p class="greet">别只看简历，<br /><em>直接问我的 AI 分身。</em></p>
-            <p class="greet-sub muted" id="greetSub">它只引用我公开的项目和经历，回答都标明出处。下面是一段示例，在下面直接提问就行。</p>
+            <p class="greet">我的简历，<br /><em>可以直接问。</em></p>
+            <p class="greet-sub muted" id="greetSub">先点一个问题，了解我的求职方向、能力和项目。AI 依据公开资料回答，附来源供你核实；下面是一段示例。</p>
           </div>
           <!-- Replaced by the live conversation once the visitor asks. -->
           <div class="sample">
@@ -405,9 +406,9 @@
         </div>
         <div class="composer">
           <div class="chips">
-            <button type="button">你的实习做了什么？</button>
-            <button type="button">你会哪些技术？</button>
+            <button type="button" class="primary-question">你的求职方向和技能是什么？</button>
             <button type="button">你最有代表性的项目是什么？</button>
+            <button type="button">你的实习做了什么？</button>
           </div>
           <form id="askForm" action="/ai" method="get">
             <input type="text" id="ask" name="q" aria-label="问我的 AI 分身" placeholder="问任何关于张锦鹏的问题……" maxlength="200" required autocomplete="off" />
@@ -473,7 +474,7 @@
             <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>BM25 + 向量混合检索</li><li>大模型 API 接入（DeepSeek）</li></ul><p class="also">也用：Embedding 向量化、SSE 流式输出、Prompt 上下文工程、引用溯源与防幻觉、AI 编程（Cursor、Claude）</p></div>
             <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li>Next.js 16</li><li>Vue 3</li></ul><p class="also">也用：Tailwind CSS、Vite</p></div>
             <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li class="key">Python</li><li>Go</li><li>MySQL</li></ul><p class="also">也用：Supabase、RESTful API、分布式大数据</p></div>
-            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li class="key">Linux 运维</li><li>Git 与 GitHub</li><li>Vercel</li></ul><p class="also">也用：PM2、Cloudflare Tunnel</p></div>
+            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li class="key">Linux 运维</li><li>Git 与 GitHub</li><li>Vercel</li></ul><p class="also">也用过：Cloudflare Tunnel</p></div>
           </div>
         </div>
       </div>

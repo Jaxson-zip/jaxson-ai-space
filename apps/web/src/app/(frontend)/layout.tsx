@@ -9,11 +9,11 @@ import './site.css'
 
 export const metadata: Metadata = {
   title: {
-    default: '张锦鹏 Jaxson · AI 应用与全栈开发',
+    default: '张锦鹏 Jaxson · AI 应用开发电子简历',
     template: '%s · 张锦鹏 Jaxson',
   },
   description:
-    '张锦鹏的个人工程师作品集与 AI 数字分身。深圳职业技术大学大数据技术专业（GPA 3.85，专业前 2%），主修 React 19、TypeScript、Vue 3 全栈开发与 RAG 智能应用落地。',
+    '张锦鹏的个人电子简历与 AI 分身。2027 届，AI 应用开发为主，全栈开发为辅；通过公开经历和项目回答招聘问题，展示真实个人贡献与 AI 协作开发过程。',
   keywords: [
     '张锦鹏',
     'Jaxson',
@@ -30,17 +30,17 @@ export const metadata: Metadata = {
   authors: [{ name: '张锦鹏 (Jaxson)', url: 'https://github.com/Jaxson-zip' }],
   creator: '张锦鹏 (Jaxson)',
   openGraph: {
-    title: '张锦鹏 Jaxson · AI 应用与全栈开发',
+    title: '张锦鹏 Jaxson · AI 应用开发电子简历',
     description:
-      '探索张锦鹏的真实上线项目（Jaxson AI Space、Todo Memo PWA）、广东润喵云实习经历与 AI 数字分身岗位智能匹配。',
+      '直接向张锦鹏的 AI 分身提问，了解 AI 应用开发方向、真实经历与持续迭代中的项目，回答附公开资料来源。',
     type: 'website',
     locale: 'zh_CN',
     siteName: '张锦鹏 Jaxson',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '张锦鹏 Jaxson · AI 应用与全栈开发',
-    description: '深职大大数据技术（GPA 3.85，专业前 2%），国家级二等奖、省级一等奖，全栈交付与 AI 应用落地。',
+    title: '张锦鹏 Jaxson · AI 应用开发电子简历',
+    description: '2027 届，AI 应用开发为主，全栈开发为辅。通过 AI 分身了解我的经历、项目与个人贡献。',
   },
 }
 
