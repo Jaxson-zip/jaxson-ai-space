@@ -28,6 +28,21 @@ afterEach(() => {
 })
 
 describe('knowledge entries about a published record', () => {
+  it('includes the required project summary when optional details are blank', async () => {
+    const summary = '支持离线记账和自动分类的开源工具。'
+    portfolio.projects = [{
+      ...project('offline-ledger', '离线账本', '离线账本'),
+      summary, problem: '', approach: '', outcome: '', technologies: [],
+    }]
+    findMock.mockResolvedValue({ docs: [] })
+
+    const chunks = await loadKnowledgeChunks('这个项目做什么？')
+
+    expect(chunks).toHaveLength(1)
+    expect(chunks[0].content).toContain(summary)
+    expect(chunks[0].keywords).toContain(summary)
+  })
+
   it('fold into that project or experience, so each is one source', async () => {
     portfolio.projects = [
       project('jaxson-ai-space', 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', 'Jaxson AI Space'),

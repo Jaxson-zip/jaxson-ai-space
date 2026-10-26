@@ -137,16 +137,56 @@ function inLoaderOrder(results: RetrievalResult[], chunks: KnowledgeChunk[]): Re
   return [...results].sort((a, b) => (position.get(a.chunk.id) ?? 0) - (position.get(b.chunk.id) ?? 0))
 }
 
+const normalizeIdentity = (value: string) => value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+
+/** Only public record names and slugs identify a subject; shared body labels/keywords do not. */
+function namesSubject(question: string, chunk: KnowledgeChunk): boolean {
+  const title = chunk.title.replace(/^[^：:]+[：:]/, '')
+  const aliases = [
+    title,
+    chunk.project ?? '',
+    ...title.split(/[()（）\[\]【】]/),
+    ...title.match(/[\u4e00-\u9fff]+|[a-z0-9][a-z0-9 ._+#-]*/gi) ?? [],
+  ].map(normalizeIdentity).filter((alias) => alias.length >= 3)
+  const subject = normalizeIdentity(question)
+  return aliases.some((alias) => {
+    let position = subject.indexOf(alias)
+    while (position >= 0) {
+      const before = subject.slice(0, position)
+      const after = subject.slice(position + alias.length)
+      // Do not substitute "Notes" for missing "Notes Pro", or a shorter Chinese
+      // title for a missing edition. Only surrounding request wording is ignored.
+      const startsHere = !before || /(?:介绍|关于|了解|讲讲|说说|项目|作品|一下|对比|比较|和|与|的|做|做过)$/.test(before)
+      const endsHere = !after || /^(?:的|项目|作品|功能|技术|特点|难点|架构|源码|上线|部署|方案|怎么|如何|都|有|是|和|与|对比|比较|呢|吗)/.test(after)
+      if (startsHere && endsHere) return true
+      position = subject.indexOf(alias, position + 1)
+    }
+    return false
+  })
+}
+
+// A generic category question has no record name to resolve. Keep this allowlist
+// narrow so a withdrawn named record cannot be replaced by a different record.
+const GENERIC_CATEGORY_QUESTION = /^(?:请问|请)?(?:介绍|说说|讲讲|了解)?(?:一下)?(?:你(?:现在|目前)?的?)?(?:有哪些|有什么|在哪里|在哪所)?(?:实习(?:经历)?|工作经历|学校|教育背景|学历|专业|竞赛荣誉|荣誉|获奖(?:经历)?|竞赛|技能|技术栈|校园(?:经历)?)(?:是什么|有哪些|怎么样|读书|吗|呢)?[？?。.!！]*$/
+
 /** The local hash projection is not semantic evidence by itself. */
-export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5): RetrievalResult[] {
+export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5, intentQuery = query, subjectQuery?: string): RetrievalResult[] {
+  if (subjectQuery !== undefined) {
+    const subjects = chunks.filter((chunk) => namesSubject(subjectQuery, chunk))
+    if (subjects.length === 1) return groundedRetrieve(query, subjects, topK, '')
+    if (subjects.length > 1 || !GENERIC_CATEGORY_QUESTION.test(subjectQuery.trim())) return []
+    const categories = new Set(TOPIC_CATEGORIES.flatMap(([pattern, types]) => pattern.test(subjectQuery) ? types : []))
+    return groundedRetrieve(query, chunks.filter((chunk) => categories.has(chunk.category)), topK, '')
+  }
   const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
   // "Best work" questions get the projects the home page leads with.
-  const wantsHighlights = /代表|最好|最满意|拿得出手|精选|主推|得意/.test(query) && /项目|作品/.test(query)
+  // Recovered context supplies relevance; only the current question can request a list.
+  const wantsHighlights = /代表|最好|最满意|拿得出手|精选|主推|得意/.test(intentQuery) && /项目|作品/.test(intentQuery)
   const highlights = projectChunks.filter((chunk) => chunk.featured)
   if (wantsHighlights && highlights.length > 0) {
     return inLoaderOrder(hybridRetrieve(query, highlights, highlights.length), highlights)
   }
-  const wantsProjectList = /项目|作品/.test(query) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(query)
+  const wantsProjectList = /项目|作品/.test(intentQuery) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(intentQuery)
   if (wantsProjectList) {
     // Every project, in the loader's (home page) order rather than by score.
     return inLoaderOrder(hybridRetrieve(query, projectChunks, Math.max(topK, projectChunks.length)), projectChunks)

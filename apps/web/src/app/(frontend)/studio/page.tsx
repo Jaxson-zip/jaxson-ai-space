@@ -23,6 +23,8 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { generateYearlyActivityData } from '@/features/studio/analytics'
+import { parseMemorySections, serializeMemorySections } from '@/features/studio/memory-editor'
+import { localDate } from '@/features/studio/local-date'
 
 interface ReflectionItem {
   id?: string
@@ -60,7 +62,8 @@ export default function StudioPage() {
   // Reflection form state
   const [refTitle, setRefTitle] = useState('')
   const [refType, setRefType] = useState('daily')
-  const [refDate, setRefDate] = useState(new Date().toISOString().slice(0, 10))
+  const [refDate, setRefDate] = useState('')
+  const [today, setToday] = useState('')
   const [refContent, setRefContent] = useState('')
   const [refChallenges, setRefChallenges] = useState('')
   const [refSolution, setRefSolution] = useState('')
@@ -68,6 +71,25 @@ export default function StudioPage() {
   const [refNextSteps, setRefNextSteps] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitFeedback, setSubmitFeedback] = useState<{ msg: string; isError?: boolean } | null>(null)
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const refreshToday = () => {
+      clearTimeout(timer)
+      setToday(localDate())
+      const midnight = new Date()
+      midnight.setHours(24, 0, 0, 0)
+      timer = setTimeout(refreshToday, Math.max(50, midnight.getTime() - Date.now() + 50))
+    }
+    refreshToday()
+    window.addEventListener('focus', refreshToday)
+    document.addEventListener('visibilitychange', refreshToday)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('focus', refreshToday)
+      document.removeEventListener('visibilitychange', refreshToday)
+    }
+  }, [])
 
   // Remote data state
   const [candidates, setCandidates] = useState<CandidateMemoryItem[]>([])
@@ -82,7 +104,7 @@ export default function StudioPage() {
     if (date) dates[date] = (dates[date] || 0) + 1
     return dates
   }, {})
-  const activity = generateYearlyActivityData(activityDates)
+  const activity = today ? generateYearlyActivityData(activityDates) : { weeks: [], totalActiveDays: 0, totalCount: 0 }
   const createKnowledgeDraft = async (item: CandidateMemoryItem) => {
     setDraftPending(String(item.id))
     setDataError(null)
@@ -106,6 +128,22 @@ export default function StudioPage() {
   const [editSolution, setEditSolution] = useState('')
   const [editMode, setEditMode] = useState<'structured' | 'raw'>('structured')
   const [editRawContent, setEditRawContent] = useState('')
+  const editedContent = () => editMode === 'raw' ? editRawContent : serializeMemorySections(editRawContent, {
+    scenario: editScenario, solution: editSolution,
+  })
+
+  const switchEditMode = (mode: 'structured' | 'raw') => {
+    if (mode === editMode) return
+    if (mode === 'raw') {
+      setEditRawContent(editedContent())
+    } else {
+      const sections = parseMemorySections(editRawContent)
+      if (!sections) return
+      setEditScenario(sections.scenario)
+      setEditSolution(sections.solution)
+    }
+    setEditMode(mode)
+  }
 
   // Helper to open edit modal with auto-parsed fields
   const openEditModal = (item: CandidateMemoryItem) => {
@@ -113,19 +151,10 @@ export default function StudioPage() {
     setEditTitle(item.title)
     setEditRawContent(item.content)
 
-    // Parse scenario and solution
-    const scenarioMatch = item.content.match(/【(?:业务场景|难点与场景|场景与难点|遇到难点|业务难点与场景)】([\s\S]*?)(?=【|$)/)
-    const solutionMatch = item.content.match(/【(?:攻坚突破|技术方案|架构决策|解决方案|技术实现|技术方案与实现)】([\s\S]*?)(?=【|$)/)
-
-    if (scenarioMatch || solutionMatch) {
-      setEditScenario(scenarioMatch ? scenarioMatch[1].trim() : '')
-      setEditSolution(solutionMatch ? solutionMatch[1].trim() : '')
-      setEditMode('structured')
-    } else {
-      setEditScenario('')
-      setEditSolution(item.content.trim())
-      setEditMode('structured')
-    }
+    const sections = parseMemorySections(item.content)
+    setEditScenario(sections?.scenario || '')
+    setEditSolution(sections?.solution || '')
+    setEditMode(sections ? 'structured' : 'raw')
   }
 
   // Load data
@@ -203,7 +232,7 @@ export default function StudioPage() {
           reflection: {
             title: refTitle,
             type: refType,
-            date: refDate,
+            date: refDate || localDate(),
             content: refContent,
             challenges: refChallenges,
             solution: refSolution,
@@ -303,24 +332,8 @@ export default function StudioPage() {
   const handleSaveEdit = async () => {
     if (!editingItem || !editTitle.trim()) return
 
-    let finalContent = ''
-    if (editMode === 'structured') {
-      const parts: string[] = []
-      if (editScenario.trim()) {
-        parts.push(`【业务难点与场景】${editScenario.trim()}`)
-      }
-      if (editSolution.trim()) {
-        parts.push(`【技术方案与实现】${editSolution.trim()}`)
-      }
-      finalContent = parts.join('\n')
-      if (!finalContent.trim()) {
-        finalContent = editScenario.trim() || editSolution.trim()
-      }
-    } else {
-      finalContent = editRawContent.trim()
-    }
-
-    if (!finalContent) return
+    const finalContent = editedContent()
+    if (!finalContent.trim()) return
 
     try {
       const res = await fetch('/api/studio/memory', {
@@ -487,6 +500,18 @@ export default function StudioPage() {
                         <option value="technical">🚀 技术攻坚复盘</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="reflection-date">复盘日期</label>
+                    <input
+                      id="reflection-date"
+                      type="date"
+                      value={refDate || today}
+                      onChange={(e) => setRefDate(e.target.value)}
+                      className="studio-input"
+                    />
+                    <p className="field-tip">默认使用本地今天，也可以选择日期补记。</p>
                   </div>
 
                   <div className="form-group">
@@ -853,14 +878,15 @@ export default function StudioPage() {
               <div className="modal-mode-tabs">
                 <button
                   type="button"
-                  onClick={() => setEditMode('structured')}
+                  onClick={() => switchEditMode('structured')}
+                  disabled={editMode === 'raw' && !parseMemorySections(editRawContent)}
                   className={`modal-mode-btn ${editMode === 'structured' ? 'active' : ''}`}
                 >
                   📋 结构化分段编辑 (自动保持【】格式)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setEditMode('raw')}
+                  onClick={() => switchEditMode('raw')}
                   className={`modal-mode-btn ${editMode === 'raw' ? 'active' : ''}`}
                 >
                   📝 自由纯文本模式
@@ -917,8 +943,10 @@ export default function StudioPage() {
                   </>
                 ) : (
                   <div className="form-group">
-                    <label>事实内容（纯文本编辑）</label>
+                    <label htmlFor="memory-content">事实内容（纯文本编辑）</label>
+                    {!parseMemorySections(editRawContent) && <p className="field-tip">此条内容使用纯文本编辑，以保留全部正文和自定义分段。</p>}
                     <textarea
+                      id="memory-content"
                       rows={6}
                       value={editRawContent}
                       onChange={(e) => setEditRawContent(e.target.value)}

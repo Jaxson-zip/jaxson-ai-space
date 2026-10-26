@@ -17,7 +17,7 @@ async function enqueuePublicIndexEvent(kind: PublicIndexKind, doc: Record<string
   const content = deleted || !isPublic
     ? ''
     : kind === 'project'
-    ? `【项目背景】${doc.problem || ''}\n【技术方案】${doc.approach || ''}\n【交付结果】${doc.outcome || ''}\n【技术栈】${tags.join('、')}`
+    ? `【项目简介】${doc.summary || ''}\n【项目背景】${doc.problem || ''}\n【技术方案】${doc.approach || ''}\n【交付结果】${doc.outcome || ''}\n【技术栈】${tags.join('、')}`
     : String(doc.content || '')
   const pool = new Pool({ connectionString: process.env.DATABASE_URI, max: 1, idleTimeoutMillis: 5000 })
   try {

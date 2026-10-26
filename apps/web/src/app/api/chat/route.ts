@@ -3,6 +3,7 @@ import { loadKnowledgeChunks } from '@/features/ai/rag/knowledge-loader'
 import { groundedRetrieve } from '@/features/ai/rag/retriever'
 import { createRAGStream } from '@/features/ai/rag/llm-stream'
 import { clientIpFrom } from '@/features/ai/client-ip'
+import { buildRetrievalQuery, retrievalSubjectQuery } from '@/features/ai/retrieval-query'
 import { allowPortfolioOrigin, portfolioPreflight } from '@/features/portfolio/cors'
 
 import { z } from 'zod'
@@ -101,19 +102,23 @@ async function answer(req: NextRequest): Promise<Response> {
     if (latestMsg.role !== 'user' || !latestMsg.content.trim()) {
       return NextResponse.json({ error: 'The last message must be a user question' }, { status: 400 })
     }
-    const latestQuery = latestMsg.content.trim()
+    const retrievalQuery = buildRetrievalQuery(messages)
 
     // 1. Load dynamic knowledge chunks from Payload CMS & portfolio content
     stage = 'knowledge'
     const knowledgeStarted = performance.now()
-    const allChunks = await loadKnowledgeChunks(latestQuery)
+    const allChunks = await loadKnowledgeChunks(retrievalQuery)
     const knowledgeMs = performance.now() - knowledgeStarted
     req.signal.throwIfAborted()
 
     // 2. Perform hybrid retrieval (Vector Cosine Similarity + BM25)
     stage = 'retrieval'
     const retrievalStarted = performance.now()
-    const retrievalResults = groundedRetrieve(latestQuery, allChunks, 5)
+    // A dependent question such as "这个项目的功能有哪些" asks about the recovered
+    // subject, even though its words resemble the global project-list shortcut.
+    const latestQuery = latestMsg.content.trim()
+    const subjectQuery = retrievalSubjectQuery(messages)
+    const retrievalResults = groundedRetrieve(retrievalQuery, allChunks, 5, subjectQuery === undefined ? latestQuery : '', subjectQuery)
     const retrievalMs = performance.now() - retrievalStarted
 
     // 3. Create real-time streaming response with AbortSignal

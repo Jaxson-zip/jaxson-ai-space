@@ -173,6 +173,60 @@ describe('RAG Engine & Hybrid Retriever', () => {
     expect(results.every((result) => result.chunk.category === 'project')).toBe(true)
   })
 
+  it('uses the current followup intent rather than an older project-list verb', () => {
+    const otherProject: KnowledgeChunk = {
+      ...MOCK_CHUNKS[1], id: 'project-resume', title: '项目：锐历简历工作台',
+      content: '中文简历模板排版和 PDF 导出。', keywords: ['锐历简历'],
+    }
+    const chunks = [MOCK_CHUNKS[1], otherProject]
+    for (const previous of ['Todo Memo 项目都有哪些功能？', '请介绍已经上线的 Todo Memo 项目']) {
+      const query = `${previous}\n能再展开讲讲吗？`
+      expect(groundedRetrieve(query, chunks, 5, '能再展开讲讲吗？').map(({ chunk }) => chunk.id)).toEqual(['project-todo-memo'])
+    }
+    expect(groundedRetrieve('你有哪些项目？', chunks).map(({ chunk }) => chunk.id)).toEqual(['project-todo-memo', 'project-resume'])
+  })
+
+  it('resolves contextual subjects from public title aliases or slugs instead of shared content', () => {
+    const project: KnowledgeChunk = {
+      id: 'harbor', project: 'harbor-notes', title: '项目：港湾笔记（Harbor Notes）', category: 'project',
+      content: '【项目简介】记录日常。\n【技术栈】React、TypeScript', keywords: ['笔记', 'React', 'TypeScript'], evidenceTag: '港湾公开档案',
+    }
+    const other: KnowledgeChunk = { ...project, id: 'other', project: 'other-project', title: '项目：另一个记录工具', vectorSource: 'semantic', vectorScore: 0.99 }
+    const skill: KnowledgeChunk = { ...other, id: 'skills-summary', project: undefined, title: '技术栈与能力图谱', category: 'skill' }
+    for (const name of ['港湾笔记', 'Harbor Notes', 'harbor-notes', 'HARBOR NOTES']) {
+      const subject = `请介绍 ${name} 项目`
+      expect(groundedRetrieve(`${subject}\n它的技术栈是什么？`, [other, skill, project], 5, '', subject).map(({ chunk }) => chunk.id)).toEqual(['harbor'])
+    }
+    const withdrawn = '请介绍 Harbor Notes 项目'
+    expect(groundedRetrieve(`${withdrawn}\n它的技术栈是什么？`, [other, skill], 5, '', withdrawn)).toEqual([])
+    expect(groundedRetrieve(`${withdrawn}\n继续`, [project, { ...project, id: 'duplicate' }], 5, '', withdrawn)).toEqual([])
+    expect(groundedRetrieve('你有哪些项目？\n继续', [project, other], 5, '', '你有哪些项目？')).toEqual([])
+  })
+
+  it('does not substitute a project whose shorter name is part of a missing named project', () => {
+    const project: KnowledgeChunk = { ...MOCK_CHUNKS[1], title: '项目：港湾笔记（Harbor Notes）', project: 'harbor-notes' }
+    for (const subject of ['请介绍 Harbor Notes Pro 项目', '请介绍港湾笔记专业版项目']) {
+      expect(groundedRetrieve(`${subject}\n它的技术栈是什么？`, [project], 5, '', subject)).toEqual([])
+    }
+  })
+
+  it.each(['你为什么做 Harbor Notes？', '你做过 Harbor Notes 吗？', '你做 Harbor Notes 的目的是什么？'])(
+    'recovers a project named in a previous user question: %s', (subject) => {
+      const project: KnowledgeChunk = {
+        ...MOCK_CHUNKS[1], title: '项目：港湾笔记（Harbor Notes）', project: 'harbor-notes',
+        content: '【项目简介】日常记录。\n【技术栈】React、TypeScript',
+      }
+      expect(groundedRetrieve(`${subject}\n它的技术栈是什么？`, [project], 5, '', subject).map(({ chunk }) => chunk.id)).toEqual([project.id])
+    },
+  )
+
+  it.each([
+    ['你现在在哪里实习？', 'exp-runmiaoyun'],
+    ['你在哪所学校读书？', 'profile-szpu'],
+  ])('keeps a generic user category topic without selecting a different category: %s', (subject, id) => {
+    expect(groundedRetrieve(`${subject}\n能再展开讲讲吗？`, MOCK_CHUNKS, 5, '', subject).map(({ chunk }) => chunk.id)).toEqual([id])
+  })
+
   it('lists projects in the order the home page shows them, not by retrieval score', () => {
     const project = (id: string, title: string, featured = false): KnowledgeChunk => ({
       ...MOCK_CHUNKS[1], id, title: `项目：${title}`, content: `${title} 的项目档案。`, keywords: [title], featured,

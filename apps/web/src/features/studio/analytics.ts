@@ -1,3 +1,5 @@
+import { localDate } from './local-date'
+
 export interface ActivityDay {
   date: string
   count: number
@@ -31,7 +33,7 @@ export function generateYearlyActivityData(
   for (let i = 0; i <= 364; i++) {
     const d = new Date(startDate)
     d.setDate(startDate.getDate() + i)
-    const dateStr = d.toISOString().slice(0, 10)
+    const dateStr = localDate(d)
 
     const count = activeDates[dateStr] || 0
     if (count > 0) {

@@ -70,11 +70,12 @@ sequenceDiagram
 
   B->>C: 问题 + 最近几轮对话（chat-history.ts）
   C->>C: 按真实 IP 限流（client-ip.ts）
+  C->>C: 必要时从历史用户问题恢复追问主题（retrieval-query.ts）
   C->>L: 加载知识
   L->>P: 读 CMS 公开记录（项目、经历、荣誉、AI 知识）
   L->>P: 查询向量相似度（public_read.knowledge_embeddings）
   L-->>C: 知识块（按首页顺序，带精选标记）
-  C->>R: groundedRetrieve：关键词 + 向量混合
+  C->>R: groundedRetrieve：补全主题用于相关性，当前问题决定列表意图
   R-->>C: 有依据的资料，没有就为空
   C->>M: prompt-builder 拼出系统提示，流式请求
   M-->>B: SSE 逐字返回 meta / text / done
@@ -96,6 +97,8 @@ flowchart LR
 
 - 回答内容永远取自 CMS 的实时公开记录。向量索引只负责“哪条更相关”，索引过期不会泄露已撤回的内容，但会让检索不准。
 - 经历和荣誉不进向量索引，靠关键词和主题路由检索（`retriever.ts` 的 `TOPIC_CATEGORIES`）。
+- 项目的一句话简介同时进入实时 AI 证据和发布索引事件。修改代码不会自动重建已有向量；发布后可按运维手册执行常规重建。即使尚未重建，回答正文也读取当前 CMS 的简介。
+- 追问只用历史用户问题恢复主题，不把历史助手回答作为事实；重新读取当前公开 CMS，撤回的资料不会被旧会话重新带入。主题不明确时保留原问题，仍执行无证据拒答。
 
 ## 4. 发布到生产
 
