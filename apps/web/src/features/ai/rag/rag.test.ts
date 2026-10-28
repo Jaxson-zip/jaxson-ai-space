@@ -32,6 +32,11 @@ const MOCK_CHUNKS: KnowledgeChunk[] = [
   },
 ]
 
+it('does not turn a factual internship role question into local JD matching', () => {
+  const results = hybridRetrieve('你的实习岗位是什么？', MOCK_CHUNKS, 1)
+  expect(buildLocalRAGAnswer('你的实习岗位是什么？', results)).not.toContain('对照岗位要求')
+})
+
 describe('RAG Engine & Hybrid Retriever', () => {
   it('accepts a strong validated semantic match while rejecting hash similarity without keyword evidence', () => {
     const chunk: KnowledgeChunk = { id: 'semantic-fact', title: 'Portable tasks', category: 'project', content: 'Offline task application', evidenceTag: 'CMS', keywords: [], vectorScore: 0.95, vectorSource: 'semantic' }
@@ -115,6 +120,17 @@ describe('RAG Engine & Hybrid Retriever', () => {
     const answer = buildLocalRAGAnswer('润喵云实习', results)
     expect(answer).toContain(`**${results[0].chunk.title}** [1]`)
     expect(answer).not.toContain('来源：')
+  })
+
+  it('formats local evidence field labels as readable headings without changing facts or source numbers', () => {
+    const chunk = { ...MOCK_CHUNKS[0], content: '【机构/公司】广东润喵云科技有限公司\n【时间】2026.06 – 2026.08\n【主要职责与产出】维护算力租赁平台。\n【核心亮点】\n- 排查订单调度缺陷。' }
+    const results = hybridRetrieve('润喵云实习', [chunk], 1)
+    const answer = buildLocalRAGAnswer('润喵云实习', results)
+    expect(answer).toContain(`**${chunk.title}** [1]`)
+    expect(answer).toContain('**机构/公司：**广东润喵云科技有限公司')
+    expect(answer).toContain('**时间：**2026.06 – 2026.08')
+    expect(answer).toContain('- 排查订单调度缺陷。')
+    expect(answer).not.toMatch(/【[^】]+】/)
   })
 
   it('builds a dedicated JD matching system prompt when isJdMatch is true', () => {

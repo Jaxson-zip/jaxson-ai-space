@@ -19,6 +19,17 @@ jobs:
   test-and-verify:
     name: 🧪 Automated Test & Typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      rehearsal-postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: jaxson_rehearsal_ci
+          POSTGRES_PASSWORD: synthetic-rehearsal-only
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jaxson_rehearsal_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
 
     steps:
       - name: Checkout Code
@@ -38,6 +49,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Reject high and critical production dependency advisories
+        run: pnpm audit --prod --audit-level=high
+
       - name: Run ESLint Code Quality Gate
         run: pnpm --filter @jaxson/web lint
 
@@ -46,6 +60,13 @@ jobs:
 
       - name: Run TypeScript Strict Check
         run: pnpm --filter @jaxson/web typecheck
+
+      - name: Rehearse PostgreSQL migration upgrade, rollback and reapply
+        run: pnpm --filter @jaxson/web exec tsx scripts/rehearse-database.mts prepare
+        env:
+          RELEASE_REHEARSAL: "true"
+          REHEARSAL_DATABASE_URI: postgresql://postgres:synthetic-rehearsal-only@127.0.0.1:55432/jaxson_rehearsal_ci
+          REHEARSAL_MEDIA_DIR: ${{ github.workspace }}/scratch/rehearsal-media
 
       - name: Run Next.js Production Build
         run: pnpm --filter @jaxson/web build
@@ -64,8 +85,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install verified backup dependencies
-        run: python -m pip install -r docker/requirements.pc-ops.txt
+      - name: Install operations and public-delivery test dependencies
+        run: python -m pip install -r docker/requirements.test.txt
 
       - name: Test Public Portfolio
         run: pnpm --filter @jaxson/portfolio test
@@ -76,18 +97,54 @@ jobs:
       - name: Test portfolio paging and zoom reflow in Chromium
         run: pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.config.ts
 
-      - name: Retain failed portfolio browser traces
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: portfolio-reflow-failure
-          path: scratch/playwright-portfolio
-          if-no-files-found: ignore
-          retention-days: 7
+      - name: Seed isolated public-page test database
+        run: pnpm --filter @jaxson/web seed:public-test
+        env:
+          PUBLIC_TEST_FIXTURE: "true"
+          SQLITE_DATABASE_FILE: ./payload-public-tests.db
+          MEDIA_DIR: ${{ github.workspace }}/scratch/public-test-media
+          USE_POSTGRES: "false"
+
+      - name: Test full-screen chat, public pages and media access
+        run: pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts
+        env:
+          PUBLIC_TEST_FIXTURE: "true"
+          SQLITE_DATABASE_FILE: ./payload-public-tests.db
+          MEDIA_DIR: ${{ github.workspace }}/scratch/public-test-media
+          USE_POSTGRES: "false"
+
+      - name: Verify production images against isolated PostgreSQL
+        env:
+          PAYLOAD_SECRET: ci-rehearsal-only-secret-never-used-in-production-20261028
+          DATABASE_URI: postgresql://owner_app:synthetic-rehearsal-owner@127.0.0.1:55432/jaxson_rehearsal_ci
+          PUBLIC_AGENT_DATABASE_URI: postgresql://public_agent:synthetic-rehearsal-reader@127.0.0.1:55432/jaxson_rehearsal_ci
+          WEB_TEST_URL: http://localhost:3110
+          TEST_PORTFOLIO_URL: http://localhost:4180
+          HANDOFF_HOME_URL: http://localhost:4180
+          PUBLIC_TEST_FIXTURE: "true"
+        run: |
+          set -eu
+          docker build -f docker/Dockerfile.web --build-arg NEXT_PUBLIC_PORTFOLIO_URL=http://localhost:4180 --build-arg NEXT_PUBLIC_SERVER_URL=http://localhost:3110 -t jaxson-web:ci-rehearsal .
+          docker build -f docker/Dockerfile.portfolio --build-arg PORTFOLIO_API_ORIGIN=http://localhost:3110 -t jaxson-portfolio:ci-rehearsal .
+          trap 'docker rm -f jaxson-ci-web jaxson-ci-portfolio >/dev/null 2>&1 || true' EXIT
+          docker run -d --name jaxson-ci-web --network host -v "$PWD/scratch/rehearsal-media:/app/media:ro" -e MEDIA_DIR=/app/media -e PORT=3110 -e USE_POSTGRES=true -e PAYLOAD_SECRET -e DATABASE_URI -e PUBLIC_AGENT_DATABASE_URI -e CLOUDFLARE_ACCESS_REQUIRED=true jaxson-web:ci-rehearsal
+          for attempt in $(seq 1 60); do curl -fsS http://127.0.0.1:3110/api/showcase-projects >/dev/null && break; sleep 2; done
+          docker exec -e PUBLIC_HEALTH_ORIGIN=http://127.0.0.1:3110 jaxson-ci-web node apps/web/scripts/check-public-health.mjs
+          docker exec jaxson-ci-web node apps/web/scripts/run-index-worker.mjs --health
+          docker run -d --name jaxson-ci-portfolio --network host --read-only -e PORT=4180 -e PORTFOLIO_UPSTREAM_ORIGIN=http://127.0.0.1:3110 jaxson-portfolio:ci-rehearsal
+          for attempt in $(seq 1 15); do curl -fsS http://127.0.0.1:4180/ >/dev/null && break; sleep 1; done
+          curl -fsS http://127.0.0.1:4180/api/showcase-projects >/dev/null
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3110/projects/private-fixture)" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3110/api/users)" = 404
+          pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts
+        # This flag selects upload assertions in the browser runner only; the running
+        # production image keeps its normal .next output directory.
 
       - name: Validate Production Compose Template
         run: |
           docker compose --env-file docker/.env.example -f docker/compose.prod.yaml --profile bootstrap --profile tunnel --profile maintenance config --quiet
+          docker compose -f docker/compose.vps-existing.yaml config --no-env-resolution --quiet
+          docker compose -f docker/compose.rehearsal.yaml --profile runtime config --quiet
           sh -n docker/backup.sh
           sh -n docker/restore.sh
           sh -n docker/lib/compose.sh
@@ -106,6 +163,17 @@ jobs:
           sh -n docker/lib/release.sh
           python3 -m unittest discover -s docker/tests -v
 
+      - name: Retain failed browser traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure
+          path: |
+            scratch/playwright-portfolio
+            scratch/playwright-web
+          if-no-files-found: ignore
+          retention-days: 7
+
   deploy-to-vps:
     name: Deploy verified images to the existing VPS
     needs: test-and-verify
@@ -123,7 +191,7 @@ jobs:
           set -eu
           docker build -f docker/Dockerfile.web --build-arg NEXT_PUBLIC_PORTFOLIO_URL="$PORTFOLIO_URL" --build-arg NEXT_PUBLIC_SERVER_URL="$API_URL" -t "jaxson-web:$GITHUB_SHA" .
           docker build -f docker/Dockerfile.portfolio --build-arg PORTFOLIO_API_ORIGIN="$API_URL" -t "jaxson-portfolio:$GITHUB_SHA" .
-          mkdir -p release-artifact/tools/lib
+          mkdir -p release-artifact/tools/lib release-artifact/migrations
           docker save "jaxson-web:$GITHUB_SHA" "jaxson-portfolio:$GITHUB_SHA" -o release-artifact/images.tar
           WEB_IMAGE=$(docker image inspect --format '{{.Id}}' "jaxson-web:$GITHUB_SHA")
           PORTFOLIO_IMAGE=$(docker image inspect --format '{{.Id}}' "jaxson-portfolio:$GITHUB_SHA")
@@ -138,6 +206,9 @@ jobs:
           cp docker/backup-vps-existing.sh docker/restore-vps-existing.sh docker/deploy-vps-existing.sh release-artifact/tools/
           cp docker/notify-vps-failure.sh docker/notify-vps-failure.mjs release-artifact/tools/
           cp docker/lib/release.sh docker/lib/release_snapshot.py docker/lib/release_candidate.py docker/lib/release_images.py docker/lib/release_retention.py release-artifact/tools/lib/
+          cp apps/web/scripts/check-public-health.mjs release-artifact/tools/lib/
+          cp docker/migrations/003-security-update.sql release-artifact/migrations/
+          (cd release-artifact/migrations && sha256sum 003-security-update.sql > SHA256SUMS)
           (cd release-artifact && sha256sum images.tar artifact.json > SHA256SUMS)
           python3 docker/lib/release_snapshot.py artifact release-artifact
       - name: Retain the verified deployment artifact

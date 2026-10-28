@@ -22,6 +22,7 @@ const mime = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.pdf': 'application/pdf',
+  '.mp4': 'video/mp4',
   '.woff2': 'font/woff2',
   '.ico': 'image/x-icon',
 }
@@ -76,6 +77,30 @@ createServer(async (request, response) => {
       value.trim() === '*' || value.trim().replace(/^W\//, '') === etag.replace(/^W\//, ''))) {
       delete headers['Content-Length']
       response.writeHead(304, headers).end()
+      return
+    }
+    const video = headers['Content-Type'].startsWith('video/')
+    if (video) headers['Accept-Ranges'] = 'bytes'
+    const ifRange = request.headers['if-range']
+    const rangeMatches = !ifRange || (!ifRange.includes('"') && Number.isFinite(Date.parse(ifRange)) &&
+      Math.trunc(info.mtimeMs / 1000) <= Math.trunc(Date.parse(ifRange) / 1000))
+    const range = request.headers.range
+    if (video && request.method === 'GET' && range?.startsWith('bytes=') && rangeMatches) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(range)
+      let start = match?.[1] ? Number(match[1]) : 0
+      let end = match?.[2] ? Number(match[2]) : info.size - 1
+      if (match && !match[1] && match[2]) {
+        start = Math.max(0, info.size - Number(match[2]))
+        end = info.size - 1
+      }
+      if (!match || (!match[1] && !match[2]) || (!match[1] && Number(match[2]) === 0) ||
+        !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start >= info.size || end < start) {
+        response.writeHead(416, { ...headers, 'Content-Length': 0, 'Content-Range': `bytes */${info.size}` }).end()
+        return
+      }
+      end = Math.min(end, info.size - 1)
+      response.writeHead(206, { ...headers, 'Content-Length': end - start + 1, 'Content-Range': `bytes ${start}-${end}/${info.size}` })
+      createReadStream(file, { start, end }).on('error', () => response.destroy()).pipe(response)
       return
     }
     response.writeHead(200, headers)

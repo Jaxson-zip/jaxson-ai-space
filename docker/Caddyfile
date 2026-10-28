@@ -12,8 +12,8 @@
     encode zstd gzip
     reverse_proxy portfolio:3000
 
-    @page path / /index.html /config.js
-    header @page >Cache-Control "no-store"
+    # Keep the portfolio server's Cache-Control and CDN-Cache-Control intact:
+    # entry pages revalidate in browsers and may be cached briefly at the edge.
     @resume path /resume/zhang-jinpeng-ai-product-builder.pdf
     header @resume >Content-Disposition "attachment; filename=Jaxson-Resume.pdf"
     header X-Content-Type-Options "nosniff"
@@ -26,6 +26,10 @@
 
 {$API_DOMAIN} {
     encode zstd gzip
+    @chatBody path /api/chat
+    request_body @chatBody {
+        max_size 65536
+    }
     # The portfolio, CMS and indexing worker use REST. Chinese enum values in
     # the current collections cannot form a valid GraphQL schema.
     @unusedGraphQL path /api/graphql* /api/graphql-playground*

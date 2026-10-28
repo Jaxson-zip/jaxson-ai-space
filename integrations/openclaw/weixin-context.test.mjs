@@ -3,7 +3,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { repairWeixinContext } from './weixin-context.mjs'
 
-const source = readFileSync(new URL('./weixin-context.fixture.js', import.meta.url), 'utf8')
+// The vendor artifact is LF; Windows Git checkouts may convert this fixture to CRLF.
+const source = readFileSync(new URL('./weixin-context.fixture.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n')
 function context(input) {
   return new Function('bodyFromItemList', 'generateMessageSid', 'getWeixinMessageId', repairWeixinContext(source).replace('export ', '') + ';return weixinMessageToMsgContext;')(
     () => 'fp private note', () => 'generated-id', (msg) => msg.message_id,

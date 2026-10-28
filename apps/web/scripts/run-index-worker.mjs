@@ -9,6 +9,8 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URI,
   max: 2,
   idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 5000,
+  ...(process.argv.includes('--health') ? { statement_timeout: 5000 } : {}),
 })
 
 function chunkText(content, maxLength = 300) {

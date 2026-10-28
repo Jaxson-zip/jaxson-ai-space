@@ -1,6 +1,7 @@
 import type { ChatMessage, RetrievalResult } from './types'
 import { buildSystemPrompt } from './prompt-builder'
 import { SSEParser } from '../sse'
+import { isJobMatchRequest } from '../jd-intent'
 
 interface StreamResponseConfig {
   messages: ChatMessage[]
@@ -13,7 +14,8 @@ interface StreamResponseConfig {
  * Generate a streaming response using either a configured LLM provider or the built-in local RAG generator.
  */
 export async function createRAGStream(config: StreamResponseConfig): Promise<ReadableStream<Uint8Array>> {
-  const { messages, retrievalResults, isJdMatch, signal } = config
+  const { messages, retrievalResults, signal } = config
+  const isJdMatch = config.isJdMatch ?? isJobMatchRequest(messages.at(-1)?.content || '')
   signal?.throwIfAborted()
   const encoder = new TextEncoder()
 
@@ -206,7 +208,7 @@ export function buildLocalRAGAnswer(
     return '这项信息目前没有收录在我的公开资料中。你可以查看作品和简历，或直接联系张锦鹏核实。'
   }
 
-  const wantsJdMatch = isJdMatch || /\bjd\b|岗位|招聘|职位要求/i.test(userMessage)
+  const wantsJdMatch = isJdMatch || isJobMatchRequest(userMessage)
   const wantsProjectList = /项目|作品/.test(userMessage) && /哪些|几个|所有|都|做过|上线|列出|介绍/.test(userMessage)
   const relevantResults = wantsProjectList
     ? retrievalResults.filter((result) =>
@@ -225,6 +227,9 @@ export function buildLocalRAGAnswer(
     : wantsProjectList
       ? '目前检索到的相关公开项目：'
       : '根据目前公开的资料：'
-  const facts = selected.map((result) => `**${result.chunk.title}** [${retrievalResults.indexOf(result) + 1}]\n${result.chunk.content}`)
+  const facts = selected.map((result) => {
+    const content = result.chunk.content.replace(/^【([^】\r\n]+)】[ \t]*/gm, '**$1：**')
+    return `**${result.chunk.title}** [${retrievalResults.indexOf(result) + 1}]\n${content}`
+  })
   return `${intro}\n\n${facts.join('\n\n')}\n\n如需更多细节，可以打开对应项目档案或与本人核实。`
 }

@@ -37,6 +37,8 @@ export interface Project {
   readonly approach: string
   readonly outcome: string
   readonly role: string
+  /** Public participation context from the CMS editorial note. */
+  readonly note?: string
   readonly technologies: readonly string[]
   readonly image: string | null
   readonly links: readonly ProjectLink[]

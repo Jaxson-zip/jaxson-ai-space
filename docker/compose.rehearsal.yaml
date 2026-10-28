@@ -1,0 +1,61 @@
+# Synthetic local rehearsal only. Never load a production env file into this stack.
+name: jaxson-rehearsal
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: jaxson_rehearsal_local
+      POSTGRES_PASSWORD: synthetic-rehearsal-only
+    ports: ["127.0.0.1:55432:5432"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "jaxson_rehearsal_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  web:
+    profiles: [runtime]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_PORTFOLIO_URL: http://127.0.0.1:4180
+        NEXT_PUBLIC_SERVER_URL: http://127.0.0.1:3110
+    image: jaxson-web:local-rehearsal
+    environment: &web_env
+      USE_POSTGRES: "true"
+      DATABASE_URI: postgresql://owner_app:synthetic-rehearsal-owner@db:5432/jaxson_rehearsal_local
+      PUBLIC_AGENT_DATABASE_URI: postgresql://public_agent:synthetic-rehearsal-reader@db:5432/jaxson_rehearsal_local
+      PAYLOAD_SECRET: local-rehearsal-synthetic-only-secret-do-not-use-in-production
+      CLOUDFLARE_ACCESS_REQUIRED: "true"
+      MEDIA_DIR: /app/media
+    ports: ["127.0.0.1:3110:3000"]
+    volumes: ["../scratch/rehearsal-media:/app/media:ro"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/showcase-projects').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    depends_on:
+      db: { condition: service_healthy }
+  worker:
+    profiles: [runtime]
+    image: jaxson-web:local-rehearsal
+    environment: *web_env
+    read_only: true
+    command: [node, apps/web/scripts/run-index-worker.mjs]
+    depends_on:
+      web: { condition: service_healthy }
+  portfolio:
+    profiles: [runtime]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.portfolio
+      args:
+        PORTFOLIO_API_ORIGIN: http://127.0.0.1:3110
+    image: jaxson-portfolio:local-rehearsal
+    environment:
+      PORTFOLIO_UPSTREAM_ORIGIN: http://web:3000
+    read_only: true
+    ports: ["127.0.0.1:4180:3000"]
+    depends_on:
+      web: { condition: service_healthy }

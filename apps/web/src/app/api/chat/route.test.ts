@@ -8,6 +8,7 @@ vi.mock('@/features/ai/rag/llm-stream', () => ({
 }))
 
 import { OPTIONS, POST } from './route'
+import { acquireChatSlot, MAX_ACTIVE_CHATS } from '@/features/ai/chat-capacity'
 
 const portfolio = 'https://portfolio.testsite.net'
 const url = 'https://cms.testsite.net/api/chat'
@@ -22,6 +23,29 @@ beforeEach(() => { vi.stubEnv('NEXT_PUBLIC_PORTFOLIO_URL', portfolio) })
 afterEach(() => { vi.unstubAllEnvs() })
 
 describe('the home page can ask the AI directly', () => {
+  it('returns a bounded busy response when all generation slots are occupied', async () => {
+    const slots = Array.from({ length: MAX_ACTIVE_CHATS }, () => acquireChatSlot()!)
+    try {
+      const response = await POST(ask(portfolio, undefined, '203.0.113.80'))
+      expect(response.status).toBe(503)
+      expect(response.headers.get('retry-after')).toBe('5')
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(portfolio)
+    } finally { slots.forEach(done => done()) }
+  })
+  it('rejects an oversized body by bytes even when the large field is ignored by the schema', async () => {
+    const response = await POST(ask(portfolio, { messages: [{ role: 'user', content: '你好' }], padding: 'x'.repeat(65536) }, '203.0.113.81'))
+    expect(response.status).toBe(413)
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe(portfolio)
+  })
+
+  it('rejects a chunked oversized body without trusting Content-Length', async () => {
+    const bytes = new TextEncoder().encode(JSON.stringify({ messages: [{ role: 'user', content: '你好' }], padding: 'x'.repeat(65536) }))
+    const body = new ReadableStream({ start(controller) { controller.enqueue(bytes.slice(0, 20000)); controller.enqueue(bytes.slice(20000)); controller.close() } })
+    const options = { method: 'POST', body, duplex: 'half' as const, headers: { 'content-type': 'application/json', 'x-real-ip': '203.0.113.82' } }
+    const request = new NextRequest(url, options)
+    expect((await POST(request)).status).toBe(413)
+  })
+
   it('answers the preflight from the portfolio origin only', async () => {
     const allowed = await OPTIONS(new NextRequest(url, { method: 'OPTIONS', headers: { origin: portfolio } }))
     expect(allowed.status).toBe(204)
@@ -47,7 +71,7 @@ describe('the home page can ask the AI directly', () => {
     expect(invalid.status).toBe(400)
     expect(invalid.headers.get('Access-Control-Allow-Origin')).toBe(portfolio)
     let limited = invalid
-    for (let index = 0; index < 21; index++) limited = await POST(ask(portfolio, undefined, '203.0.113.9'))
+    for (let index = 0; index < 21; index++) { limited = await POST(ask(portfolio, undefined, '203.0.113.9')); await limited.body?.cancel() }
     expect(limited.status).toBe(429)
     expect(limited.headers.get('Access-Control-Allow-Origin')).toBe(portfolio)
   })
@@ -55,5 +79,6 @@ describe('the home page can ask the AI directly', () => {
   it('does not open the API to other sites', async () => {
     const response = await POST(ask('https://evil.example', undefined, '203.0.113.10'))
     expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
+    await response.body?.cancel()
   })
 })

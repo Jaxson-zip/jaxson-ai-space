@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  distDir: process.env.PUBLIC_TEST_FIXTURE === 'true' ? '.next-public-tests' : '.next',
   async redirects() {
     const portfolioUrl = process.env.NEXT_PUBLIC_PORTFOLIO_URL
     const legacyManageRedirects = [
@@ -41,6 +42,7 @@ const nextConfig: NextConfig = {
     '@payloadcms/drizzle',
   ],
   agentRules: false,
+  devIndicators: false,
   images: {
     localPatterns: [
       {

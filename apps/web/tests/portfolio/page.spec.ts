@@ -19,6 +19,38 @@ const twoProjects = [
 
 const sse = (event: string, data: object) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
 
+type StreamingFixture = { chatFixture: {
+  push: (body: string) => void
+  requests: { signal?: AbortSignal | null; cancelled: boolean; messages: unknown[] }[]
+} }
+
+/** Deterministic, open response body: chunks arrive independently until the test completes it. */
+async function streamingChat(page: Page) {
+  await page.addInitScript(() => {
+    const nativeFetch = window.fetch.bind(window)
+    const fixture: StreamingFixture['chatFixture'] = { push: () => {}, requests: [] }
+    const fixtureWindow = window as unknown as StreamingFixture
+    fixtureWindow.chatFixture = fixture
+    window.fetch = async (input, options) => {
+      if (String(input) !== 'https://cms.example.test/api/chat') return nativeFetch(input, options)
+      const request = { signal: options?.signal, cancelled: false, messages: JSON.parse(String(options?.body)).messages }
+      fixture.requests.push(request)
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          fixture.push = chunk => controller.enqueue(new TextEncoder().encode(chunk))
+          options?.signal?.addEventListener('abort', () => controller.error(options.signal?.reason), { once: true })
+        },
+        cancel() { request.cancelled = true },
+      })
+      return new Response(body, { headers: { 'Content-Type': 'text/event-stream' } })
+    }
+  })
+}
+
+async function pushChat(page: Page, ...events: string[]) {
+  await page.evaluate(body => (window as unknown as StreamingFixture).chatFixture.push(body), events.join(''))
+}
+
 /** Opens the page with the chat API answering every question with `events`; returns the request bodies. */
 async function askable(page: Page, events: string[]) {
   const bodies: { messages: { role: string, content: string }[] }[] = []
@@ -109,8 +141,9 @@ test.describe('whole page', () => {
       await open(page, viewport)
       const small = await page.evaluate(() => [...document.querySelectorAll('a, button, input')]
         .filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden' })
-        .filter(el => el.getBoundingClientRect().height < 44)
-        .map(el => `${Math.round(el.getBoundingClientRect().height)}px ${el.textContent!.trim().slice(0, 16)}`))
+        // Chromium's animated transforms can report a 44px target as 43.999992px.
+        .filter(el => el.getBoundingClientRect().height < 44 - 1e-3)
+        .map(el => `${el.getBoundingClientRect().height}px ${el.textContent!.trim().slice(0, 16)}`))
       expect(small, JSON.stringify(viewport)).toEqual([])
     }
   })
@@ -165,15 +198,66 @@ test.describe('header', () => {
       const url = new URL(href)
       expect(url.origin).toBe('https://cms.example.test')
       expect(url.pathname).toBe('/ai')
-      expect(url.searchParams.get('from')).toContain('http://127.0.0.1:4174/')
+      expect(url.searchParams.get('from')).toBe(page.url())
     }
+  })
+
+  test('hands completed history, sources and the unsent draft to the configured full-screen window without putting text in its URL', async ({ page, context }) => {
+    await context.route('https://cms.example.test/ai?**', route => route.fulfill({ contentType: 'text/html', body: `<main id="state"></main><script>
+      const token = new URLSearchParams(location.search).get('handoff');
+      const origin = new URL(new URLSearchParams(location.search).get('from')).origin;
+      addEventListener('message', event => {
+        if (event.origin !== origin || event.source !== opener || event.data.type !== 'jaxson-chat:state') return;
+        document.getElementById('state').textContent = JSON.stringify(event.data.state);
+        opener.postMessage({ type: 'jaxson-chat:received', token }, origin);
+      });
+      opener.postMessage({ type: 'jaxson-chat:ready', token }, origin);
+      </script>` }))
+    await askable(page, [sse('meta', { evidence: ['项目档案'], sources: [{ tag: '项目档案', project: 'todo-memo' }], generator: 'external' }), sse('text', { text: '之前的回答[1]' }), sse('done', {})])
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('之前的问题')
+    await page.getByRole('button', { name: '提问', exact: true }).click()
+    await expect(page.locator('#liveThread [data-retry]')).toHaveCount(1)
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('没发出的草稿')
+    const popupPromise = page.waitForEvent('popup')
+    await page.getByRole('link', { name: '全屏对话', exact: true }).click()
+    const popup = await popupPromise
+    await expect(popup.locator('#state')).toContainText('之前的问题')
+    const snapshot = JSON.parse(await popup.locator('#state').innerText())
+    expect(snapshot.draft).toBe('没发出的草稿')
+    expect(snapshot.messages).toHaveLength(2)
+    expect(snapshot.messages[1]).toMatchObject({ content: '之前的回答[1]', status: 'completed', sources: [{ tag: '项目档案', project: 'todo-memo' }] })
+    expect(decodeURIComponent(popup.url())).not.toMatch(/之前的|没发出/)
+    await expect(page.locator('#liveThread .q')).toHaveText('之前的问题')
+  })
+
+  test('keeps the original conversation when the full-screen popup is blocked', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    await page.evaluate(() => { window.open = () => null })
+    const url = page.url()
+    await page.getByRole('link', { name: '全屏对话', exact: true }).click()
+    await expect(page.getByText(/浏览器阻止了新窗口/)).toBeVisible()
+    await expect(page).toHaveURL(url)
+  })
+
+  test('asks the visitor to finish or stop generation before continuing in full screen', async ({ page }) => {
+    await streamingChat(page)
+    await open(page, { width: 1440, height: 900 })
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('正在问的问题')
+    await page.getByRole('button', { name: '提问', exact: true }).click()
+    const expand = page.getByRole('link', { name: '全屏对话', exact: true })
+    await expect(expand).toHaveAttribute('aria-disabled', 'true')
+    await expand.click({ force: true })
+    await expect(page.getByText(/回答完成或停止后/)).toBeVisible()
+    await page.getByRole('button', { name: '停止', exact: true }).click()
+    await expect(expand).not.toHaveAttribute('aria-disabled', 'true')
   })
 
   test('“问我的 AI” takes you to the conversation on this page, not to another site', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
+    const initialUrl = page.url()
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight))
     await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '问我的 AI' }).click()
-    await expect(page).toHaveURL(/127\.0\.0\.1:4174/)
+    await expect(page).toHaveURL(initialUrl)
     await expect(page.getByRole('textbox', { name: '问我的 AI 分身' })).toBeFocused()
     await expect(page.getByRole('textbox', { name: '问我的 AI 分身' })).toBeInViewport()
   })
@@ -189,6 +273,30 @@ test.describe('first screen', () => {
     await expect(profile.locator('.facts dt')).toHaveText(['在读', '实习', '方向', '地点'])
     await expect(profile.getByRole('link', { name: '下载简历' })).toHaveAttribute('href', '/resume/zhang-jinpeng-ai-product-builder.pdf')
     await expect(profile.getByRole('link', { name: '发邮件' })).toHaveAttribute('href', 'mailto:1822103245@qq.com')
+  })
+
+  test('keeps the education major together at normal and zoom-equivalent widths', async ({ page }) => {
+    for (const viewport of [
+      { width: 1440, height: 900 }, { width: 1309, height: 818 },
+      { width: 1600, height: 900 }, { width: 1920, height: 1080 },
+      { width: 760, height: 900 }, { width: 375, height: 812 }, { width: 320, height: 640 },
+    ]) {
+      await open(page, viewport)
+      const majorLines = await page.locator('#hero .facts dd').first().evaluate(element => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+        let node: Node | null
+        while ((node = walker.nextNode())) {
+          const offset = node.textContent?.indexOf('大数据技术专业') ?? -1
+          if (offset < 0) continue
+          const range = document.createRange()
+          range.setStart(node, offset)
+          range.setEnd(node, offset + '大数据技术专业'.length)
+          return range.getClientRects().length
+        }
+        return 0
+      })
+      expect(majorLines, JSON.stringify(viewport)).toBe(1)
+    }
   })
 
   test('conversation: a sample exchange marked as an example, answered from the published projects', async ({ page }) => {
@@ -250,13 +358,15 @@ test.describe('first screen', () => {
     await expect(thinking.locator('summary')).toContainText(/用时 \d+(\.\d)? 秒/)
     await expect(thinking.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/, /开发实习生/])
     // Every answer keeps its own thinking.
-    await page.locator('#hero .chips button').nth(1).click()
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('你会哪些技术？')
+    await page.keyboard.press('Enter')
     await expect(page.locator('#hero .live .a')).toHaveCount(2)
     await expect(page.locator('#hero .live .round .thinking')).toHaveCount(2)
   })
 
   test('asking answers right here: the question, the streamed answer and its sources', async ({ page }) => {
     const bodies = await askable(page, [sse('meta', { evidence: ['项目档案：待办备忘'], generator: 'external' }), sse('text', { text: '我会 **React**' }), sse('text', { text: ' 和 TypeScript。' }), sse('done', {})])
+    const initialUrl = page.url()
     const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
     await expect(field).toHaveAttribute('maxlength', '200')
     await field.fill('你会哪些技术？')
@@ -267,7 +377,7 @@ test.describe('first screen', () => {
     await expect(chat.locator('.live .a b')).toHaveText('React')
     await expect(chat.locator('.sample')).toHaveCount(0)
     await expect(chat).not.toContainText('示例对话')
-    await expect(page).toHaveURL(/127\.0\.0\.1:4174/)
+    await expect(page).toHaveURL(initialUrl)
     expect(bodies[0]).toEqual({ messages: [{ role: 'user', content: '你会哪些技术？' }] })
     const thinking = page.locator('#hero .live .thinking')
     await expect(thinking.locator('.doc.hit')).toHaveText([/项目档案：待办备忘/])
@@ -405,6 +515,198 @@ test.describe('first screen', () => {
   })
 })
 
+test.describe('conversation controls', () => {
+  test('accepts CRLF events and multiline data split between network chunks', async ({ page }) => {
+    await streamingChat(page)
+    await open(page, { width: 1440, height: 900 })
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('协议回归')
+    await page.getByRole('button', { name: '提问', exact: true }).click()
+    await pushChat(page, 'event: text\r\ndata: {\r\ndata: "text": "格式兼容的回答"}\r\n\r')
+    await pushChat(page, '\nevent: done\r\ndata: {}\r\n\r\n')
+    await expect(page.locator('#liveThread .a')).toHaveText('格式兼容的回答')
+    await expect(page.locator('#liveThread .status')).toHaveCount(0)
+  })
+  test('a long question fits its editor when opened and after narrowing the phone viewport', async ({ page }) => {
+    const question = '请详细介绍你在实习期间负责的工作内容和具体贡献。'.repeat(3)
+    await askable(page, [sse('text', { text: '收到这个问题。' }), sse('done', {})])
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill(question)
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.live .a')).toHaveText('收到这个问题。')
+    await page.getByRole('button', { name: '编辑问题', exact: true }).click()
+    const editor = page.getByRole('textbox', { name: '编辑问题', exact: true })
+    await expect(editor).toHaveValue(question)
+    await expect.poll(() => editor.evaluate(input => input.scrollHeight - input.clientHeight)).toBeLessThanOrEqual(1)
+    await page.setViewportSize({ width: 320, height: 740 })
+    await expect.poll(() => editor.evaluate(input => input.scrollHeight - input.clientHeight)).toBeLessThanOrEqual(1)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+  })
+
+  test('older answers cannot start regeneration while another answer is streaming', async ({ page }) => {
+    await streamingChat(page)
+    await open(page, { width: 1440, height: 900 })
+    await page.locator('.chips button').first().click()
+    await pushChat(page, sse('text', { text: '第一轮回答' }), sse('done', {}))
+    const retry = page.getByRole('group', { name: '回答操作' }).first().getByRole('button', { name: '重试', exact: true })
+    await expect(retry).toBeEnabled()
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('继续问一个问题')
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('button', { name: '停止', exact: true })).toBeEnabled()
+    await expect(retry).toBeDisabled()
+    await pushChat(page, sse('text', { text: '第二轮回答' }), sse('done', {}))
+    await expect(retry).toBeEnabled()
+    await expect(page.locator('.live .q')).toHaveCount(2)
+  })
+
+  test('user messages keep their timestamp, copy and edit controls under the right-hand bubble', async ({ page }) => {
+    await askable(page, [sse('text', { text: '收到你的问题。' }), sse('done', {})])
+    await page.locator('.chips button').first().click()
+    const user = page.locator('.live .user-message')
+    await expect(user.getByRole('group', { name: '消息操作' })).toBeVisible()
+    await expect(user.locator('time')).toHaveText(/^\d{2}:\d{2}$/)
+    const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
+    await field.fill('未发送的草稿')
+    await user.getByRole('button', { name: '编辑问题' }).click()
+    await expect(user.getByRole('textbox', { name: '编辑问题' })).toHaveValue('你的实习做了什么？')
+    await expect(user.locator('.q')).toHaveCount(0)
+    await expect(user.locator('.user-tools')).toHaveCount(0)
+    await expect(field).toHaveValue('未发送的草稿')
+    await user.getByRole('button', { name: '取消', exact: true }).click()
+    await expect(user.locator('.q')).toHaveText('你的实习做了什么？')
+    await user.getByRole('button', { name: '编辑问题' }).click()
+    await page.keyboard.press('Escape')
+    await expect(user.locator('.question-editor')).toHaveCount(0)
+    await expect(field).toHaveValue('未发送的草稿')
+    await expect(page.locator('.greet')).toBeHidden()
+    await expect(page.locator('.chips')).toBeHidden()
+  })
+
+  test('completed answers have a copy action with success feedback', async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: {
+      writeText: async (text: string) => { (window as unknown as { copiedAnswer: string }).copiedAnswer = text },
+    } }))
+    await askable(page, [sse('text', { text: '可复制的回答 [1]' }), sse('done', {})])
+    await page.locator('.chips button').first().click()
+    const tools = page.getByRole('group', { name: '回答操作' })
+    await expect(tools.locator('time')).toHaveCount(0)
+    const copy = tools.getByRole('button', { name: '复制回答' })
+    await expect(copy).toHaveText('')
+    await expect(copy).toHaveAttribute('title', '复制回答')
+    await copy.click()
+    await expect(tools.getByRole('status')).toHaveText('已复制')
+    expect(await page.evaluate(() => (window as unknown as { copiedAnswer: string }).copiedAnswer)).toBe('可复制的回答 [1]')
+  })
+
+  test('editing a question replaces that branch and does not send the old answers as history', async ({ page }) => {
+    const bodies = await askable(page, [sse('text', { text: '一条完整回答' }), sse('done', {})])
+    const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
+    await field.fill('原问题')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.live .a')).toHaveCount(1)
+    await field.fill('后续问题')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.live .a')).toHaveCount(2)
+    const user = page.locator('.live .user-message').first()
+    await user.getByRole('button', { name: '编辑问题' }).click()
+    await user.getByRole('textbox', { name: '编辑问题' }).fill('修改后的问题')
+    await user.getByRole('button', { name: '发送', exact: true }).click()
+    await expect(page.locator('.live .q')).toHaveText(['修改后的问题'])
+    await expect(page.locator('.live .a')).toHaveText(['一条完整回答'])
+    expect(bodies[2].messages).toEqual([{ role: 'user', content: '修改后的问题' }])
+  })
+
+  test('regenerating a completed answer reuses the question without including its old answer', async ({ page }) => {
+    const bodies = await askable(page, [sse('text', { text: '可重新生成的回答' }), sse('done', {})])
+    await page.locator('.chips button').first().click()
+    await page.getByRole('group', { name: '回答操作' }).getByRole('button', { name: '重试', exact: true }).click()
+    await expect(page.locator('.live .a')).toHaveText(['可重新生成的回答'])
+    await expect(page.locator('.live .q')).toHaveCount(1)
+    expect(bodies[1].messages).toEqual([{ role: 'user', content: '你的实习做了什么？' }])
+  })
+
+  test('a rejected clipboard write gives feedback without breaking the answer', async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: {
+      writeText: async () => { throw new Error('Clipboard unavailable') },
+    } }))
+    await askable(page, [sse('text', { text: '保留这段回答' }), sse('done', {})])
+    await page.locator('.chips button').first().click()
+    await page.getByRole('button', { name: '复制回答' }).click()
+    await expect(page.getByRole('status')).toHaveText('复制失败，请手动选择文字')
+    await expect(page.locator('.live .a')).toHaveText('保留这段回答')
+  })
+
+  test('stops a pending request on mobile and allows another question with the draft intact', async ({ page }) => {
+    await streamingChat(page)
+    await open(page, { width: 375, height: 812 })
+    await page.locator('.chips button').first().click()
+    const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
+    await field.fill('下一条问题草稿')
+    await expect(page.locator('.chips button').first()).toBeDisabled()
+    await page.getByRole('button', { name: '停止', exact: true }).click()
+    await expect(page.locator('.live .status')).toContainText('已停止本次提问')
+    await expect(page.getByRole('button', { name: '复制回答' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: '重试', exact: true })).toHaveText('')
+    await expect(field).toHaveValue('下一条问题草稿')
+    expect(await page.evaluate(() => (window as unknown as StreamingFixture).chatFixture.requests[0].signal?.aborted)).toBe(true)
+    await page.getByRole('button', { name: '提问', exact: true }).click()
+    await pushChat(page, sse('text', { text: '第二次成功' }), sse('done', {}))
+    await expect(page.locator('.live .a')).toHaveText(['第二次成功'])
+    expect(await page.evaluate(() => (window as unknown as StreamingFixture).chatFixture.requests[1].messages)).toEqual([{ role: 'user', content: '下一条问题草稿' }])
+    expect(await page.evaluate(() => (window as unknown as StreamingFixture).chatFixture.requests[1].cancelled)).toBe(true)
+  })
+
+  test('stopping a partial answer retains its text and retries in the same round', async ({ page }) => {
+    await streamingChat(page)
+    await open(page, { width: 1440, height: 900 })
+    await page.locator('.chips button').first().click()
+    await pushChat(page, sse('text', { text: '已经生成的内容' }))
+    await expect(page.locator('.live .a')).toHaveText('已经生成的内容')
+    await page.getByRole('button', { name: '停止', exact: true }).click()
+    await expect(page.locator('.live .status')).toContainText('已停止生成')
+    await expect(page.locator('.live .thinking')).not.toHaveAttribute('open', '')
+    await expect(page.locator('.live .a')).toHaveText('已经生成的内容')
+    await page.locator('.live').getByRole('button', { name: '重试' }).click()
+    await pushChat(page, sse('text', { text: '完整的新回答' }), sse('done', {}))
+    await expect(page.locator('.live .q')).toHaveCount(1)
+    await expect(page.locator('.live .a')).toHaveText('完整的新回答')
+    await expect(page.locator('.live .status')).toHaveCount(0)
+  })
+
+  test('offers feedback during a stall, times out, and resets the idle timer on progress', async ({ page }) => {
+    await page.clock.install()
+    await streamingChat(page)
+    await open(page, { width: 1440, height: 900 })
+    await page.locator('.chips button').first().click()
+    await page.clock.fastForward(12001)
+    await expect(page.locator('.live .wait-note')).toBeVisible()
+    await pushChat(page, sse('text', { text: '开始回答' }))
+    await expect(page.locator('.live .wait-note')).toBeHidden()
+    await page.clock.fastForward(34000)
+    await expect(page.getByRole('button', { name: '停止', exact: true })).toBeEnabled()
+    await page.clock.fastForward(11001)
+    await expect(page.locator('.live .status')).toContainText('长时间未更新')
+    await expect(page.locator('.live .a')).toHaveText('开始回答')
+    await expect(page.getByRole('button', { name: '提问', exact: true })).toBeEnabled()
+  })
+
+  test('lets the reader scroll up during streaming and resumes following at the bottom', async ({ page }) => {
+    await streamingChat(page)
+    await open(page, { width: 1440, height: 900 })
+    await page.locator('.chips button').first().click()
+    await pushChat(page, sse('text', { text: Array.from({ length: 50 }, (_, i) => `第 ${i + 1} 行`).join('\n') }))
+    const thread = page.locator('#hero .thread')
+    await expect(page.locator('.live .a')).toContainText('第 50 行')
+    await thread.evaluate(node => { node.scrollTop = 0; node.dispatchEvent(new Event('scroll')) })
+    await pushChat(page, sse('text', { text: '\n新增内容' }))
+    await expect(page.locator('.live .a')).toContainText('新增内容')
+    expect(await thread.evaluate(node => node.scrollTop)).toBe(0)
+    await thread.evaluate(node => { node.scrollTop = node.scrollHeight; node.dispatchEvent(new Event('scroll')) })
+    await pushChat(page, sse('text', { text: '\n最新内容' }), sse('done', {}))
+    await expect(page.locator('.live .a')).toContainText('最新内容')
+    expect(await thread.evaluate(node => node.scrollHeight - node.clientHeight - node.scrollTop)).toBeLessThan(2)
+  })
+})
+
 test.describe('more than two projects', () => {
   // Five projects, the third and fifth featured in the CMS.
   const five = Array.from({ length: 5 }, (_, index) => project(`p${index}`, `项目${index}`, { featured: index === 2 || index === 4 }))
@@ -513,6 +815,29 @@ test.describe('more than two projects', () => {
 })
 
 test.describe('works', () => {
+  test('a project source opens that project directly and returns focus when closed', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    const initialUrl = page.url()
+    const source = page.locator('#hero .src').first()
+    await source.click()
+    await expect(page.getByRole('dialog', { name: '待办备忘 (Todo Memo)', exact: true })).toBeVisible()
+    await expect(page).toHaveURL(initialUrl)
+    await page.keyboard.press('Escape')
+    await expect(source).toBeFocused()
+  })
+
+  test('shows the CMS participation note separately from the technologies the project uses', async ({ page }) => {
+    const note = '负责产品定位、页面信息组织与交互方向；通过 AI 协作完成代码实现，并参与功能验证和迭代。'
+    await open(page, { width: 1440, height: 900 }, [project('jaxson-ai-space', 'Jaxson AI Space', {
+      role: '产品定位、交互设计与 AI 协作开发', note,
+    })])
+    await page.locator('#works .project').getByRole('button').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText(note, { exact: true })).toBeVisible()
+    await expect(dialog.getByText('项目使用的技术', { exact: true })).toBeVisible()
+    await expect(dialog.locator('.work-role')).toContainText('我的角色：产品定位、交互设计与 AI 协作开发')
+  })
+
   test('each card shows the screenshot, name, summary and main stack, and opens its details', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     const cards = page.locator('#works .project')
@@ -609,7 +934,7 @@ test.describe('works', () => {
     await page.unroute('**/api/showcase-projects')
     await page.route('**/api/showcase-projects', route => route.fulfill({ status: 503, json: { error: 'unavailable' } }))
     await page.goto('/')
-    await expect(page.locator('#works')).toContainText('项目暂时无法加载，请稍后刷新页面。')
+    await expect(page.locator('#works')).toContainText('项目暂时无法加载，可以重试。')
   })
 
   test('handles twenty projects with long unbroken titles and missing links on a small phone', async ({ page }) => {
@@ -623,6 +948,55 @@ test.describe('works', () => {
     await page.locator('#works .project').nth(1).getByRole('button').click()
     await expect(page.getByRole('dialog').locator('.links')).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+  })
+
+  test('retries an unavailable project feed without clearing the question draft', async ({ page }) => {
+    await open(page, { width: 375, height: 812 })
+    let calls = 0
+    await page.route('**/api/showcase-projects', route => ++calls === 1
+      ? route.fulfill({ status: 503, json: { error: 'unavailable' } })
+      : route.fulfill({ json: { source: 'cms', projects: twoProjects } }))
+    await page.goto('/')
+    const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
+    await field.fill('还没发出的问题')
+    const reload = page.locator('#works').getByRole('button', { name: '重新加载' })
+    await expect(reload).toBeVisible()
+    await reload.click()
+    await expect(page.locator('#works .project')).toHaveCount(2)
+    await expect(field).toHaveValue('还没发出的问题')
+    expect(calls).toBe(2)
+    await expect(page.locator('#works').getByRole('button', { name: '重新加载' })).toHaveCount(0)
+  })
+
+  test('unavailable screenshots fall back in cards, sources and the project dialog', async ({ page }) => {
+    await page.route('**/missing-project.png', route => route.fulfill({ status: 404 }))
+    await open(page, { width: 375, height: 812 }, [project('broken', '失效截图项目', { image: '/missing-project.png' })])
+    await expect(page.locator('#hero .src .thumb')).toHaveText('失')
+    await page.locator('#works .project').getByRole('button').scrollIntoViewIfNeeded()
+    await expect(page.locator('#works .cover.placeholder b')).toHaveText('失')
+    await expect(page.locator('#works .cover img')).toHaveCount(0)
+    await page.locator('#works .project').getByRole('button').click()
+    await expect(page.getByRole('dialog').locator('.cover.placeholder b')).toHaveText('失')
+    await expect(page.getByRole('dialog').locator('.cover img')).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+  })
+
+  test('a stalled project feed times out and can be loaded again', async ({ page }) => {
+    await page.clock.install()
+    await open(page, { width: 375, height: 812 })
+    let calls = 0
+    await page.route('**/api/showcase-projects', route => {
+      if (++calls === 1) return // Keep the request open until the client aborts it.
+      return route.fulfill({ json: { source: 'cms', projects: twoProjects } })
+    })
+    await page.goto('/')
+    await expect(page.locator('#works')).toContainText('正在加载项目')
+    await page.clock.fastForward(10001)
+    const reload = page.locator('#works').getByRole('button', { name: '重新加载' })
+    await expect(reload).toBeVisible()
+    await reload.click()
+    await expect(page.locator('#works .project')).toHaveCount(2)
+    expect(calls).toBe(2)
   })
 
   test('renders CMS text as text, never as markup', async ({ page }) => {
@@ -663,7 +1037,17 @@ test.describe('résumé', () => {
     await open(page, { width: 1440, height: 900 })
     const ai = page.locator('#bio .skills .group').first()
     await expect(ai.locator('li')).toHaveText(['RAG 检索增强', 'pgvector 向量检索', 'BM25 + 向量混合检索', '大模型 API 接入（DeepSeek）'])
-    for (const item of ['Embedding 向量化', 'SSE 流式输出', '引用溯源与防幻觉']) await expect(ai.locator('.also')).toContainText(item)
+    for (const item of ['Embedding 向量化', 'SSE 流式输出', '来源引用与回答约束']) await expect(ai.locator('.also')).toContainText(item)
+  })
+
+  test('scopes the technology list to project practice and the current deployment', async ({ page }) => {
+    await open(page, { width: 1440, height: 900 })
+    await expect(page.locator('#bio .skills-context')).toContainText('产品定位、交互设计、AI 协作开发和功能验证')
+    await expect(page.locator('#bio .skills-context')).toContainText('项目与实习中使用的技术')
+    const delivery = page.locator('#bio .skills .group').last()
+    await expect(delivery.locator('li')).toHaveText(['Docker Compose', 'Linux 运维', 'Git 与 GitHub', 'Caddy'])
+    await expect(delivery.locator('.also')).toContainText('本站使用 Cloudflare；待办备忘使用 Vercel')
+    await expect(delivery).not.toContainText(/PM2|Cloudflare Tunnel/)
   })
 
   test('the résumé sits on the page itself: no boxes around experience or skills', async ({ page }) => {

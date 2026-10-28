@@ -3,6 +3,9 @@ import { Projects } from './Projects'
 import { migrations } from '../migrations'
 
 describe('projects collection', () => {
+  it('starts new projects privately until the owner chooses to publish', () => {
+    expect(Projects.fields.find(field => 'name' in field && field.name === 'visibility')).toMatchObject({ defaultValue: 'private' })
+  })
   it('lets the owner feature projects on the home page and order them', () => {
     const field = (name: string) => Projects.fields.find((entry) => 'name' in entry && entry.name === name)
     expect(field('featured')).toMatchObject({ type: 'checkbox', defaultValue: false })
@@ -38,11 +41,17 @@ describe('projects collection', () => {
     expect(field.admin?.description).toMatch(/mp4/)
   })
 
-  it('ships the demo video column as the latest migration, linked to media like the cover', async () => {
-    expect(migrations.at(-1)!.name).toMatch(/_project_demo_video$/)
+  it('ships the demo video column linked to media like the cover', async () => {
     const sql = await upSql(/_project_demo_video$/)
     expect(sql).toContain('ADD COLUMN \\"demo_video_id\\" integer')
     expect(sql).toContain('REFERENCES \\"owner\\".\\"media\\"(\\"id\\") ON DELETE set null')
     expect(sql).toContain('CREATE INDEX \\"projects_demo_video_idx\\"')
+  })
+  it('supports the upgraded auth schema and changes defaults without altering existing projects', async () => {
+    const sql = await upSql(/_security_update$/)
+    expect(sql).toContain('reset_password_requested_at')
+    expect(sql).toContain('SET DEFAULT')
+    expect(sql).toContain('private')
+    expect(sql).not.toContain('UPDATE ')
   })
 })

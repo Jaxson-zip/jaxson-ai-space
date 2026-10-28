@@ -1,7 +1,8 @@
 import { defineConfig } from '@playwright/test'
 
 // Browser checks for the CMS-served public pages (/ai, /resume, /projects/[slug], 404).
-// They need the local CMS with its SQLite content (payload-local.db), so they run locally:
+// CI uses seed:public-test with an isolated SQLite database and synthetic media.
+// Local runs can use an existing CMS preview via WEB_TEST_URL:
 //   pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts
 export default defineConfig({
   testDir: './tests/web',
@@ -11,6 +12,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.WEB_TEST_URL || 'http://localhost:3102',
     browserName: 'chromium',
+    channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
     trace: 'retain-on-failure',
   },
   webServer: process.env.WEB_TEST_URL ? undefined : {

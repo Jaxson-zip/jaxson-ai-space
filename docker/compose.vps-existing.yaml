@@ -30,6 +30,12 @@ services:
     command: ["node", "apps/web/scripts/run-index-worker.mjs"]
     mem_limit: 192m
     read_only: true
+    healthcheck:
+      test: ["CMD", "node", "apps/web/scripts/run-index-worker.mjs", "--health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     depends_on:
       web: { condition: service_healthy }
   portfolio:

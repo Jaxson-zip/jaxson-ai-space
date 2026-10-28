@@ -28,6 +28,20 @@ afterEach(() => {
 })
 
 describe('knowledge entries about a published record', () => {
+  it('keeps the project role and participation note alongside its technical implementation', async () => {
+    portfolio.projects = [{
+      ...project('jaxson-ai-space', 'Jaxson AI Space', 'Jaxson AI Space'),
+      role: '产品设计与 AI 协作开发',
+      note: '负责产品定位与交互方向，借助 AI 完成代码实现。',
+    }]
+    findMock.mockResolvedValue({ docs: [] })
+
+    const chunks = await loadKnowledgeChunks('你在本站负责什么？')
+    const content = chunks.find(chunk => chunk.id === 'project-jaxson-ai-space')!.content
+    expect(content).toContain('产品设计与 AI 协作开发')
+    expect(content).toContain('负责产品定位与交互方向，借助 AI 完成代码实现。')
+  })
+
   it('fold into that project or experience, so each is one source', async () => {
     portfolio.projects = [
       project('jaxson-ai-space', 'Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', 'Jaxson AI Space'),

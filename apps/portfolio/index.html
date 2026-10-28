@@ -94,13 +94,14 @@
     .shot img { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: auto; max-width: none; height: 200%; }
     .shot .status { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
       background: var(--panel); color: var(--accent); font-size: 14px; font-weight: 700; }
-    .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2E9E4F; }
+    .shot .status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2E9E4F; }
     .pbody { padding: 18px; display: grid; gap: 14px; align-content: start; }
     .pbody h1 { font-size: 30px; line-height: 1.2; font-weight: 800; }
     .pbody .role { font-size: 16px; color: var(--sub); margin-top: 4px; }
     .facts { display: grid; gap: 6px; font-size: 15px; line-height: 1.6; }
     .facts div { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 8px; }
     .facts dt { color: var(--faint); }
+    .facts .fact-phrase { display: inline-block; }
     .ctas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     /* min-height: 0 lets the thread scroll inside the panel instead of stretching the first screen. */
@@ -111,9 +112,28 @@
     .ph-tools { display: flex; align-items: center; gap: 8px; }
     .ph-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--accent); font-size: 14px; font-weight: 700; }
     /* The live conversation: questions on the right, answers as text, failures with a retry. */
-    .live { display: flex; flex-direction: column; gap: 16px; }
+    .live { display: flex; flex-direction: column; gap: 28px; }
     .live:empty { display: none; }
-    .round { display: flex; flex-direction: column; gap: 12px; }
+    .round { display: flex; flex-direction: column; gap: 18px; }
+    .user-message { display: flex; flex-direction: column; align-self: flex-end; align-items: flex-end; gap: 2px; max-width: 85%; min-width: 0; }
+    .user-message .q { max-width: 100%; }
+    .user-message.is-editing { align-self: stretch; align-items: stretch; max-width: 100%; width: 100%; }
+    .question-editor { padding: 12px; border-radius: 18px; background: #F3F4F6; }
+    .question-editor textarea { display: block; width: 100%; height: 48px; min-height: 48px; max-height: 180px; padding: 0; resize: none;
+      border: 0; background: transparent; color: #242528; font: 400 15px/1.6 var(--font-text); }
+    .question-editor textarea:focus-visible { outline: none; }
+    .question-edit-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+    .question-edit-actions button { min-height: 28px; padding: 0 10px; border: 1px solid #E6E7E9; border-radius: 10px;
+      background: #FFF; color: #242528; font: 500 14px/1 var(--font-text); cursor: pointer; }
+    .question-edit-actions .question-edit-send { border-color: #202123; background: #202123; color: #FFF; }
+    .question-edit-actions button:hover { filter: brightness(.96); }
+    @media (pointer: coarse) { .question-edit-actions button { min-height: 44px; } }
+    .assistant-message { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .chat[data-live] .thread > div:has(.greet), .chat[data-live] .chips { display: none; }
+    .assistant-message .thinking { align-self: stretch; }
+    .assistant-message .thinking summary { display: flex; min-height: 32px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+    .assistant-message .thinking summary::before { display: none; }
+    .assistant-message .think-label { color: var(--faint); font-weight: 500; }
     .live .a p + p { margin-top: 8px; }
     .live .a .li { position: relative; padding-left: 16px; }
     .live .a .li::before { content: ''; position: absolute; left: 2px; top: .8em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
@@ -121,10 +141,30 @@
     .live .a.pending:empty { display: none; }
     .live .status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--sub); font-size: 14px; }
     .live .status a { color: var(--accent); font-weight: 700; }
+    .message-tools { position: relative; display: flex; align-items: center; align-self: flex-start; gap: 0; color: var(--faint); }
+    .message-tools time { margin-right: 5px; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .user-tools { align-self: flex-end; }
+    .user-tools .action-feedback { left: auto; right: 0; }
+    .assistant-message > .message-tools { margin-top: -4px; }
+    .icon-action { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0;
+      border: 0; border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+    .icon-action:hover { color: var(--ink); background: var(--card); }
+    .icon-action:disabled { opacity: .35; cursor: default; background: transparent; }
+    .icon-action svg { width: 14px; height: 14px; pointer-events: none; }
+    @media (pointer: coarse) { .icon-action { width: 44px; height: 44px; } }
+    .action-feedback { position: absolute; left: 0; bottom: 100%; z-index: 1; width: max-content; max-width: 260px; padding: 4px 8px;
+      border-radius: 6px; color: var(--on-ink); background: var(--ink); font-size: 14px; }
+    .retry-action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 4px;
+      border: 0; border-radius: 6px; background: transparent; color: var(--accent); font: 600 14px/1 var(--font-text); cursor: pointer; }
+    .retry-action::before { content: ''; width: 14px; height: 14px; background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 5a5.5 5.5 0 1 0 1 5M13 1v4H9' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+              mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 5a5.5 5.5 0 1 0 1 5M13 1v4H9' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .retry-action:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 4px; }
+    .wait-note { color: var(--faint); font-size: 14px; }
     .greet { font-size: clamp(26px, 2.4vw, 34px); line-height: 1.3; font-weight: 800; }
     .greet em { font-style: normal; color: var(--accent); }
     .greet-sub { margin-top: 6px; }
-    .q { align-self: flex-end; max-width: 80%; background: var(--ink); color: var(--on-ink); padding: 9px 16px; border-radius: 16px 16px 4px 16px; }
+    .q { align-self: flex-end; max-width: 80%; background: #E9F3FF; color: #263C57; padding: 9px 16px; border-radius: 16px 16px 4px 16px; overflow-wrap: anywhere; }
     .a { font-size: 17px; line-height: 1.8; overflow-wrap: anywhere; }
     .a sup { font: 700 14px/1 var(--font-mono); color: var(--accent); background: var(--accent-bg); border-radius: 4px; padding: 1px 5px; margin-left: 2px; vertical-align: 3px; }
     .a .caret { display: inline-block; width: 8px; height: 18px; background: var(--accent); vertical-align: -3px; margin-left: 3px; }
@@ -143,6 +183,7 @@
     .chips button { cursor: pointer; font-family: var(--font-text); }
     .chips a, .chips button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--sub); font-size: 14px; }
     .chips a:hover, .chips button:hover { border-color: var(--accent); color: var(--accent); }
+    .chips button:disabled { opacity: .6; cursor: not-allowed; border-color: var(--line); color: var(--sub); }
     #askForm button:disabled { background: #C3CBDE; cursor: not-allowed; }
     #askForm { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px 0 4px; border-radius: 14px; background: var(--panel);
       border: 1.5px solid var(--accent); box-shadow: 0 0 0 4px var(--accent-bg); }
@@ -251,6 +292,7 @@
     .cover.placeholder ul { display: flex; flex-wrap: wrap; gap: 6px; }
     .cover.placeholder li { font: 500 14px/1 var(--font-mono); padding: 7px 10px; border-radius: 6px; background: rgba(255, 255, 255, .75); color: var(--sub); }
     .works-status { color: var(--sub); }
+    .works-retry { margin-top: 12px; }
 
     /* Project dialog: the demo (video or screenshot) on the left, the story on the right. */
     .project-dialog { width: min(1120px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0;
@@ -277,6 +319,7 @@
     .project-dialog .info { display: flex; flex-direction: column; gap: 14px; padding: 28px 28px 24px; min-height: 0; }
     .project-dialog h3 { font-size: 24px; line-height: 1.3; padding-right: 48px; overflow-wrap: anywhere; }
     .project-dialog .work-role { color: var(--sub); font-size: 14px; margin-top: -8px; }
+    .project-dialog .stack-label { font-size: 14px; color: var(--sub); font-weight: 600; }
     .project-dialog .summary { font-size: 16px; overflow-wrap: anywhere; }
     .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 8px 12px; font-size: 15px; }
     .story dt { color: var(--faint); }
@@ -303,6 +346,7 @@
     .entry li { position: relative; padding-left: 16px; }
     .entry li::before { content: ''; position: absolute; left: 0; top: .8em; width: 6px; height: 6px; border-radius: 50%; background: #C3C9D6; }
     .skills { padding-top: 26px; display: grid; gap: 30px; }
+    .skills-context { font-size: 14px; line-height: 1.7; color: var(--sub); }
     .also { margin-top: 10px; font-size: 14px; line-height: 1.7; color: var(--faint); }
     .skills h3 { font-size: 14px; font-weight: 400; color: var(--sub); margin-bottom: 12px; }
     .skills .tags { gap: 8px; }
@@ -354,9 +398,9 @@
             <h1>张锦鹏</h1>
             <p class="role">AI 应用与全栈开发</p>
           </div>
-          <!-- Facts kept as on the live page until the owner confirms them (see docs/独立审查报告-2026-10-21.md P1-1). -->
+          <!-- Confirmed facts: docs/部署交接-2026-10-22.md §8; internship scope matches the public CMS record. -->
           <dl class="facts">
-            <div><dt>在读</dt><dd>深圳职业技术大学 大数据技术专业</dd></div>
+            <div><dt>在读</dt><dd><span class="fact-phrase">深圳职业技术大学</span> <span class="fact-phrase">大数据技术专业</span></dd></div>
             <div><dt>实习</dt><dd>广东润喵云科技，开发实习生</dd></div>
             <div><dt>方向</dt><dd>RAG 应用、AI 产品、全栈开发</dd></div>
             <div><dt>地点</dt><dd>深圳，可线下到岗</dd></div>
@@ -373,7 +417,7 @@
         <div class="thread">
           <div>
             <p class="greet">别只看简历，<br /><em>直接问我的 AI 分身。</em></p>
-            <p class="greet-sub muted" id="greetSub">它只引用我公开的项目和经历，回答都标明出处。下面是一段示例，在下面直接提问就行。</p>
+            <p class="greet-sub muted" id="greetSub">可以问项目、实习和技术实践，展开回答上方的资料栏查看来源。下面是示例，输入问题即可开始对话。</p>
           </div>
           <!-- Replaced by the live conversation once the visitor asks. -->
           <div class="sample">
@@ -410,10 +454,11 @@
             <button type="button">你最有代表性的项目是什么？</button>
           </div>
           <form id="askForm" action="/ai" method="get">
-            <input type="text" id="ask" name="q" aria-label="问我的 AI 分身" placeholder="问任何关于张锦鹏的问题……" maxlength="200" required autocomplete="off" />
+            <input type="text" id="ask" name="q" aria-label="问我的 AI 分身" placeholder="问问项目、实习或技术实践…" maxlength="200" required autocomplete="off" />
             <input type="hidden" name="from" />
             <button type="submit">提问</button>
           </form>
+          <p id="handoffNote" class="status" role="status" hidden></p>
         </div>
       </section>
 
@@ -425,7 +470,7 @@
     </section>
 
     <section class="chapter" id="bio" aria-labelledby="bio-title">
-      <div class="sh"><h2 id="bio-title">履历</h2><p class="muted">实习、教育、竞赛和技术栈</p></div>
+      <div class="sh"><h2 id="bio-title">履历</h2><p class="muted">实习、教育、竞赛与项目实践</p></div>
       <div class="bio">
         <div class="col">
           <p class="col-title">经历</p>
@@ -435,10 +480,11 @@
               <div>
                 <h3>开发实习生</h3>
                 <p class="org">广东润喵云科技有限公司</p>
-                <p>参与算力租赁平台用户端、管理端的功能迭代与日常运维。</p>
+                <p>参与基于 Vue 和 Go 的算力租赁平台日常运维。</p>
                 <ul>
-                  <li>开发与修复订单管理、资源调度、数据统计模块。</li>
-                  <li>跟进线上反馈，参与需求评审和问题排查。</li>
+                  <li>排查租赁管理与订单调度模块缺陷，完成修复和功能联调。</li>
+                  <li>制作 Docker 运行环境镜像，参与依赖调优和标准化构建。</li>
+                  <li>借助 AI 编程工具定位问题，辅助前后端缺陷修复。</li>
                 </ul>
               </div>
             </article>
@@ -468,12 +514,13 @@
           </div>
         </div>
         <div class="col">
-          <p class="col-title">技术栈</p>
+          <p class="col-title">项目技术与实践</p>
           <div class="skills">
-            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>BM25 + 向量混合检索</li><li>大模型 API 接入（DeepSeek）</li></ul><p class="also">也用：Embedding 向量化、SSE 流式输出、Prompt 上下文工程、引用溯源与防幻觉、AI 编程（Cursor、Claude）</p></div>
+            <p class="skills-context">主要实践是产品定位、交互设计、AI 协作开发和功能验证。以下为项目与实习中使用的技术，具体参与范围见项目说明。</p>
+            <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>BM25 + 向量混合检索</li><li>大模型 API 接入（DeepSeek）</li></ul><p class="also">相关实践：Embedding 向量化、SSE 流式输出、Prompt 上下文组织、来源引用与回答约束、AI 辅助编程</p></div>
             <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li>Next.js 16</li><li>Vue 3</li></ul><p class="also">也用：Tailwind CSS、Vite</p></div>
             <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li class="key">Python</li><li>Go</li><li>MySQL</li></ul><p class="also">也用：Supabase、RESTful API、分布式大数据</p></div>
-            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker</li><li class="key">Linux 运维</li><li>Git 与 GitHub</li><li>Vercel</li></ul><p class="also">也用：PM2、Cloudflare Tunnel</p></div>
+            <div class="group"><h3>工程交付</h3><ul class="tags"><li class="key">Docker Compose</li><li class="key">Linux 运维</li><li>Git 与 GitHub</li><li>Caddy</li></ul><p class="also">部署：本站使用 Cloudflare；待办备忘使用 Vercel。</p></div>
           </div>
         </div>
       </div>
@@ -548,19 +595,28 @@
     const sourceCard = (number, name, project) => {
       const card = document.createElement(project ? 'a' : 'div');
       card.className = 'src';
-      if (project) card.href = '#works';
+      if (project) {
+        card.href = '#works';
+        card.dataset.project = project.slug;
+        card.setAttribute('aria-haspopup', 'dialog');
+      }
       const image = project && media.thumb(project);
+      const initial = () => {
+        const node = document.createElement('span');
+        node.className = 'thumb';
+        node.textContent = Array.from(name)[0] || '';
+        node.setAttribute('aria-hidden', 'true');
+        return node;
+      };
       let thumb;
       if (image) {
         thumb = document.createElement('img');
         thumb.src = image;
         thumb.alt = '';
         thumb.decoding = 'async';
+        thumb.addEventListener('error', () => thumb.replaceWith(initial()), { once: true });
       } else {
-        thumb = document.createElement('span');
-        thumb.className = 'thumb';
-        thumb.textContent = Array.from(name)[0] || '';
-        thumb.setAttribute('aria-hidden', 'true');
+        thumb = initial();
       }
       const label = document.createElement('div');
       const tag = document.createElement('span');
@@ -584,7 +640,15 @@
       // Same budget as the API: at most 10 messages, 8000 characters, 2500 per message.
       const LIMITS = { messages: 10, total: 8000, each: 2500 };
       const rounds = [];
+      const answerState = new WeakMap();
+      const expandLinks = [...document.querySelectorAll('[data-ai-link]')];
+      const handoffNote = document.getElementById('handoffNote');
+      const explainHandoff = text => { handoffNote.textContent = text; handoffNote.hidden = !text; };
+      let closeHandoff = null;
       let busy = false;
+      let closeEditor = null;
+      let stopCurrent = null;
+      const chips = [...chat.querySelectorAll('.chips button')];
 
       const make = (tag, className, text) => {
         const node = document.createElement(tag);
@@ -592,6 +656,46 @@
         if (text !== undefined) node.textContent = text;
         return node;
       };
+      expandLinks.forEach(link => link.addEventListener('click', event => {
+        // Modified clicks retain the ordinary link to a fresh chat.
+        if (event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        if (busy) { explainHandoff('回答完成或停止后，可在全屏继续当前对话。'); return; }
+        if (closeEditor) { explainHandoff('请先发送或取消正在编辑的问题，再全屏继续。'); return; }
+        closeHandoff?.();
+        explainHandoff('');
+        const messages = [...live.children].flatMap((round, index) => {
+          const answer = answerState.get(round);
+          if (!answer) return [];
+          const userId = `home-${index}-user`;
+          return [
+            { id: userId, role: 'user', content: round.querySelector('.q').textContent, createdAt: round.querySelector('time')?.dateTime },
+            { ...answer, id: `home-${index}-answer`, role: 'assistant', replyTo: userId },
+          ];
+        });
+        const state = { messages, draft: field.value };
+        if (messages.length > 100 || messages.some(message => message.content.length > 24000) ||
+          messages.reduce((sum, message) => sum + message.content.length, state.draft.length) > 200000) {
+          explainHandoff('当前对话较长，请留在首页继续，或用新标签页打开全屏开始新对话。');
+          return;
+        }
+        const token = crypto.randomUUID();
+        const target = new URL(link.href);
+        target.searchParams.set('handoff', token);
+        let child;
+        const finish = () => { window.removeEventListener('message', receive); clearTimeout(deadline); closeHandoff = null; };
+        const receive = event => {
+          if (!child || event.source !== child || event.origin !== target.origin || event.data?.token !== token) return;
+          if (event.data.type === 'jaxson-chat:ready') child.postMessage({ type: 'jaxson-chat:state', token, state }, target.origin);
+          if (event.data.type === 'jaxson-chat:received') finish();
+        };
+        window.addEventListener('message', receive);
+        const deadline = setTimeout(() => { finish(); explainHandoff('全屏页面未能接续。原对话仍在这里，可以再试一次。'); }, 30000);
+        closeHandoff = finish;
+        child = window.open(target.href, '_blank');
+        if (!child) { finish(); explainHandoff('浏览器阻止了新窗口，请允许弹出窗口后重试。原对话仍保留在这里。'); }
+      }));
+      window.addEventListener('pagehide', () => closeHandoff?.());
       const request = question => {
         const messages = [{ role: 'user', content: question }];
         let total = question.length;
@@ -674,86 +778,279 @@
             label.textContent = '已检索公开资料';
             meta.textContent = [meta.textContent, `用时 ${((performance.now() - started) / 1000).toFixed(1)} 秒`].filter(Boolean).join(' · ');
           },
-          stopped() {
+          stopped(message = '检索没有完成') {
             box.classList.remove('busy');
-            label.textContent = '检索没有完成';
+            box.open = false;
+            label.textContent = message;
+            if (hits.textContent === '检索中…') hits.textContent = '未取得检索结果';
+            writer.textContent = message;
           },
         };
       };
-      const scrollDown = () => { thread.scrollTop = thread.scrollHeight; };
+      let followLatest = true;
+      thread.addEventListener('scroll', () => {
+        followLatest = thread.scrollHeight - thread.clientHeight - thread.scrollTop < 48;
+      });
+      const scrollDown = (force = false) => {
+        if (force) followLatest = true;
+        if (followLatest) thread.scrollTop = thread.scrollHeight;
+      };
       const goLive = () => {
         if (chat.dataset.live) return;
         chat.dataset.live = 'true';
         chat.querySelector('.sample')?.remove();
         document.getElementById('chatBadge').textContent = '实时回答';
-        document.getElementById('greetSub').textContent = '回答只引用我公开的项目和经历，每条回答上方可以展开看它查了哪些资料。';
+        document.getElementById('greetSub').textContent = '根据我的公开项目和经历回答；展开资料栏查看来源，也可以继续追问。';
+      };
+
+      const actionIcon = name => {
+        const shapes = {
+          copy: ['M9 7h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z', 'M17 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2'],
+          retry: ['M3 12a9 9 0 1 0 9-9c-2.5 0-4.9 1-6.7 2.8L3 8', 'M3 3v5h5'],
+          edit: ['m16 3 5 5L9 20l-6 1 1-6L16 3Z', 'm13 6 5 5'],
+          check: ['M5 12l4 4L19 6'],
+        };
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(key, value);
+        shapes[name].forEach(shape => {
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', shape);
+          svg.append(path);
+        });
+        return svg;
+      };
+      const toolsFor = (text, { retry, edit } = {}) => {
+        const tools = make('div', edit ? 'message-tools user-tools' : 'message-tools');
+        tools.setAttribute('role', 'group');
+        tools.setAttribute('aria-label', edit ? '消息操作' : '回答操作');
+        if (edit) {
+          const now = new Date();
+          const time = make('time', '', now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }));
+          time.dateTime = now.toISOString();
+          tools.append(time);
+        }
+        const action = (name, label) => {
+          const button = make('button', 'icon-action');
+          button.type = 'button';
+          button.title = label;
+          button.setAttribute('aria-label', label);
+          button.append(actionIcon(name));
+          return button;
+        };
+        const copy = action('copy', edit ? '复制问题' : '复制回答');
+        copy.disabled = !text;
+        if (!text) copy.title = '暂无回答可复制';
+        const feedback = make('span', 'action-feedback');
+        feedback.hidden = true;
+        feedback.setAttribute('role', 'status');
+        let feedbackTimer;
+        copy.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(edit ? text : withoutEvidenceList(text));
+            copy.replaceChildren(actionIcon('check'));
+            feedback.textContent = '已复制';
+          } catch {
+            feedback.textContent = '复制失败，请手动选择文字';
+          }
+          feedback.hidden = false;
+          clearTimeout(feedbackTimer);
+          feedbackTimer = setTimeout(() => { feedback.hidden = true; copy.replaceChildren(actionIcon('copy')); }, 1800);
+        });
+        if (text) tools.append(copy);
+        if (edit) {
+          const button = action('edit', '编辑问题');
+          button.dataset.edit = 'true';
+          button.disabled = busy;
+          button.addEventListener('click', edit);
+          tools.append(button);
+        }
+        if (retry) {
+          const button = action('retry', '重试');
+          button.dataset.retry = 'true';
+          button.disabled = busy;
+          button.addEventListener('click', retry);
+          tools.append(button);
+        }
+        tools.append(feedback);
+        return tools;
+      };
+
+      const editQuestion = round => {
+        if (busy) return;
+        closeEditor?.();
+        const user = round.querySelector('.user-message');
+        const saved = [...user.childNodes];
+        const editor = make('form', 'question-editor');
+        const input = make('textarea');
+        input.setAttribute('aria-label', '编辑问题');
+        input.rows = 2;
+        input.maxLength = 200;
+        input.required = true;
+        input.value = user.querySelector('.q').textContent;
+        const actions = make('div', 'question-edit-actions');
+        const cancel = make('button', '', '取消');
+        cancel.type = 'button';
+        const submit = make('button', 'question-edit-send', '发送');
+        submit.type = 'submit';
+        actions.append(cancel, submit);
+        editor.append(input, actions);
+        user.replaceChildren(editor);
+        user.classList.add('is-editing');
+        const fit = () => {
+          input.style.height = 'auto';
+          input.style.height = Math.min(input.scrollHeight, 180) + 'px';
+        };
+        let observedWidth = 0;
+        const observer = new ResizeObserver(([entry]) => {
+          if (Math.abs(entry.contentRect.width - observedWidth) < .5) return;
+          observedWidth = entry.contentRect.width;
+          fit();
+        });
+        observer.observe(user);
+        fit();
+        const close = (focus = false) => {
+          observer.disconnect();
+          user.replaceChildren(...saved);
+          user.classList.remove('is-editing');
+          closeEditor = null;
+          if (focus) user.querySelector('[data-edit]')?.focus();
+        };
+        closeEditor = () => close();
+        cancel.addEventListener('click', () => close(true));
+        editor.addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.preventDefault(); close(true); }
+        });
+        editor.addEventListener('submit', event => {
+          event.preventDefault();
+          const question = input.value.trim();
+          if (!question || busy) return;
+          close();
+          user.querySelector('.q').textContent = question;
+          user.querySelector('.user-tools').replaceWith(toolsFor(question, { edit: () => editQuestion(round) }));
+          ask(question, round);
+        });
+        input.addEventListener('input', fit);
+        input.focus();
       };
 
       const ask = async (question, round) => {
         if (busy) return;
+        closeEditor?.();
         busy = true;
-        send.disabled = true;
+        explainHandoff('');
+        expandLinks.forEach(link => { link.setAttribute('aria-disabled', 'true'); link.title = '回答完成或停止后，可全屏继续'; });
+        send.type = 'button';
+        send.textContent = '停止';
+        chips.forEach(chip => { chip.disabled = true; });
         goLive();
+        const controller = new AbortController();
+        let endReason = '';
+        stopCurrent = () => { endReason = 'stopped'; controller.abort(); };
         if (!round) {
           round = make('div', 'round');
-          round.append(make('p', 'q', question), make('div', 'a'));
+          const user = make('div', 'user-message');
+          user.append(make('p', 'q', question), toolsFor(question, { edit: () => editQuestion(round) }));
+          round.append(user, make('div', 'assistant-message'));
           live.append(round);
+        } else {
+          // Retrying or editing starts a new branch from this question.
+          const following = [...live.children].slice([...live.children].indexOf(round));
+          for (let index = rounds.length - 1; index >= 0; index--) {
+            if (following.includes(rounds[index][2])) rounds.splice(index, 1);
+          }
+          following.slice(1).forEach(node => node.remove());
         }
+        live.querySelectorAll('[data-edit], [data-retry]').forEach(button => { button.disabled = true; });
+        const savedAnswer = { content: '', status: 'error', evidence: [], sources: [] };
+        answerState.set(round, savedAnswer);
         // How this answer was found sits between the question and the answer.
-        round.querySelector('.thinking')?.remove();
         const thinking = thinkingFor();
-        round.querySelector('.q').after(thinking.box);
-        const answer = round.querySelector('.a');
-        round.querySelector('.status')?.remove();
-        answer.className = 'a pending';
-        answer.textContent = '';
-        scrollDown();
+        const reply = round.querySelector('.assistant-message');
+        const answer = make('div', 'a pending');
+        reply.replaceChildren(thinking.box, answer);
+        const waiting = make('p', 'wait-note', '等待时间较长，可以继续等待，或停止后重试。');
+        waiting.hidden = true;
+        reply.append(waiting);
+        scrollDown(true);
         let text = '';
         let sources = [];
-        const fail = (message, withLink) => {
-          thinking.stopped();
+        let reader;
+        let waitTimer;
+        let idleTimer;
+        // A progressing answer can run longer; only a stalled request times out.
+        const resetWait = () => {
+          clearTimeout(waitTimer);
+          clearTimeout(idleTimer);
+          waiting.hidden = true;
+          waitTimer = setTimeout(() => { waiting.hidden = false; scrollDown(); }, 12000);
+          idleTimer = setTimeout(() => { endReason = 'timeout'; controller.abort(); }, 45000);
+        };
+        const fail = (message, withLink, label = text ? '回答未完成' : '检索没有完成') => {
+          Object.assign(savedAnswer, { content: text, status: endReason === 'stopped' ? 'stopped' : text ? 'interrupted' : 'error', errorMessage: message });
+          thinking.stopped(label);
           if (!text) answer.remove();
+          if (!text && !sources.length) thinking.box.hidden = true;
           const status = make('p', 'status', message);
           if (withLink) {
             const link = make('a', '', '去完整对话页试试');
             link.href = document.querySelector('[data-ai-link]').href;
             status.append(link);
           }
-          const retry = make('button', 'btn', '重试');
-          retry.type = 'button';
-          retry.addEventListener('click', () => {
-            if (!round.querySelector('.a')) round.querySelector('.q').after(make('div', 'a'));
-            ask(question, round);
-          });
-          status.append(retry);
-          round.append(status);
+          reply.append(status, toolsFor(text, { retry: () => ask(question, round) }));
         };
         try {
-          const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: request(question) }) });
+          resetWait();
+          const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: request(question) }), signal: controller.signal });
           if (response.status === 429) return fail('提问太频繁，请过一分钟再试。');
           if (!response.ok || !response.body) return fail('暂时连不上 AI，请稍后重试。', true);
-          const reader = response.body.getReader();
+          reader = response.body.getReader();
           const decoder = new TextDecoder();
           let buffer = '';
+          let eventType = '';
+          let dataLines = [];
+          const parseEvents = value => {
+            buffer += decoder.decode(value, { stream: true });
+            const events = [];
+            let newline;
+            while ((newline = buffer.indexOf('\n')) !== -1) {
+              const line = buffer.slice(0, newline).replace(/\r$/, '');
+              buffer = buffer.slice(newline + 1);
+              if (!line) {
+                if (dataLines.length) events.push({ type: eventType || 'message', data: dataLines.join('\n') });
+                eventType = ''; dataLines = [];
+              } else if (!line.startsWith(':')) {
+                const colon = line.indexOf(':');
+                const key = colon < 0 ? line : line.slice(0, colon);
+                const content = colon < 0 ? '' : line.slice(colon + 1).replace(/^ /, '');
+                if (key === 'event') eventType = content;
+                if (key === 'data') dataLines.push(content);
+              }
+              if (dataLines.reduce((sum, line) => sum + line.length, 0) > 65536) throw new Error('SSE frame too large');
+            }
+            if (buffer.length + dataLines.reduce((sum, line) => sum + line.length, 0) > 65536) throw new Error('SSE frame too large');
+            return events;
+          };
           let finished = false;
           while (!finished) {
             const { value, done } = await reader.read();
             if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const events = buffer.split('\n\n');
-            buffer = events.pop();
-            for (const block of events) {
-              const type = /^event: (.+)$/m.exec(block)?.[1];
-              const data = JSON.parse(/^data: (.*)$/m.exec(block)?.[1] || '{}');
+            for (const entry of parseEvents(value)) {
+              const type = entry.type;
+              if (!['meta', 'text', 'done', 'error'].includes(type)) continue;
+              const data = JSON.parse(entry.data);
               if (type === 'meta') {
+                resetWait();
                 const evidence = Array.isArray(data.evidence) ? data.evidence.filter(tag => typeof tag === 'string') : [];
                 // Older servers send only the tags.
                 sources = Array.isArray(data.sources) && data.sources.every(source => typeof source?.tag === 'string')
                   ? data.sources : evidence.map(tag => ({ tag }));
                 thinking.found(evidence, data.generator);
+                Object.assign(savedAnswer, { evidence, sources, generator: data.generator });
               }
-              if (type === 'text' && typeof data.text === 'string') {
+              if (type === 'text' && typeof data.text === 'string' && data.text) {
+                resetWait();
                 text += data.text;
+                savedAnswer.content = text;
                 thinking.answering();
                 answer.className = 'a';
                 renderAnswer(answer, text);
@@ -763,20 +1060,45 @@
             }
           }
           if (finished === 'done' && text) {
-            rounds.push([question, text]);
+            savedAnswer.status = 'completed';
+            rounds.push([question, text, round]);
             if (sources.length) answer.after(sourceCards(sources, text));
+            reply.append(toolsFor(text, { retry: () => ask(question, round) }));
           } else {
             fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时没能生成回答，请重试。');
           }
         } catch {
-          fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时连不上 AI，请稍后重试。', !text);
+          if (endReason === 'stopped') {
+            fail(text ? '已停止生成，已收到的内容保留在上面。' : '已停止本次提问。', false, '已停止回答');
+          } else if (endReason === 'timeout') {
+            fail(text ? '回答长时间未更新，已保留收到的内容，请重试。' : '等待回答超时，请重试。', false, '等待超时');
+          } else {
+            fail(text ? '回答中断了，已收到的内容保留在上面。' : '暂时连不上 AI，请稍后重试。', !text);
+          }
         } finally {
+          clearTimeout(waitTimer);
+          clearTimeout(idleTimer);
+          waiting.remove();
+          if (reader) {
+            await reader.cancel().catch(() => {});
+            reader.releaseLock();
+          }
+          stopCurrent = null;
           busy = false;
-          send.disabled = false;
+          expandLinks.forEach(link => { link.removeAttribute('aria-disabled'); link.title = '在新标签页继续当前对话'; });
+          send.type = 'submit';
+          send.textContent = '提问';
+          chips.forEach(chip => { chip.disabled = false; });
+          live.querySelectorAll('[data-edit], [data-retry]').forEach(button => { button.disabled = false; });
           scrollDown();
         }
       };
 
+      send.addEventListener('click', event => {
+        if (!busy) return;
+        event.preventDefault();
+        stopCurrent?.();
+      });
       askForm.addEventListener('submit', event => {
         event.preventDefault();
         const question = field.value.trim();
@@ -784,7 +1106,7 @@
         field.value = '';
         ask(question);
       });
-      chat.querySelectorAll('.chips button').forEach(chip => chip.addEventListener('click', () => ask(chip.textContent.trim())));
+      chips.forEach(chip => chip.addEventListener('click', () => ask(chip.textContent.trim())));
       // "问我的 AI" anywhere on the page brings you to the composer instead of another site.
       document.querySelectorAll('a[href="#ask"]').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
@@ -887,23 +1209,27 @@
       const coverOf = (project, src) => {
         const name = nameOf(project);
         const cover = el('div', 'cover');
+        const placeholder = () => {
+          // The name is already the card's heading: the cover shows its initial and the stack.
+          cover.classList.add('placeholder');
+          cover.setAttribute('aria-hidden', 'true');
+          cover.replaceChildren(el('b', '', Array.from(name)[0]));
+          if (project.technologies?.length) {
+            const stack = el('ul');
+            stack.append(...project.technologies.slice(0, 4).map(tech => el('li', '', tech)));
+            cover.append(stack);
+          }
+        };
         if (src) {
           const img = el('img');
+          img.addEventListener('error', placeholder, { once: true });
           img.src = src;
           img.alt = `${name}界面截图`;
           img.loading = 'lazy';
           img.decoding = 'async';
           cover.append(img);
         } else {
-          // The name is already the card's heading: the cover shows its initial and the stack.
-          cover.classList.add('placeholder');
-          cover.setAttribute('aria-hidden', 'true');
-          cover.append(el('b', '', Array.from(name)[0]));
-          if (project.technologies?.length) {
-            const stack = el('ul');
-            stack.append(...project.technologies.slice(0, 4).map(tech => el('li', '', tech)));
-            cover.append(stack);
-          }
+          placeholder();
         }
         return cover;
       };
@@ -935,14 +1261,15 @@
         title.id = 'projectDialogTitle';
         const parts = [title];
         const role = [project.role, project.date].filter(Boolean).join('，');
-        if (role) parts.push(el('p', 'work-role', role));
+        if (role) parts.push(el('p', 'work-role', `我的角色：${role}`));
         if (project.summary) parts.push(el('p', 'summary', project.summary));
         const story = el('dl', 'story');
-        for (const [label, text] of [['难题', project.problem], ['做法', project.action], ['结果', project.outcome]]) {
+        for (const [label, text] of [['难题', project.problem], ['做法', project.action], ['结果', project.outcome], ['说明', project.note]]) {
           if (text) story.append(el('dt', '', label), el('dd', '', text));
         }
         if (story.children.length) parts.push(story);
         if (project.technologies?.length) {
+          parts.push(el('h4', 'stack-label', '项目使用的技术'));
           const stack = el('ul', 'tags');
           stack.append(...project.technologies.map(tech => el('li', '', tech)));
           parts.push(stack);
@@ -954,6 +1281,15 @@
         opener = button;
         dialog.showModal();
       };
+      document.addEventListener('click', event => {
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !(event.target instanceof Element)) return;
+        const source = event.target.closest('a.src[data-project]');
+        if (!source) return;
+        const project = published.find(item => item.slug === source.dataset.project);
+        if (!project) return;
+        event.preventDefault();
+        showProject(project, source);
+      });
       dialog.querySelector('.close').addEventListener('click', () => dialog.close());
       // A click on the dimmed backdrop lands on the dialog element itself.
       dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
@@ -1012,11 +1348,27 @@
         }
         list.replaceChildren(...blocks);
       };
-      fetch(new URL('/api/showcase-projects', location.origin), { cache: 'no-store' })
-        .then(response => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
-        .then(data => Array.isArray(data.projects) && data.projects.every(p => p.slug && p.title)
-          ? render(data.projects) : Promise.reject(new Error('Invalid feed')))
-        .catch(() => status('项目暂时无法加载，请稍后刷新页面。'));
+      const load = async () => {
+        status('正在加载项目…');
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10000);
+        try {
+          const response = await fetch(new URL('/api/showcase-projects', location.origin), { cache: 'no-store', signal: controller.signal });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if (!Array.isArray(data.projects) || !data.projects.every(p => p.slug && p.title)) throw new Error('Invalid feed');
+          render(data.projects);
+        } catch {
+          status('项目暂时无法加载，可以重试。');
+          const retry = el('button', 'retry-action works-retry', '重新加载');
+          retry.type = 'button';
+          retry.addEventListener('click', load);
+          list.append(retry);
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+      load();
     })();
 
     let currentFrame = 0;

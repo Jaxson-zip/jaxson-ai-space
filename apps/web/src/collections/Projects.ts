@@ -98,7 +98,7 @@ export const Projects: CollectionConfig = {
       name: 'visibility',
       label: '公开属性',
       type: 'select',
-      defaultValue: 'public',
+      defaultValue: 'private',
       options: [
         { label: '公开展示 (Public)', value: 'public' },
         { label: '私有探索 (Private)', value: 'private' },

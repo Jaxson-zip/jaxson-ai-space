@@ -4,8 +4,8 @@ import { fileURLToPath, URL as NodeUrl } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { awards, experiences } from './content'
 
-// The owner confirmed these on 2026-10-23. Every public copy must say the same thing; the CMS records and the
-// résumé PDF are edited separately (docs/部署交接-2026-10-22.md §8).
+// The owner confirmed these on 2026-10-23. Every public copy must say the same thing.
+// docker/tests/test_public_delivery.py checks both shipped PDFs; CMS records are maintained separately.
 const root = fileURLToPath(new NodeUrl('../../../../../', import.meta.url))
 const publicSources = [
   'apps/portfolio/index.html',
@@ -29,6 +29,27 @@ describe('résumé facts', () => {
     const home = readFileSync(join(root, 'apps/portfolio/index.html'), 'utf8')
     for (const fact of ['2026.06 – 2026.08', '开发实习生', 'GPA 3.85 / 4.0，专业排名前 2%', '国家级奖项 3 项、省市级奖项 8 项']) {
       expect(home, fact).toContain(fact)
+    }
+  })
+
+  it('keeps the internship summary concise and puts its dates in the résumé', () => {
+    const home = readFileSync(join(root, 'apps/portfolio/index.html'), 'utf8')
+    const page = new DOMParser().parseFromString(home, 'text/html')
+    const facts = page.querySelector('#hero .facts')?.textContent || ''
+    expect(facts).toContain('实习')
+    expect(facts).not.toContain('已结束')
+    expect(page.querySelector('#bio .entry .when')?.textContent).toBe('2026.06 – 2026.08')
+  })
+
+  it('describes the internship with the same maintenance scope as the confirmed record', () => {
+    const home = readFileSync(join(root, 'apps/portfolio/index.html'), 'utf8')
+    const page = new DOMParser().parseFromString(home, 'text/html')
+    const entry = page.querySelector('#bio .entry')?.textContent || ''
+    for (const fact of ['Vue', 'Go', '订单调度', 'Docker', '镜像', 'AI 编程']) {
+      expect(entry, fact).toContain(fact)
+    }
+    for (const unsupported of ['数据统计', '需求评审', '开发与修复订单管理']) {
+      expect(entry).not.toContain(unsupported)
     }
   })
 

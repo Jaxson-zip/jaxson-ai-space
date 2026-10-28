@@ -16,7 +16,8 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
   const { slug } = await params
-  const { projects } = await getHydratedPortfolioData({ allowStaticFallback: false, projectSlug: slug })
+  const { projects, isLiveDb } = await getHydratedPortfolioData({ allowStaticFallback: false, projectSlug: slug })
+  if (!isLiveDb) throw new Error('项目资料暂时无法加载')
   const project = projects.find((p) => p.slug === slug)
   return project ? { title: project.title, description: project.summary } : { title: '页面未找到' }
 }
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
 /** The home page's featured card, at full width: screenshot and story on the left, role, stack and links on the right. */
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const { slug } = await params
-  const { projects } = await getHydratedPortfolioData({ allowStaticFallback: false, projectSlug: slug })
+  const { projects, isLiveDb } = await getHydratedPortfolioData({ allowStaticFallback: false, projectSlug: slug })
+  if (!isLiveDb) throw new Error('项目资料暂时无法加载')
   const project = projects.find((p) => p.slug === slug)
 
   if (!project) {
@@ -36,6 +38,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     ['要解决的问题', project.problem],
     ['做法', project.approach],
     ['结果', project.outcome],
+    ['参与说明', project.note],
   ].filter(([, text]) => text)
 
   return (
@@ -85,7 +88,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             </dl>
             {project.technologies.length > 0 && (
               <div>
-                <h3>技术栈</h3>
+                <h3>项目使用的技术</h3>
                 <ul className="jx-tags project-stack">
                   {project.technologies.map((tech) => <li key={tech}>{tech}</li>)}
                 </ul>

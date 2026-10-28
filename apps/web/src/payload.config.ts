@@ -87,7 +87,7 @@ export default buildConfig({
     : sqliteAdapter({
         transactionOptions: { behavior: 'immediate' },
         client: {
-          url: 'file:./payload-local.db',
+          url: `file:${process.env.SQLITE_DATABASE_FILE || './payload-local.db'}`,
         },
       }),
   sharp,
