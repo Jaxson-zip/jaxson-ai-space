@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
+const browserName = process.env.WEB_TEST_BROWSER === 'webkit' ? 'webkit' : 'chromium'
+
 // Browser checks for the CMS-served public pages (/ai, /resume, /projects/[slug], 404).
 // CI uses seed:public-test with an isolated SQLite database and synthetic media.
 // Local runs can use an existing CMS preview via WEB_TEST_URL:
@@ -11,8 +13,8 @@ export default defineConfig({
   timeout: 90_000,
   use: {
     baseURL: process.env.WEB_TEST_URL || 'http://localhost:3102',
-    browserName: 'chromium',
-    channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
+    browserName,
+    channel: browserName === 'chromium' ? process.env.PLAYWRIGHT_CHANNEL || undefined : undefined,
     trace: 'retain-on-failure',
   },
   webServer: process.env.WEB_TEST_URL ? undefined : {

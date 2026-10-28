@@ -92,8 +92,8 @@ jobs:
       - name: Test Public Portfolio
         run: pnpm --filter @jaxson/portfolio test
 
-      - name: Install Chromium for portfolio reflow checks
-        run: pnpm --filter @jaxson/web exec playwright install --with-deps chromium
+      - name: Install Chromium and WebKit for public-page checks
+        run: pnpm --filter @jaxson/web exec playwright install --with-deps chromium webkit
 
       - name: Test portfolio paging and zoom reflow in Chromium
         run: pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.config.ts
@@ -138,11 +138,17 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3110/projects/private-fixture)" = 404
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3110/api/users)" = 404
           pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts
+          WEB_TEST_BROWSER=webkit pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts --grep 'every public page|names and greeting|multiline JD grows|plain and linked sources|long mixed source|title, story sections|a missing project|legacy Word'
         # This flag selects upload assertions in the browser runner only; the running
         # production image keeps its normal .next output directory.
 
       - name: Validate Production Compose Template
         run: |
+          # Older Compose still checks env_file existence with --no-env-resolution.
+          # CI uses an empty disposable file; no production configuration is loaded.
+          test ! -e docker/production.env
+          touch docker/production.env
+          trap 'rm -f docker/production.env' EXIT
           docker compose --env-file docker/.env.example -f docker/compose.prod.yaml --profile bootstrap --profile tunnel --profile maintenance config --quiet
           docker compose -f docker/compose.vps-existing.yaml config --no-env-resolution --quiet
           docker compose -f docker/compose.rehearsal.yaml --profile runtime config --quiet

@@ -156,9 +156,11 @@ test.describe('/ai interactions', () => {
     for (const viewport of [desktop, phone]) {
       await open(page, '/ai', viewport)
       const field = page.getByRole('textbox', { name: '问我的 AI 分身' })
-      const shortHeight = (await field.boundingBox())!.height
+      const shortHeight = await field.evaluate(element => element.getBoundingClientRect().height)
       await field.fill('请分析这个 JD\n岗位职责：开发业务应用\n任职要求：熟悉 React 和 TypeScript\n具备接口联调经验\n了解自动化测试')
-      await expect.poll(async () => (await field.boundingBox())!.height).toBeGreaterThan(shortHeight)
+      // Measure rendered geometry directly: WebKit's first protocol bounding-box
+      // round-trip can exceed the default polling deadline on Windows.
+      await expect.poll(() => field.evaluate(element => element.getBoundingClientRect().height), { timeout: 15000 }).toBeGreaterThan(shortHeight)
       await expect(field).toBeInViewport({ ratio: 1 })
       await expect(page.getByRole('button', { name: '发送消息' })).toBeInViewport({ ratio: 1 })
       const before = requests.length
