@@ -18,7 +18,8 @@ permissions:
 jobs:
   test-and-verify:
     name: 🧪 Automated Test & Typecheck
-    runs-on: ubuntu-latest
+    # Playwright 1.58 supports this release; ubuntu-latest can advance beyond it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     services:
       rehearsal-postgres:
@@ -177,7 +178,7 @@ jobs:
   deploy-to-vps:
     name: Deploy verified images to the existing VPS
     needs: test-and-verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     if: github.event_name == 'workflow_dispatch' && (github.ref_name == 'main' || github.ref_name == 'master')
 
