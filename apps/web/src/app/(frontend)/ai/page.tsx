@@ -2,13 +2,15 @@
 
 import React, { useState, useRef, useLayoutEffect, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import { Send, RotateCcw, ArrowLeft, ShieldCheck, ChevronDown } from 'lucide-react'
+import { Send, Square, Copy, Check, Pencil, RotateCcw, ArrowLeft, ShieldCheck, ChevronDown } from 'lucide-react'
 import './ai.css'
 import { portfolioOrigin } from '@/components/public-site/links'
-import { buildChatHistory, CHAT_LIMITS, type ConversationMessage as Message } from '@/features/ai/chat-history'
+import { buildChatHistory, CHAT_LIMITS, type ConversationMessage as Message, type ConversationSource } from '@/features/ai/chat-history'
 import { consumeChatStream } from '@/features/ai/chat-stream'
 import { buildSuggestions, type Suggestion } from '@/features/ai/suggestions'
 import { initialQuestion } from '@/features/ai/initial-question'
+import { isJobMatchRequest } from '@/features/ai/jd-intent'
+import { readConversationSnapshot } from '@/features/ai/conversation-handoff'
 
 const INITIAL_MESSAGES: Message[] = [
   {
@@ -34,9 +36,10 @@ function renderInlineMarkdown(content: string) {
 }
 
 /** The sources the answer cites by [n], keeping their numbers; every source while it cites none yet. */
-function citedSources(content: string, evidence: readonly string[]) {
+function citedSources(content: string, evidence: readonly string[], sources?: readonly ConversationSource[]) {
   const cited = new Set([...content.matchAll(/\[(\d{1,2})\]/g)].map((match) => Number(match[1])))
-  const all = evidence.map((tag, index) => ({ number: index + 1, tag }))
+  const available: readonly ConversationSource[] = sources?.length ? sources : evidence.map(tag => ({ tag }))
+  const all = available.map((source, index) => ({ ...source, number: index + 1 }))
   const kept = all.filter(({ number }) => cited.has(number))
   return kept.length ? kept : all
 }
@@ -61,14 +64,99 @@ function FormattedContent({ text, isUser }: { text: string; isUser?: boolean }) 
   )
 }
 
+function MessageTools({ message, busy, onEdit, onRegenerate }: {
+  message: Message
+  busy: boolean
+  onEdit?: () => void
+  onRegenerate?: () => void
+}) {
+  const isUser = message.role === 'user'
+  const label = isUser ? '复制问题' : '复制回答'
+  const retryLabel = message.status === 'completed' ? '重新生成回答' : '重试回答'
+  const [feedback, setFeedback] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false; if (timer.current) clearTimeout(timer.current) }
+  }, [])
+  const copy = async () => {
+    let result: 'copied' | 'failed'
+    try { await navigator.clipboard.writeText(message.content); result = 'copied' }
+    catch { result = 'failed' }
+    if (!mounted.current) return
+    setFeedback(result)
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => setFeedback('idle'), 1800)
+  }
+  return <div className="ai-message-tools" role="group" aria-label={isUser ? '消息操作' : '回答操作'}>
+    {isUser && message.createdAt && <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</time>}
+    {message.content && <button type="button" aria-label={label} title={label} onClick={() => void copy()}>
+      {feedback === 'copied' ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+    </button>}
+    {onEdit && <button id={`ai-edit-${message.id}`} type="button" aria-label="编辑问题" title="编辑问题" disabled={busy} onClick={onEdit}><Pencil size={14} aria-hidden="true" /></button>}
+    {onRegenerate && <button type="button" aria-label={retryLabel} title={retryLabel} disabled={busy} onClick={onRegenerate}><RotateCcw size={14} aria-hidden="true" /></button>}
+    <span className="ai-action-feedback" role="status" hidden={feedback === 'idle'}>{feedback === 'copied' ? '已复制' : feedback === 'failed' ? '复制失败，请手动选择文字' : ''}</span>
+  </div>
+}
+
+function fitQuestionEditor(input: HTMLTextAreaElement | null) {
+  if (!input) return
+  input.style.height = 'auto'
+  input.style.height = Math.max(48, Math.min(input.scrollHeight, 180)) + 'px'
+}
+
+function QuestionEditor({ content, onCancel, onSave }: { content: string; onCancel: () => void; onSave: (value: string) => void }) {
+  const [value, setValue] = useState(content)
+  const field = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => fitQuestionEditor(field.current), [value])
+  useEffect(() => {
+    const input = field.current
+    input?.focus()
+    if (!input?.form || typeof ResizeObserver === 'undefined') return
+    let width = 0
+    const observer = new ResizeObserver(([entry]) => {
+      if (Math.abs(entry.contentRect.width - width) < .5) return
+      width = entry.contentRect.width
+      fitQuestionEditor(input)
+    })
+    observer.observe(input.form)
+    return () => observer.disconnect()
+  }, [])
+  return <form className="ai-question-editor" onSubmit={event => {
+    event.preventDefault()
+    if (value.trim()) onSave(value.trim())
+  }} onKeyDown={event => {
+    if (event.nativeEvent.isComposing) return
+    if (event.key === 'Escape') { event.preventDefault(); onCancel() }
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.requestSubmit() }
+  }}>
+    <textarea ref={field} aria-label="编辑问题" rows={2} maxLength={CHAT_LIMITS.messageChars} value={value} onChange={event => setValue(event.target.value)} required />
+    <div className="ai-question-edit-actions">
+      <button type="button" onClick={onCancel}>取消</button>
+      <button type="submit" className="ai-question-edit-send" disabled={!value.trim()}>发送</button>
+    </div>
+  </form>
+}
+
 export default function AIPage() {
   const portfolioUrl = `${portfolioOrigin}/`
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [longWait, setLongWait] = useState(false)
+  const [handoffPending, setHandoffPending] = useState(false)
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false)
   const [inputError, setInputError] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const restoreEditFocus = useRef<string | null>(null)
   const [suggestions, setSuggestions] = useState<Suggestion[]>(() => buildSuggestions([]))
+  const hasConversation = messages.some(message => message.role === 'user')
+  useLayoutEffect(() => {
+    if (editingId || !restoreEditFocus.current) return
+    document.getElementById(`ai-edit-${restoreEditFocus.current}`)?.focus()
+    restoreEditFocus.current = null
+  }, [editingId])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -87,16 +175,37 @@ export default function AIPage() {
   const isAutoScrollEnabled = useRef(true)
   const activeRequestRef = useRef<AbortController | null>(null)
   const requestGenerationRef = useRef(0)
+  const clearWaitRef = useRef<() => void>(() => {})
 
   useEffect(() => () => {
+    clearWaitRef.current()
     activeRequestRef.current?.abort()
     activeRequestRef.current = null
     requestGenerationRef.current++
   }, [])
 
   // A question typed on the portfolio arrives prefilled; the visitor still sends it.
-  const composerRef = useRef<HTMLInputElement>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => {
+    const field = composerRef.current
+    if (!field) return
+    const fit = () => {
+      field.style.height = 'auto'
+      field.style.height = Math.max(44, Math.min(field.scrollHeight, 180)) + 'px'
+    }
+    fit()
+    if (typeof ResizeObserver === 'undefined') return
+    let width = field.getBoundingClientRect().width
+    const observer = new ResizeObserver(([entry]) => {
+      if (Math.abs(entry.contentRect.width - width) < .5) return
+      width = entry.contentRect.width
+      fit()
+    })
+    observer.observe(field)
+    return () => observer.disconnect()
+  }, [input])
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).has('handoff')) return
     const question = initialQuestion(window.location.search)
     if (!question) return
     // After hydration, so the server-rendered empty field matches the first client render.
@@ -106,6 +215,54 @@ export default function AIPage() {
     })
     return () => cancelAnimationFrame(frame)
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('handoff')
+    if (!token) return
+    const opener = window.opener as Window | null
+    const origin = new URL(portfolioUrl).origin
+    let from: URL | undefined
+    try { from = new URL(params.get('from') || '') } catch { /* Reject malformed senders. */ }
+    const removeToken = () => {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('handoff')
+      window.history.replaceState(null, '', url)
+    }
+    if (!opener || opener.closed || from?.origin !== origin || token.length > 100) {
+      removeToken()
+      const frame = requestAnimationFrame(() => setInputError('未能接续首页对话，请返回原页面重试。'))
+      return () => cancelAnimationFrame(frame)
+    }
+    let finished = false
+    const frame = requestAnimationFrame(() => { if (!finished) setHandoffPending(true) })
+    const ready = () => opener.postMessage({ type: 'jaxson-chat:ready', token }, origin)
+    const receive = (event: MessageEvent) => {
+      if (finished || event.origin !== origin || event.source !== opener || event.data?.type !== 'jaxson-chat:state' || event.data.token !== token) return
+      const snapshot = readConversationSnapshot(event.data.state)
+      finished = true
+      clearInterval(retry)
+      clearTimeout(deadline)
+      removeToken()
+      setHandoffPending(false)
+      if (!snapshot) { setInputError('对话内容未能接续，请返回原页面重试。'); return }
+      setMessages(snapshot.messages.length ? snapshot.messages : INITIAL_MESSAGES)
+      setInput(snapshot.draft)
+      opener.postMessage({ type: 'jaxson-chat:received', token }, origin)
+      composerRef.current?.focus()
+    }
+    window.addEventListener('message', receive)
+    const retry = setInterval(ready, 500)
+    const deadline = setTimeout(() => {
+      finished = true
+      clearInterval(retry)
+      removeToken()
+      setHandoffPending(false)
+      setInputError('未能接续首页对话，请返回原页面重试。原对话仍保留在首页。')
+    }, 15000)
+    ready()
+    return () => { finished = true; cancelAnimationFrame(frame); window.removeEventListener('message', receive); clearInterval(retry); clearTimeout(deadline) }
+  }, [portfolioUrl])
 
   useEffect(() => {
     const from = new URLSearchParams(window.location.search).get('from')
@@ -145,8 +302,7 @@ export default function AIPage() {
     const container = scrollContainerRef.current
     if (!container) return
     const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
-    // If user scrolled up significantly (> 180px), pause auto-follow so they can read
-    const isUserFarFromBottom = distanceFromBottom > 180
+    const isUserFarFromBottom = distanceFromBottom > 48
     isAutoScrollEnabled.current = !isUserFarFromBottom
     setShowScrollBottomBtn(isUserFarFromBottom)
   }
@@ -161,8 +317,11 @@ export default function AIPage() {
     }
     const retryIndex = retryUserId ? messages.findIndex((message) => message.id === retryUserId && message.role === 'user') : -1
     if (retryUserId && retryIndex < 0) return
-    const userMessage: Message = retryIndex >= 0 ? messages[retryIndex] : {
-      id: crypto.randomUUID(), role: 'user', content: textToSend,
+    const userMessage: Message = retryIndex >= 0 ? {
+      ...messages[retryIndex], content: textToSend,
+      ...(messages[retryIndex].content !== textToSend ? { createdAt: new Date().toISOString() } : {}),
+    } : {
+      id: crypto.randomUUID(), role: 'user', content: textToSend, createdAt: new Date().toISOString(),
     }
     const requestHistory = buildChatHistory(retryIndex >= 0 ? messages.slice(0, retryIndex) : messages, userMessage)
     const previousAnswer = retryUserId ? messages.find((message) => message.replyTo === retryUserId) : undefined
@@ -171,32 +330,47 @@ export default function AIPage() {
     activeRequestRef.current = request
     const generation = ++requestGenerationRef.current
     const isActive = () => requestGenerationRef.current === generation && !request.signal.aborted
-    setInput('')
+    if (queryText === undefined) setInput('')
     setInputError('')
+    restoreEditFocus.current = null
+    setEditingId(null)
     setIsLoading(true)
+    setLongWait(false)
     isAutoScrollEnabled.current = true
 
-    const isJdMatch =
-      textToSend.toLowerCase().includes('jd') ||
-      textToSend.includes('岗位') ||
-      textToSend.includes('招聘') ||
-      textToSend.includes('要求') ||
-      textToSend.includes('任职')
+    const isJdMatch = isJobMatchRequest(textToSend)
 
     const answer: Message = {
       id: assistantMsgId, role: 'assistant', replyTo: userMessage.id,
       content: '', status: 'streaming', isJdMatch, evidence: [],
     }
-    setMessages((prev) => previousAnswer
-      ? prev.map((message) => message.id === assistantMsgId ? answer : message)
-      : [...prev, ...(retryUserId ? [] : [userMessage]), answer])
+    setMessages(retryIndex >= 0
+      ? [...messages.slice(0, retryIndex), userMessage, answer]
+      : [...messages, userMessage, answer])
     let accumulatedText = ''
+    let waitTimer: ReturnType<typeof setTimeout>
+    let idleTimer: ReturnType<typeof setTimeout>
+    const clearWait = () => { clearTimeout(waitTimer); clearTimeout(idleTimer) }
+    clearWaitRef.current = clearWait
+    const resetWait = () => {
+      clearWait()
+      setLongWait(false)
+      waitTimer = setTimeout(() => { if (isActive()) setLongWait(true) }, 12000)
+      idleTimer = setTimeout(() => {
+        if (!isActive()) return
+        const errorMessage = accumulatedText ? '回答长时间未更新，已保留收到的内容，请重试。' : '等待回答超时，请重试。'
+        setMessages(previous => previous.map(message => message.id === assistantMsgId
+          ? { ...message, status: accumulatedText ? 'interrupted' : 'error', errorMessage } : message))
+        request.abort()
+      }, 45000)
+    }
     const updateAnswer = (update: Partial<Message>) => {
       if (!isActive()) return
       setMessages((prev) => isActive() ? prev.map((message) => message.id === assistantMsgId ? { ...message, ...update } : message) : prev)
     }
 
     try {
+      resetWait()
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -207,24 +381,32 @@ export default function AIPage() {
         signal: request.signal,
       })
 
+      if (response.status === 429) {
+        updateAnswer({ status: 'error', errorMessage: '提问太频繁，请稍后再试。' })
+        return
+      }
       if (!response.ok || !response.body) {
         throw new Error('网络请求失败')
       }
 
       await consumeChatStream(response.body, (event) => {
+        if (!isActive()) return
+        resetWait()
         if (event.type === 'text') {
           accumulatedText += event.text
           updateAnswer({ content: accumulatedText })
         } else {
-          updateAnswer({ evidence: event.evidence, generator: event.generator })
+          updateAnswer({ evidence: event.evidence, sources: event.sources, generator: event.generator })
         }
       }, request.signal)
       updateAnswer({ status: 'completed' })
     } catch {
       updateAnswer({ status: accumulatedText ? 'interrupted' : 'error' })
     } finally {
+      clearWait()
       if (activeRequestRef.current !== request) return
       activeRequestRef.current = null
+      setLongWait(false)
       setIsLoading(false)
       // Final guarantee scroll
       if (isAutoScrollEnabled.current && scrollContainerRef.current) {
@@ -233,11 +415,27 @@ export default function AIPage() {
     }
   }
 
+  const handleStopMessage = () => {
+    const request = activeRequestRef.current
+    if (!request) return
+    activeRequestRef.current = null
+    clearWaitRef.current()
+    setLongWait(false)
+    requestGenerationRef.current++
+    request.abort()
+    setIsLoading(false)
+    setMessages(previous => previous.map(message => message.status === 'streaming'
+      ? { ...message, status: 'stopped' as const }
+      : message))
+  }
+
   const handlePresetClick = (query: string) => {
     handleSendMessage(query)
   }
 
   const handleResetChat = () => {
+    clearWaitRef.current()
+    setLongWait(false)
     activeRequestRef.current?.abort()
     activeRequestRef.current = null
     requestGenerationRef.current++
@@ -246,6 +444,8 @@ export default function AIPage() {
     setMessages(INITIAL_MESSAGES)
     setInput('')
     setInputError('')
+    restoreEditFocus.current = null
+    setEditingId(null)
     setShowScrollBottomBtn(false)
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0
@@ -253,7 +453,7 @@ export default function AIPage() {
   }
 
   return (
-    <div className="jx-page jx-ai">
+    <div className={`jx-page jx-ai${hasConversation ? ' is-live' : ''}`}>
       <div className="ai-scroll" ref={scrollContainerRef} onScroll={handleScroll}>
         <div className="ai-column">
           <div className="ai-top">
@@ -261,7 +461,7 @@ export default function AIPage() {
               <ArrowLeft size={16} aria-hidden="true" />
               <span>返回作品集</span>
             </Link>
-            <button type="button" className="ai-reset" onClick={handleResetChat}>
+            <button type="button" className="ai-reset" disabled={handoffPending} onClick={handleResetChat}>
               <RotateCcw size={15} aria-hidden="true" />
               <span>清空记录</span>
             </button>
@@ -276,19 +476,23 @@ export default function AIPage() {
           {/* Project questions follow the published list. */}
           <div className="ai-chips">
             {suggestions.map((suggestion) => (
-              <button key={suggestion.prompt} type="button" onClick={() => handlePresetClick(suggestion.prompt)}>
+              <button key={suggestion.prompt} type="button" disabled={isLoading || handoffPending} onClick={() => handlePresetClick(suggestion.prompt)}>
                 {suggestion.label}
               </button>
             ))}
           </div>
 
           <div className="ai-thread">
-            {messages.map((msg) => (
-              <div key={msg.id} className={`ai-message ${msg.role}`}>
-                <p className="ai-meta">
-                  {msg.role === 'user' ? '你' : '张锦鹏的 AI 分身'}
-                  {msg.role === 'assistant' && msg.isJdMatch && <span className="ai-mode">岗位匹配</span>}
-                </p>
+            {messages.filter(msg => !hasConversation || msg.id !== '1').map((msg) => (
+              <div key={msg.id} className={`ai-message ${msg.role}${editingId === msg.id ? ' is-editing' : ''}`}>
+                {msg.role === 'user' && editingId === msg.id ? <QuestionEditor content={msg.content} onCancel={() => {
+                  restoreEditFocus.current = msg.id
+                  setEditingId(null)
+                }} onSave={value => { void handleSendMessage(value, msg.id); composerRef.current?.focus() }} /> : <>
+                {msg.role === 'assistant' && <p className="ai-meta">
+                  张锦鹏的 AI 分身
+                  {msg.isJdMatch && <span className="ai-mode">岗位匹配</span>}
+                </p>}
                 <div className="ai-bubble">
                   {msg.content ? (
                     <FormattedContent text={msg.content} isUser={msg.role === 'user'} />
@@ -296,34 +500,39 @@ export default function AIPage() {
                     <p className="ai-pending">正在查找公开资料并生成回答…</p>
                   ) : null}
 
-                  {(msg.status === 'interrupted' || msg.status === 'error') && (
+                  {(msg.status === 'interrupted' || msg.status === 'error' || msg.status === 'stopped') && (
                     <div className="ai-status" role="status">
-                      <span>{msg.status === 'interrupted' ? '回答中断，已收到的内容保留在上方。' : '暂时未能生成回答，请重试。'}</span>
-                      <button type="button" className="jx-btn" disabled={isLoading} onClick={() => {
-                        const question = messages.find((message) => message.id === msg.replyTo)
-                        if (question) void handleSendMessage(question.content, question.id)
-                      }}>重试回答</button>
+                      <span>{msg.status === 'stopped' ? (msg.content ? '已停止生成，已收到的内容保留在上方。' : '已停止生成。') : msg.errorMessage || (msg.status === 'interrupted' ? '回答中断，已收到的内容保留在上方。' : '暂时未能生成回答，请重试。')}</span>
                     </div>
                   )}
                   {msg.generator === 'local' && msg.status === 'completed' && (
                     <p className="ai-status">此回答由公开资料直接整理。</p>
                   )}
+                  {msg.status === 'streaming' && longWait && <p className="ai-status" role="status">等待时间较长，可以继续等待，或停止后重试。</p>}
 
                   {msg.evidence && msg.evidence.length > 0 && (
                     <div className="ai-sources">
                       <p>资料来源</p>
-                      <ul className="jx-tags">
-                        {citedSources(msg.content, msg.evidence).map(({ number, tag }) => <li key={number}>{`${number}. ${tag}`}</li>)}
+                      <ul className="ai-source-list">
+                        {citedSources(msg.content, msg.evidence, msg.sources).map(({ number, tag, project }) => <li key={number}>{project
+                          ? <Link className="ai-source" href={`/projects/${encodeURIComponent(project)}`} target="_blank" rel="noopener noreferrer"><span className="ai-source-label">{`${number}. ${tag}`}</span></Link>
+                          : <span className="ai-source"><span className="ai-source-label">{`${number}. ${tag}`}</span></span>}</li>)}
                       </ul>
                     </div>
                   )}
                 </div>
+                {msg.role === 'user' ? <MessageTools message={msg} busy={isLoading} onEdit={() => setEditingId(msg.id)} /> : msg.status && msg.status !== 'streaming' ? <MessageTools message={msg} busy={isLoading} onRegenerate={() => {
+                  const question = messages.find(message => message.id === msg.replyTo)
+                  if (question) void handleSendMessage(question.content, question.id)
+                }} /> : null}
+                </>}
               </div>
             ))}
           </div>
         </div>
       </div>
 
+      <div className="ai-dock">
       {showScrollBottomBtn && (
         <button type="button" className="jx-btn ai-to-bottom" onClick={() => scrollToBottom(true)}>
           <ChevronDown size={16} aria-hidden="true" />
@@ -331,8 +540,8 @@ export default function AIPage() {
         </button>
       )}
 
-      <div className="ai-dock">
         <div className="ai-column">
+          {handoffPending && <p className="ai-status" role="status">正在接续首页对话…</p>}
           {inputError && <p className="ai-input-error" role="alert">{inputError}</p>}
           <form
             className="ai-composer"
@@ -341,16 +550,24 @@ export default function AIPage() {
               handleSendMessage()
             }}
           >
-            <input
-              type="text"
+            <textarea
+              rows={1}
+              disabled={handoffPending}
               ref={composerRef}
               placeholder="向 AI 分身提问，或直接粘贴贵司岗位 JD 需求..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading}
+              onKeyDown={event => {
+                if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) return
+                event.preventDefault()
+                if (!activeRequestRef.current) event.currentTarget.form?.requestSubmit()
+              }}
+              aria-label="问我的 AI 分身"
             />
-            <button type="submit" disabled={isLoading || !input.trim()} aria-label="发送消息">
-              <Send size={17} aria-hidden="true" />
+            <button type={isLoading ? 'button' : 'submit'} disabled={handoffPending || (!isLoading && !input.trim())} aria-label={isLoading ? '停止生成' : '发送消息'} onClick={event => {
+              if (isLoading) { event.preventDefault(); handleStopMessage() }
+            }}>
+              {isLoading ? <Square size={16} aria-hidden="true" /> : <Send size={17} aria-hidden="true" />}
             </button>
           </form>
         </div>

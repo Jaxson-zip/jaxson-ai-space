@@ -54,6 +54,7 @@ flowchart TB
 图里省略了两条运维线路：GitHub Actions 通过 SSH 发布新版本（见第 4 节）；站长电脑用 `docker/windows-pull-backup.py` 拉取加密备份，用 `docker/windows-monitor.py` 做在线监测。
 
 - **jaxson.bond**：`portfolio` 容器用 `apps/portfolio/scripts/serve.mjs` 提供静态首页，只把 `/api/showcase-projects` 代理到 web（`showcase.mjs`）。首页的对话框由访客浏览器直接请求 `api.jaxson.bond/api/chat`，这样限流拿到的是访客自己的 IP；CORS 只允许作品集的域名（`apps/web/src/features/portfolio/cors.ts`）。`/ai` 保留为全屏对话页。
+- 本地待发布的会话接续：普通点击首页“全屏对话”后，新窗口通过 postMessage 握手取得会话和草稿；发送方与接收方都验证窗口、配置的 origin 和一次性标记，接收方再用 `conversation-handoff.ts` 校验长度、角色、状态及来源。URL 仅携带返回地址和短期握手标记，成功后删除标记；不存服务端，不自动发问，两页后续独立。生成或编辑中需先结束当前操作，接续失败保留原首页。
 - **api.jaxson.bond**：`web` 容器包含 Payload 后台 `/admin`、AI 对话 `/ai` 与 `/api/chat`、简历 `/resume`、项目详情 `/projects/[slug]`、私人工作台 `/studio`。
 - **私人页面**：`/studio`、`/api/studio/memory` 和后台由 `apps/web/src/middleware.ts` 加 Cloudflare Access 保护，路由内部也会再检查一次（`features/studio/private-access.ts`）。`/api/studio/inbox` 只接受 OpenClaw 的口令和白名单发送者。
 
@@ -96,6 +97,7 @@ flowchart LR
 
 - 回答内容永远取自 CMS 的实时公开记录。向量索引只负责“哪条更相关”，索引过期不会泄露已撤回的内容，但会让检索不准。
 - 经历和荣誉不进向量索引，靠关键词和主题路由检索（`retriever.ts` 的 `TOPIC_CATEGORIES`）。
+- 项目的角色和公开参与说明（CMS 的 editorialNote）同样属于回答依据：`data.ts` 保留为 role / note，知识加载器把它们与项目使用的技术一并交给 AI；首页弹窗和独立详情页也展示参与说明，避免只列技术栈而漏掉实际分工。
 
 ## 4. 发布到生产
 
@@ -112,6 +114,14 @@ flowchart TB
 ```
 
 Caddyfile 和 `production.env` 沿用服务器上当前版本的副本，不随仓库发布。具体步骤见 [部署交接](./部署交接-2026-10-22.md) 和 [生产运维与数据迁移](./生产运维与数据迁移.md)。
+
+2026-10-28 本地修复版：CI 增加生产依赖 high 级安全门禁，使用独立 SQLite 和合成媒体运行公开页浏览器测试；发布健康检查验证 `/ai`、完整聊天 SSE 和 worker 队列。`check-public-health.mjs` 限制超时及响应大小，不记录问答正文。Compose 增加 worker healthcheck，但服务器保留的配置需要另行同步。
+
+上线准备补充：CI 使用独立 PostgreSQL + pgvector 演练正式迁移，并构建、运行两份生产镜像，重跑公开页浏览器测试。`rehearse-database.mts` 不读取生产数据库配置，只接受空的 loopback 演练库。发布包附带受限运维 SQL 及独立校验和，迁移仍不自动执行；健康 checker 随工具包提供并通过 stdin 传给容器，确保旧镜像回退时无需新文件。复现与发布顺序见 [上线候选验收](./上线候选验收-2026-10-28.md)。
+
+聊天在应用读取请求流时限制 64 KiB，Caddy 同时配置相同上限；同一 Web 进程最多 8 个生成任务，完成、取消、断开或错误均释放名额。多进程部署时此并发计数不跨进程共享。首页解析支持 LF/CRLF、多行 data 和跨块边界。
+
+项目新建默认 private；既有 public 项目不自动改状态。匿名媒体查询和本地上传文件下载仅允许公开项目引用的封面与视频，登录用户按 CMS 权限读取；不能将此推断为外部公开 S3 桶或已缓存附件也会立即撤回。CMS 不可用时项目页进入错误与重试状态，查询正常但无项目才返回 404。作品站视频支持单段 Range 206/416；历史 Word 链接临时重定向到当前 PDF 并禁止缓存。
 
 ## 5. 故障定位表
 

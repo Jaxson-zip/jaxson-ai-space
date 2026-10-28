@@ -3,6 +3,8 @@ import { loadKnowledgeChunks } from '@/features/ai/rag/knowledge-loader'
 import { groundedRetrieve } from '@/features/ai/rag/retriever'
 import { createRAGStream } from '@/features/ai/rag/llm-stream'
 import { clientIpFrom } from '@/features/ai/client-ip'
+import { readChatBody, ChatBodyError } from '@/features/ai/request-body'
+import { acquireChatSlot, trackChatStream } from '@/features/ai/chat-capacity'
 import { allowPortfolioOrigin, portfolioPreflight } from '@/features/portfolio/cors'
 
 import { z } from 'zod'
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
 async function answer(req: NextRequest): Promise<Response> {
   let stage = 'validation'
   const started = performance.now()
+  let release: (() => void) | undefined
   try {
     // 0. Extract Client IP and verify Rate Limit
     if (!checkRateLimit(clientIpFrom(req.headers))) {
@@ -76,7 +79,12 @@ async function answer(req: NextRequest): Promise<Response> {
       )
     }
 
-    const rawBody = await req.json().catch(() => ({}))
+    let rawBody: unknown
+    try { rawBody = await readChatBody(req) }
+    catch (error) {
+      if (error instanceof ChatBodyError) return NextResponse.json({ error: error.message }, { status: error.status })
+      throw error
+    }
     const parsed = chatRequestSchema.safeParse(rawBody)
 
     if (!parsed.success) {
@@ -102,6 +110,8 @@ async function answer(req: NextRequest): Promise<Response> {
       return NextResponse.json({ error: 'The last message must be a user question' }, { status: 400 })
     }
     const latestQuery = latestMsg.content.trim()
+    release = acquireChatSlot()
+    if (!release) return NextResponse.json({ error: 'Chat service busy. Please retry shortly.' }, { status: 503, headers: { 'Retry-After': '5' } })
 
     // 1. Load dynamic knowledge chunks from Payload CMS & portfolio content
     stage = 'knowledge'
@@ -130,7 +140,7 @@ async function answer(req: NextRequest): Promise<Response> {
       signal: req.signal,
     })
 
-    return new Response(stream, {
+    const response = new Response(trackChatStream(stream, release, req.signal), {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
@@ -139,6 +149,8 @@ async function answer(req: NextRequest): Promise<Response> {
         'Server-Timing': `knowledge;dur=${knowledgeMs.toFixed(1)}, retrieval;dur=${retrievalMs.toFixed(1)}, provider;dur=${(performance.now() - providerStarted).toFixed(1)}, setup;dur=${(performance.now() - started).toFixed(1)}`,
       },
     })
+    release = undefined // The response stream now owns the slot through EOF, error or cancellation.
+    return response
   } catch {
     if (req.signal.aborted) return new Response(null, { status: 499 })
     const requestId = `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`
@@ -147,5 +159,5 @@ async function answer(req: NextRequest): Promise<Response> {
       { error: 'Internal server error in RAG engine', requestId },
       { status: 500 }
     )
-  }
+  } finally { release?.() }
 }

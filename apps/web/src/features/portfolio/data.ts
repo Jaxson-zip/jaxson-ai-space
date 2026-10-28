@@ -57,6 +57,7 @@ export async function getHydratedPortfolioData(
             featured: doc.featured === true,
             status: doc.status || '已上线',
             role: doc.role || '独立开发',
+            note: doc.editorialNote || '',
             summary: doc.summary || '',
             problem: doc.problem || '',
             approach: doc.approach || '',
@@ -140,9 +141,10 @@ export async function getHydratedPortfolioData(
     console.warn('[Payload CMS] Falling back to static data due to:', error)
   }
 
+  const projects: Project[] = allowStaticFallback ? fallbackProjects.filter((p) => p.sourceVisibility === 'public') : []
   return {
     profile: fallbackProfile,
-    projects: allowStaticFallback ? fallbackProjects.filter((p) => p.sourceVisibility === 'public') : [],
+    projects,
     experiences: allowStaticFallback ? fallbackExperiences : [],
     skillGroups: allowStaticFallback ? fallbackSkillGroups : [],
     awards: allowStaticFallback ? fallbackAwards : [],

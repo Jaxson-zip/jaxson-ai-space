@@ -1,13 +1,21 @@
 export const CHAT_LIMITS = { messages: 10, messageChars: 2500, totalChars: 8000 } as const
 
+export interface ConversationSource {
+  tag: string
+  project?: string
+}
+
 export interface ConversationMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
+  createdAt?: string
   replyTo?: string
   status?: 'streaming' | 'completed' | 'interrupted' | 'error' | 'stopped'
   isJdMatch?: boolean
   evidence?: readonly string[]
+  sources?: readonly ConversationSource[]
+  errorMessage?: string
   generator?: 'external' | 'local'
 }
 

@@ -7,12 +7,9 @@
 FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-ENV npm_config_registry="https://registry.npmmirror.com"
-ENV COREPACK_NPM_REGISTRY="https://registry.npmmirror.com"
-ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
-ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
-RUN npm install -g pnpm@11.5.0 --registry=https://registry.npmmirror.com
-RUN pnpm config set registry https://registry.npmmirror.com
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV npm_config_registry=${NPM_REGISTRY}
+RUN npm install -g pnpm@11.5.0 && pnpm config set registry "$NPM_REGISTRY"
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 COPY apps/web/package.json ./apps/web/
 RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild sharp esbuild
@@ -21,12 +18,9 @@ RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild sharp esbuil
 FROM node:24-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-ENV npm_config_registry="https://registry.npmmirror.com"
-ENV COREPACK_NPM_REGISTRY="https://registry.npmmirror.com"
-ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
-ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
-RUN npm install -g pnpm@11.5.0 --registry=https://registry.npmmirror.com
-RUN pnpm config set registry https://registry.npmmirror.com
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV npm_config_registry=${NPM_REGISTRY}
+RUN npm install -g pnpm@11.5.0 && pnpm config set registry "$NPM_REGISTRY"
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
@@ -61,6 +55,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/lib ./apps/web/s
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/reindex-knowledge.mjs ./apps/web/scripts/reindex-knowledge.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/cms-content.mjs ./apps/web/scripts/cms-content.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/check-smtp.mjs ./apps/web/scripts/check-smtp.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/scripts/check-public-health.mjs ./apps/web/scripts/check-public-health.mjs
 
 USER nextjs
 EXPOSE 3000

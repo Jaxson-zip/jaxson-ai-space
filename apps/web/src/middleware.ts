@@ -13,6 +13,13 @@ import { isPrivateRequestAuthorized } from '@/features/studio/private-access'
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  let decoded = pathname
+  try { decoded = decodeURIComponent(pathname) } catch { /* Malformed paths cannot match a legacy filename. */ }
+  if (decoded === '/resume/zhang-jinpeng-resume.docx' || decoded === '/assets/张锦鹏-秋招简历.docx') {
+    const response = NextResponse.redirect(new URL('/resume/zhang-jinpeng-ai-product-builder.pdf', request.url), 307)
+    response.headers.set('Cache-Control', 'no-store')
+    return response
+  }
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/')
   const accessRequired = process.env.CLOUDFLARE_ACCESS_REQUIRED === 'true'
   const isPublicAppApi = ['/api/chat', '/api/showcase-projects', '/api/studio/inbox'].includes(pathname)
@@ -55,5 +62,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/studio/:path*', '/api/:path*'],
+  matcher: ['/admin/:path*', '/studio/:path*', '/api/:path*', '/resume/:path*', '/assets/:path*'],
 }

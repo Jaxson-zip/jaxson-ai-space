@@ -46,4 +46,7 @@ health() {
   compose up -d --no-deps --wait --wait-timeout 180 web worker portfolio caddy >&2
   curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/api/showcase-projects >/dev/null
   curl --fail --silent --show-error --max-time 15 http://127.0.0.1:39000/ >/dev/null
+  # Supply the checker from this artifact: rollback images predate this file.
+  compose exec -T web node --input-type=module - < "$release_tools/lib/check-public-health.mjs" >&2
+  compose exec -T worker node apps/web/scripts/run-index-worker.mjs --health >&2
 }

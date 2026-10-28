@@ -25,4 +25,4 @@ pnpm --filter @jaxson/web exec playwright test --config playwright.portfolio.con
 pnpm --filter @jaxson/web exec playwright test --config playwright.web.config.ts   # 需要本地 CMS 数据
 ```
 
-在 Windows 上，`integrations/openclaw/weixin-context.test.mjs` 会因为检出时换行符被转成 CRLF 而失败；CI 在 Linux 上运行，不受影响。
+微信上下文测试会把 fixture 正规化为供应商使用的 LF 行尾，Windows 和 Linux 均应通过；生产供应商代码仍按原有完整性条件校验。

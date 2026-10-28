@@ -18,6 +18,7 @@ body:has(.jx-ai) .jx-footer { display: none; }
 .ai-chips button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--jx-line);
   background: var(--jx-panel); color: var(--jx-sub); font: 400 15px/1 var(--jx-text); }
 .ai-chips button:hover { border-color: var(--jx-accent); color: var(--jx-accent); }
+.jx-ai.is-live .ai-intro, .jx-ai.is-live .ai-chips { display: none; }
 
 .ai-thread { display: grid; gap: 18px; padding-top: 22px; }
 .ai-message { display: grid; gap: 6px; max-width: 100%; }
@@ -26,7 +27,10 @@ body:has(.jx-ai) .jx-footer { display: none; }
 .ai-mode { padding: 2px 8px; border-radius: 6px; background: var(--jx-hit-bg); color: var(--jx-hit); font-weight: 700; }
 .ai-bubble { padding: 14px 18px; border-radius: 16px; overflow-wrap: anywhere; }
 .ai-message.assistant .ai-bubble { background: var(--jx-panel); border: 1px solid var(--jx-line); box-shadow: var(--jx-shadow); border-top-left-radius: 4px; }
-.ai-message.user .ai-bubble { background: var(--jx-ink); color: var(--jx-on-ink); max-width: min(80%, 640px); border-top-right-radius: 4px; }
+.ai-message.user .ai-bubble { background: #E9F3FF; color: #263C57; max-width: min(85%, 640px); border-bottom-right-radius: 4px; }
+.ai-message.user .md-p { white-space: pre-wrap; }
+.ai-message.user.is-editing { justify-items: stretch; }
+.jx-ai.is-live .ai-message.assistant .ai-bubble { padding: 0; background: transparent; border: 0; box-shadow: none; }
 
 .md { display: grid; gap: 8px; }
 .md-p, .md-li { font-size: 16px; line-height: 1.8; }
@@ -43,20 +47,52 @@ body:has(.jx-ai) .jx-footer { display: none; }
 
 .ai-pending { color: var(--jx-faint); }
 .ai-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; color: var(--jx-sub); font-size: 14px; }
+.ai-message-tools { display: flex; align-items: center; position: relative; justify-self: start; color: var(--jx-faint); }
+.ai-message.user .ai-message-tools { justify-self: end; }
+.ai-message-tools time { font-size: 12px; font-variant-numeric: tabular-nums; margin-right: 5px; }
+.ai-message-tools button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0;
+  border: 0; border-radius: 6px; color: inherit; background: transparent; cursor: pointer; }
+.ai-message-tools button:hover { color: var(--jx-ink); background: var(--jx-chip); }
+.ai-message-tools button:disabled { opacity: .4; cursor: default; }
+.ai-action-feedback { position: absolute; left: 0; bottom: calc(100% + 4px); z-index: 1; width: max-content; max-width: min(260px, calc(100vw - 48px));
+  padding: 4px 8px; border-radius: 6px; color: var(--jx-on-ink); background: var(--jx-ink); font-size: 14px; }
+.ai-message.user .ai-action-feedback { left: auto; right: 0; }
+.ai-question-editor { width: 100%; padding: 12px; border-radius: 18px; background: #ECEEF1; }
+.ai-question-editor textarea { display: block; width: 100%; min-height: 48px; max-height: 180px; padding: 0; border: 0; resize: none;
+  background: transparent; color: #242528; font: 400 15px/1.6 var(--jx-text); }
+.ai-question-editor textarea:focus-visible { outline: none; }
+.ai-question-edit-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.ai-question-edit-actions button { min-height: 28px; padding: 0 10px; border: 1px solid #E6E7E9; border-radius: 10px; background: #FFF;
+  color: #242528; font: 500 14px/1 var(--jx-text); cursor: pointer; }
+.ai-question-edit-actions .ai-question-edit-send { border-color: #202123; background: #202123; color: #FFF; }
+.ai-question-edit-actions button:disabled { opacity: .4; cursor: default; }
+@media (pointer: coarse) {
+  .ai-message-tools button { width: 44px; height: 44px; }
+  .ai-question-edit-actions button { min-height: 44px; }
+  .ai-question-editor textarea { font-size: 16px; }
+}
 .ai-sources { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--jx-line); display: grid; gap: 8px; }
 .ai-sources p { color: var(--jx-faint); font-size: 14px; }
-.ai-sources .jx-tags li { background: var(--jx-accent-bg); color: var(--jx-accent); }
+.ai-source-list { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; list-style: none; padding: 0; margin: 0; }
+.ai-source-list li { display: flex; min-width: 0; max-width: 100%; }
+.ai-source { display: inline-flex; align-items: center; min-width: 0; max-width: 100%; min-height: 32px; padding: 6px 10px;
+  border-radius: 6px; background: var(--jx-accent-bg); color: var(--jx-accent); font: 400 14px/20px var(--jx-text); }
+.ai-source-label { min-width: 0; overflow-wrap: anywhere; }
+a.ai-source:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (pointer: coarse) {
+  .ai-source { min-height: 44px; padding-block: 12px; }
+}
 
-.ai-to-bottom { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); box-shadow: var(--jx-shadow); }
+.ai-to-bottom { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); box-shadow: var(--jx-shadow); }
 
-.ai-dock { padding: 12px 0 18px; background: linear-gradient(transparent, var(--jx-bg) 30%); }
+.ai-dock { position: relative; padding: 12px 0 18px; background: linear-gradient(transparent, var(--jx-bg) 30%); }
 .ai-input-error { margin-bottom: 8px; color: var(--jx-hit); font-size: 14px; }
-.ai-composer { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 6px 0 4px; border-radius: 14px; background: var(--jx-panel);
+.ai-composer { display: flex; align-items: flex-end; gap: 8px; min-height: 56px; padding: 5px 6px 5px 4px; border-radius: 14px; background: var(--jx-panel);
   border: 1.5px solid var(--jx-accent); box-shadow: 0 0 0 4px var(--jx-accent-bg); }
 .ai-composer:focus-within { box-shadow: 0 0 0 4px #C9D6FF; }
-.ai-composer input { flex: 1; min-width: 0; height: 48px; border: 0; background: none; padding: 0 12px; font: 400 16px var(--jx-text); color: var(--jx-ink); }
-.ai-composer input::placeholder { color: var(--jx-faint); }
-.ai-composer input:focus-visible { outline: none; }
+.ai-composer textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 180px; resize: none; border: 0; background: none; padding: 10px 12px; font: 400 16px/24px var(--jx-text); color: var(--jx-ink); }
+.ai-composer textarea::placeholder { color: var(--jx-faint); }
+.ai-composer textarea:focus-visible { outline: none; }
 .ai-composer button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 10px; background: var(--jx-accent); color: var(--jx-on-ink); cursor: pointer; }
 .ai-composer button:hover { background: var(--jx-accent-hover); }
 .ai-composer button:disabled { background: #C3CBDE; opacity: 1; cursor: not-allowed; }

@@ -8,6 +8,14 @@ function payloadSigningSecret(secret: string) {
 }
 
 describe('Studio Security & 404 Disguise Middleware', () => {
+  it('redirects both encoded and ordinary legacy Word URLs with no-store', async () => {
+    for (const path of ['/resume/zhang-jinpeng-resume.docx', '/assets/张锦鹏-秋招简历.docx']) {
+      const response = await middleware(new NextRequest(`http://localhost:3000${path}`))
+      expect(response.status).toBe(307)
+      expect(response.headers.get('cache-control')).toBe('no-store')
+      expect(new URL(response.headers.get('location')!).pathname).toBe('/resume/zhang-jinpeng-ai-product-builder.pdf')
+    }
+  })
   const originalEnv = process.env
 
   beforeEach(() => {
