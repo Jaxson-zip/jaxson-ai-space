@@ -299,18 +299,23 @@
       border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); overflow: hidden;
       box-shadow: 0 30px 80px rgba(14, 21, 38, .28); }
     .project-dialog::backdrop { background: rgba(14, 21, 38, .55); backdrop-filter: blur(4px); }
-    .project-dialog[open] { display: grid; }
+    .project-dialog[open] { display: grid; grid-template-rows: minmax(0, 1fr); }
     @media (prefers-reduced-motion: no-preference) {
       .project-dialog[open] { animation: dialog-in .22s ease-out; }
       @keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
     }
     .project-dialog .frame { display: grid; min-height: 0; overflow: auto; }
     @media (min-width: 900px) {
+      .project-dialog { height: min(640px, calc(100dvh - 64px)); }
       .project-dialog .frame { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); overflow: hidden; }
-      .project-dialog .info { overflow: auto; }
+      .project-dialog .info { overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+      .project-dialog .info > * { flex-shrink: 0; }
       /* The whole screenshot sits framed on a light ground; a video keeps the dark one. */
       .project-dialog .media:not(:has(video)) { padding: 28px; background: radial-gradient(circle, rgba(41, 82, 227, .10) 1px, transparent 1.5px) 0 0 / 20px 20px, var(--cover); }
       .project-dialog .media:not(:has(video)) > img, .project-dialog .media > .cover { border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(14, 21, 38, .16); background: var(--panel); }
+      .project-dialog .media > .cover { max-height: 100%; aspect-ratio: 16 / 10; overflow: hidden; }
+      .project-dialog .media .cover img { height: 100%; object-fit: contain; }
+      .project-dialog .media video { max-height: 100%; }
     }
     .project-dialog .media { background: #0E1526; display: grid; place-items: center; min-height: 0; }
     .project-dialog .media video, .project-dialog .media img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; background: #0E1526; }
@@ -321,9 +326,9 @@
     .project-dialog .work-role { color: var(--sub); font-size: 14px; margin-top: -8px; }
     .project-dialog .stack-label { font-size: 14px; color: var(--sub); font-weight: 600; }
     .project-dialog .summary { font-size: 16px; overflow-wrap: anywhere; }
-    .story { display: grid; grid-template-columns: 3em minmax(0, 1fr); gap: 8px 12px; font-size: 15px; }
-    .story dt { color: var(--faint); }
-    .story dd { overflow-wrap: anywhere; }
+    .project-highlights { display: grid; gap: 10px; padding-left: 18px; list-style: disc; font-size: 15px; line-height: 1.7; color: var(--sub); overflow-wrap: anywhere; }
+    .project-highlights li::marker { color: var(--accent); }
+    .project-dialog .links { margin-top: 4px; padding-top: 4px; }
     .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 4px; }
     .project-dialog .close { position: absolute; top: 12px; right: 12px; z-index: 1; width: 44px; height: 44px; display: grid; place-items: center;
       border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; }
@@ -417,7 +422,7 @@
         <div class="thread">
           <div>
             <p class="greet">别只看简历，<br /><em>直接问我的 AI 分身。</em></p>
-            <p class="greet-sub muted" id="greetSub">可以问项目、实习和技术实践，展开回答上方的资料栏查看来源。下面是示例，输入问题即可开始对话。</p>
+            <p class="greet-sub muted" id="greetSub">问问项目、实习或技术，回答附资料来源。</p>
           </div>
           <!-- Replaced by the live conversation once the visitor asks. -->
           <div class="sample">
@@ -516,7 +521,7 @@
         <div class="col">
           <p class="col-title">项目技术与实践</p>
           <div class="skills">
-            <p class="skills-context">主要实践是产品定位、交互设计、AI 协作开发和功能验证。以下为项目与实习中使用的技术，具体参与范围见项目说明。</p>
+            <p class="skills-context">产品定位、交互设计、AI 协作开发和功能验证；下列为项目与实习中使用的技术。</p>
             <div class="group"><h3>AI 应用开发</h3><ul class="tags"><li class="key">RAG 检索增强</li><li class="key">pgvector 向量检索</li><li>BM25 + 向量混合检索</li><li>大模型 API 接入（DeepSeek）</li></ul><p class="also">相关实践：Embedding 向量化、SSE 流式输出、Prompt 上下文组织、来源引用与回答约束、AI 辅助编程</p></div>
             <div class="group"><h3>前端开发</h3><ul class="tags"><li class="key">React 19</li><li class="key">TypeScript</li><li>Next.js 16</li><li>Vue 3</li></ul><p class="also">也用：Tailwind CSS、Vite</p></div>
             <div class="group"><h3>后端与数据</h3><ul class="tags"><li class="key">PostgreSQL</li><li class="key">Python</li><li>Go</li><li>MySQL</li></ul><p class="also">也用：Supabase、RESTful API、分布式大数据</p></div>
@@ -1260,26 +1265,41 @@
         const title = el('h3', '', name);
         title.id = 'projectDialogTitle';
         const parts = [title];
-        const role = [project.role, project.date].filter(Boolean).join('，');
-        if (role) parts.push(el('p', 'work-role', `我的角色：${role}`));
-        if (project.summary) parts.push(el('p', 'summary', project.summary));
-        const story = el('dl', 'story');
-        for (const [label, text] of [['难题', project.problem], ['做法', project.action], ['结果', project.outcome], ['说明', project.note]]) {
-          if (text) story.append(el('dt', '', label), el('dd', '', text));
+        const note = (project.note || '').trim();
+        const contribution = note.split(/(?<=[。！？])/u).filter(sentence => /负责|参与|借助|协作|贡献/.test(sentence)).join('') || note;
+        const role = contribution || [project.role, project.date].filter(Boolean).join('，');
+        if (role) {
+          const participation = el('p', 'work-role');
+          participation.append('我的参与：', el('span', 'participation-text', role));
+          parts.push(participation);
         }
-        if (story.children.length) parts.push(story);
+        if (project.summary) parts.push(el('p', 'summary', project.summary));
+        const highlights = [];
+        if (project.action) highlights.push(project.action.trim().split(/(?<=[。！？])/u)[0]);
+        if (project.outcome) {
+          const clauses = project.outcome.split(/[，,；;。！？!?]/u).map(text => text.trim()).filter(Boolean);
+          const highlight = clauses.filter(text => /^(支持|提供|实现|完成|获得)/u.test(text)).at(-1);
+          const result = [...new Set([clauses[0], highlight].filter(Boolean))].join('，');
+          if (result) highlights.push(result + '。');
+        }
+        if (highlights.length) {
+          const points = el('ul', 'project-highlights');
+          points.append(...highlights.map(text => el('li', '', text)));
+          parts.push(points);
+        }
         if (project.technologies?.length) {
-          parts.push(el('h4', 'stack-label', '项目使用的技术'));
-          const stack = el('ul', 'tags');
+          parts.push(el('h4', 'stack-label', '主要技术'));
+          const stack = el('ul', 'tags project-stack');
           stack.append(...project.technologies.map(tech => el('li', '', tech)));
           parts.push(stack);
         }
         const links = projectLinks(project, 'links', true);
         if (links.children.length) parts.push(links);
         dialogInfo.replaceChildren(...parts);
-        dialogInfo.scrollTop = 0;
         opener = button;
         dialog.showModal();
+        dialogInfo.scrollTop = 0;
+        dialog.querySelector('.frame').scrollTop = 0;
       };
       document.addEventListener('click', event => {
         if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !(event.target instanceof Element)) return;
