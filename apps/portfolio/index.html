@@ -14,7 +14,7 @@
   <meta property="og:title" content="张锦鹏 Jaxson · AI 应用与全栈开发" />
   <meta property="og:description" content="2027 届，求职 AI 应用与全栈开发。直接问我的 AI 分身，回答都标明出处。" />
   <meta property="og:url" content="https://jaxson.bond/" />
-  <meta property="og:image" content="https://jaxson.bond/optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp" />
+  <meta property="og:image" content="https://jaxson.bond/optimized/jaxson-ai-space-home-20261022-1440.eeab0a69877d.webp" />
   <meta property="og:locale" content="zh_CN" />
   <meta name="twitter:card" content="summary_large_image" />
 
@@ -446,8 +446,8 @@
           <!-- Rewritten from the project feed; this default stays true for any number of projects. -->
           <p class="a" id="introAnswer">我做过的项目里，最有代表性的两个是：<b>待办备忘 Todo Memo</b>，离线可用、多端同步的待办工具，部署在 Vercel<sup>1</sup>；<b>Jaxson AI Space</b>，就是这个网站，有内容后台、向量检索和我这个 AI 分身<sup>2</sup>。</p>
           <div class="srcs" id="introSources">
-            <a class="src" href="#works"><img src="./optimized/todo-memo-cover-900.765d77142054.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 1</span><b>待办备忘 Todo Memo</b></div></a>
-            <a class="src" href="#works"><img src="./optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 2</span><b>Jaxson AI Space</b></div></a>
+            <a class="src" href="#works"><img src="./optimized/todo-memo-cover-900.be1bb6107063.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 1</span><b>待办备忘 Todo Memo</b></div></a>
+            <a class="src" href="#works"><img src="./optimized/jaxson-ai-space-home-20261022-900.57aaf137d988.webp" width="900" height="563" decoding="async" alt="" /><div><span>来源 2</span><b>Jaxson AI Space</b></div></a>
           </div>
           </div>
           <div class="live" id="liveThread" aria-live="polite"></div>
@@ -569,20 +569,25 @@
     askForm.action = new URL('/ai', window.JAXSON_BACKEND_ORIGIN).href;
     askForm.elements.from.value = location.href;
 
+    // Approved recordings ship with the site, so these public projects also work before a CMS upload.
+    const bundledDemos = {
+      'jaxson-ai-space': '/demos/jaxson-ai-space-demo.mp4?v=20261029',
+      'todo-memo': '/demos/todo-memo-demo.mp4?v=20261029',
+    };
     // Projects and their screenshots, shared by the works chapter, the sample answer and live answers.
     const published = [];
     const media = (() => {
       const covers = {
-        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.be1bb6107063.webp',
         // The CMS still names the old screenshot; both names show the current home page.
-        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
-        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp',
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-1440.eeab0a69877d.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-1440.eeab0a69877d.webp',
       };
       // Small copies for source cards.
       const thumbs = {
-        'todo-memo-cover.png': './optimized/todo-memo-cover-900.765d77142054.webp',
-        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
-        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp',
+        'todo-memo-cover.png': './optimized/todo-memo-cover-900.be1bb6107063.webp',
+        'portfolio-actual-20260928.png': './optimized/jaxson-ai-space-home-20261022-900.57aaf137d988.webp',
+        'jaxson-ai-space-home-20261022.png': './optimized/jaxson-ai-space-home-20261022-900.57aaf137d988.webp',
       };
       // This site is its own screenshot, even while its CMS record still names the stock image.
       const bySlug = { 'jaxson-ai-space': 'jaxson-ai-space-home-20261022.png' };
@@ -1241,7 +1246,8 @@
       // Only a web address can be a video source; anything else from the CMS shows the screenshot instead.
       const videoOf = project => {
         try {
-          return /^https?:$/.test(new URL(project.video, location.href).protocol) && project.video ? project.video : '';
+          const video = project.video || bundledDemos[project.slug] || '';
+          return video && /^https?:$/.test(new URL(video, location.href).protocol) ? video : '';
         } catch { return ''; }
       };
 

@@ -15,24 +15,24 @@
   ],
   "todo-memo-cover": [
     {
-      "src": "./optimized/todo-memo-cover-900.765d77142054.webp",
+      "src": "./optimized/todo-memo-cover-900.be1bb6107063.webp",
       "width": 900,
-      "height": 1000,
-      "bytes": 48264
+      "height": 562,
+      "bytes": 20110
     }
   ],
   "jaxson-ai-space-home-20261022": [
     {
-      "src": "./optimized/jaxson-ai-space-home-20261022-900.cf36a8f36d24.webp",
+      "src": "./optimized/jaxson-ai-space-home-20261022-900.57aaf137d988.webp",
       "width": 900,
       "height": 562,
-      "bytes": 60748
+      "bytes": 32750
     },
     {
-      "src": "./optimized/jaxson-ai-space-home-20261022-1440.565a789a8607.webp",
+      "src": "./optimized/jaxson-ai-space-home-20261022-1440.eeab0a69877d.webp",
       "width": 1440,
       "height": 900,
-      "bytes": 118036
+      "bytes": 63254
     }
   ]
 }
