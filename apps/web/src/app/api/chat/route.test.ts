@@ -1,14 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
-vi.mock('@/features/ai/rag/knowledge-loader', () => ({ loadKnowledgeChunks: async () => [] }))
-vi.mock('@/features/ai/rag/retriever', () => ({ groundedRetrieve: () => [] }))
+const rag = vi.hoisted(() => ({
+  load: vi.fn<(...args: unknown[]) => Promise<KnowledgeChunk[]>>(async () => []),
+  stream: vi.fn<(config: { retrievalResults: RetrievalResult[] }) => Promise<ReadableStream<Uint8Array>>>(),
+}))
+vi.mock('@/features/ai/rag/knowledge-loader', () => ({ loadKnowledgeChunks: rag.load }))
 vi.mock('@/features/ai/rag/llm-stream', () => ({
-  createRAGStream: async () => new Response('event: done\ndata: {}\n\n').body,
+  createRAGStream: rag.stream,
 }))
 
 import { OPTIONS, POST } from './route'
 import { acquireChatSlot, MAX_ACTIVE_CHATS } from '@/features/ai/chat-capacity'
+import type { KnowledgeChunk, RetrievalResult } from '@/features/ai/rag/types'
 
 const portfolio = 'https://portfolio.testsite.net'
 const url = 'https://cms.testsite.net/api/chat'
@@ -19,10 +23,30 @@ const ask = (origin: string | null, body: unknown = { messages: [{ role: 'user',
     body: JSON.stringify(body),
   })
 
-beforeEach(() => { vi.stubEnv('NEXT_PUBLIC_PORTFOLIO_URL', portfolio) })
+beforeEach(() => {
+  vi.stubEnv('NEXT_PUBLIC_PORTFOLIO_URL', portfolio)
+  rag.load.mockReset().mockResolvedValue([])
+  rag.stream.mockReset().mockImplementation(async () => new Response('event: done\ndata: {}\n\n').body!)
+})
 afterEach(() => { vi.unstubAllEnvs() })
 
 describe('the home page can ask the AI directly', () => {
+  it('retrieves the confirmed project case when a follow-up omits its name and wording', async () => {
+    const caseChunk: KnowledgeChunk = {
+      id: 'project-jaxson-ai-space', title: '项目：Jaxson AI Space', category: 'project',
+      content: '通过多轮界面审计确定信息展示的取舍：重点直接可见，不依赖访客点击展开；内容既不能密密麻麻，也不能删得过空。',
+      evidenceTag: '项目档案：Jaxson AI Space', keywords: ['Jaxson AI Space'], project: 'jaxson-ai-space',
+    }
+    rag.load.mockResolvedValue([caseChunk])
+    const response = await POST(ask(portfolio, { messages: [
+      { role: 'user', content: '在 Jaxson AI Space 里，你做过什么具体的产品判断？请举一个例子。' },
+      { role: 'assistant', content: '项目详情里，重点信息直接可见，不依赖点击展开。' },
+      { role: 'user', content: '那为什么不把详细介绍折叠起来？' },
+    ] }, '203.0.113.90'))
+    expect(response.status).toBe(200)
+    await response.text()
+    expect(rag.stream.mock.calls[0][0].retrievalResults.map((item: { chunk: KnowledgeChunk }) => item.chunk.id)).toContain(caseChunk.id)
+  })
   it('returns a bounded busy response when all generation slots are occupied', async () => {
     const slots = Array.from({ length: MAX_ACTIVE_CHATS }, () => acquireChatSlot()!)
     try {

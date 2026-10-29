@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadKnowledgeChunks } from '@/features/ai/rag/knowledge-loader'
-import { groundedRetrieve } from '@/features/ai/rag/retriever'
+import { buildRetrievalQuery, groundedRetrieve } from '@/features/ai/rag/retriever'
 import { createRAGStream } from '@/features/ai/rag/llm-stream'
 import { clientIpFrom } from '@/features/ai/client-ip'
 import { readChatBody, ChatBodyError } from '@/features/ai/request-body'
@@ -110,20 +110,21 @@ async function answer(req: NextRequest): Promise<Response> {
       return NextResponse.json({ error: 'The last message must be a user question' }, { status: 400 })
     }
     const latestQuery = latestMsg.content.trim()
+    const searchQuery = buildRetrievalQuery(messages)
     release = acquireChatSlot()
     if (!release) return NextResponse.json({ error: 'Chat service busy. Please retry shortly.' }, { status: 503, headers: { 'Retry-After': '5' } })
 
     // 1. Load dynamic knowledge chunks from Payload CMS & portfolio content
     stage = 'knowledge'
     const knowledgeStarted = performance.now()
-    const allChunks = await loadKnowledgeChunks(latestQuery)
+    const allChunks = await loadKnowledgeChunks(searchQuery)
     const knowledgeMs = performance.now() - knowledgeStarted
     req.signal.throwIfAborted()
 
     // 2. Perform hybrid retrieval (Vector Cosine Similarity + BM25)
     stage = 'retrieval'
     const retrievalStarted = performance.now()
-    const retrievalResults = groundedRetrieve(latestQuery, allChunks, 5)
+    const retrievalResults = groundedRetrieve(latestQuery, allChunks, 5, searchQuery)
     const retrievalMs = performance.now() - retrievalStarted
 
     // 3. Create real-time streaming response with AbortSignal

@@ -1,5 +1,5 @@
 import { generateLocalEmbedding, tokenize } from './embedder'
-import type { ChunkCategory, KnowledgeChunk, RetrievalResult } from './types'
+import type { ChatMessage, ChunkCategory, KnowledgeChunk, RetrievalResult } from './types'
 
 // Short questions such as "你现在在哪里实习？" share only the topic word with the
 // record. Experience and award records are not in the semantic index, so the
@@ -11,6 +11,27 @@ const TOPIC_CATEGORIES: [RegExp, ChunkCategory[]][] = [
   [/技能|技术栈|擅长/, ['skill']],
   [/校园|社团|学生会|学信委/, ['campus']],
 ]
+
+function refersToPriorQuestion(query: string): boolean {
+  // A newly named topic is self-contained, even when introduced with "那".
+  if (/换(?:个|一)?(?:话题|项目)|另一个问题|另外问|改聊|说回/.test(query)) return false
+  if (TOPIC_CATEGORIES.some(([pattern]) => pattern.test(query))) return false
+  return /^(?:那(?:么)?(?:为什么|怎么|具体|你负责|能不能)|为什么|具体呢|然后呢|还有呢)|这(?:个|次|种|些|项)|它(?:们)?|其中|刚才|上面|前面|里面|那个|那些/.test(query)
+}
+
+/** Resolve short follow-ups using bounded user questions, never assistant claims as evidence. */
+export function buildRetrievalQuery(messages: readonly Pick<ChatMessage, 'role' | 'content'>[]): string {
+  const questions = messages.filter((message) => message.role === 'user').map((message) => message.content.trim())
+  const latest = questions.at(-1) || ''
+  if (!refersToPriorQuestion(latest)) return latest
+  const context: string[] = []
+  for (let index = questions.length - 2; index >= 0 && context.length < 3; index -= 1) {
+    const question = questions[index]
+    context.unshift(question.slice(0, 700))
+    if (!refersToPriorQuestion(question)) break
+  }
+  return [...context, latest].join('\n')
+}
 
 /**
  * Compute Cosine Similarity between two normalized vectors
@@ -138,7 +159,7 @@ function inLoaderOrder(results: RetrievalResult[], chunks: KnowledgeChunk[]): Re
 }
 
 /** The local hash projection is not semantic evidence by itself. */
-export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5): RetrievalResult[] {
+export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5, searchQuery = query): RetrievalResult[] {
   const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
   // "Best work" questions get the projects the home page leads with.
   const wantsHighlights = /代表|最好|最满意|拿得出手|精选|主推|得意/.test(query) && /项目|作品/.test(query)
@@ -157,9 +178,10 @@ export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK =
     ? hybridRetrieve(query, chunks.filter((chunk) => topics.has(chunk.category)), topK)
     : []
 
-  const queryTokens = new Set(tokenize(query))
+  // Search may include the prior user question; list/topic intent stays tied to the current question.
+  const queryTokens = new Set(tokenize(searchQuery))
   const minimumMatches = queryTokens.size >= 3 ? 2 : 1
-  const evidenceResults = hybridRetrieve(query, chunks, topK).filter((result) => {
+  const evidenceResults = hybridRetrieve(searchQuery, chunks, topK).filter((result) => {
     if (result.chunk.vectorSource === 'semantic' && result.vectorScore >= 0.8) return true
     if (result.bm25Score <= 0) return false
     const evidenceTokens = new Set(tokenize(

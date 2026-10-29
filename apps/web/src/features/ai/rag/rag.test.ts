@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { cosineSimilarity, groundedRetrieve, hybridRetrieve } from './retriever'
+import { buildRetrievalQuery, cosineSimilarity, groundedRetrieve, hybridRetrieve } from './retriever'
 import { generateLocalEmbedding, fetchSemanticEmbedding } from './embedder'
 import { buildSystemPrompt } from './prompt-builder'
 import { buildLocalRAGAnswer, createRAGStream } from './llm-stream'
@@ -35,6 +35,40 @@ const MOCK_CHUNKS: KnowledgeChunk[] = [
 it('does not turn a factual internship role question into local JD matching', () => {
   const results = hybridRetrieve('你的实习岗位是什么？', MOCK_CHUNKS, 1)
   expect(buildLocalRAGAnswer('你的实习岗位是什么？', results)).not.toContain('对照岗位要求')
+})
+
+describe('follow-up retrieval context', () => {
+  const projectQuestion = { role: 'user' as const, content: 'Jaxson AI Space 的项目详情如何取舍？' }
+  it('carries a user topic through consecutive short follow-ups without searching assistant claims', () => {
+    const query = buildRetrievalQuery([
+      projectQuestion,
+      { role: 'assistant', content: '未经证实的点击率提升 100%。' },
+      { role: 'user', content: '那为什么不把详细介绍折叠起来？' },
+      { role: 'assistant', content: '另一条未经证实的说法。' },
+      { role: 'user', content: '那这次保留了什么？' },
+    ])
+    expect(query).toContain(projectQuestion.content)
+    expect(query).toContain('折叠')
+    expect(query).not.toContain('未经证实')
+    expect(query).not.toContain('100%')
+  })
+  it.each(['那你实习做了什么？', 'Todo Memo 使用什么后端？', '换个话题，这次说说学校吧。'])(
+    'does not carry the old project into an independent question: %s', (content) => {
+      expect(buildRetrievalQuery([projectQuestion, { role: 'user', content }])).toBe(content)
+    },
+  )
+  it('does not inherit project-list intent from the earlier question', () => {
+    const chunks = MOCK_CHUNKS.filter((chunk) => chunk.category === 'project')
+    expect(groundedRetrieve('那为什么？', chunks, 5, '你做过哪些项目？\n那为什么？')).toHaveLength(0)
+  })
+  it('keeps context bounded and stops at the latest self-contained user topic', () => {
+    const query = buildRetrievalQuery([
+      projectQuestion, { role: 'user', content: 'Todo Memo 离线同步' },
+      ...Array.from({ length: 4 }, () => ({ role: 'user' as const, content: '这个为什么？'.repeat(400) })),
+    ])
+    expect(query).not.toContain('Jaxson')
+    expect(query.length).toBeLessThanOrEqual(3 * 701 + 2400)
+  })
 })
 
 describe('RAG Engine & Hybrid Retriever', () => {
