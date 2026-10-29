@@ -872,7 +872,7 @@ test.describe('works', () => {
     const first = cards.first()
     await expect(first.getByText('已上线的待办与备忘工具', { exact: false })).toBeVisible()
     await expect(first.locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
-    await expect(first.locator('img')).toHaveAttribute('src', './optimized/todo-memo-cover-900.765d77142054.webp')
+    await expect(first.locator('img')).toHaveAttribute('src', './optimized/todo-memo-cover-900.be1bb6107063.webp')
     await expect(first.locator('.story, a')).toHaveCount(0)
     const opener = first.getByRole('button', { name: /待办备忘 \(Todo Memo\)/ })
     await expect(opener).toHaveAttribute('aria-haspopup', 'dialog')
@@ -885,7 +885,7 @@ test.describe('works', () => {
     await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
     await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
     await expect(dialog.getByRole('link', { name: '源码' })).toHaveAttribute('href', 'https://github.com/example/todo')
-    await expect(dialog.locator('.media img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
+    await expect(dialog.locator('.media video')).toHaveAttribute('aria-label', '待办备忘 (Todo Memo)演示视频')
   })
 
   test('desktop project dialogs keep the same compact frame while longer details scroll independently', async ({ page }, testInfo) => {
@@ -945,13 +945,34 @@ test.describe('works', () => {
     await expect(dialog).toBeHidden()
   })
 
+  test('published portfolio projects play their bundled recordings when CMS video fields are empty', async ({ page }) => {
+    for (const width of [1440, 375]) {
+      await open(page, { width, height: 900 })
+      const cards = page.locator('#works .project')
+      for (const [index, file] of [[0, 'todo-memo-demo.mp4'], [1, 'jaxson-ai-space-demo.mp4']] as const) {
+        await cards.nth(index).getByRole('button').click()
+        const video = page.getByRole('dialog').locator('.media video')
+        await expect(video).toBeVisible()
+        await expect(video).toHaveAttribute('src', `/demos/${file}?v=20261029`)
+        await expect(video).toHaveAttribute('poster', /\.webp$/)
+        await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.readyState)).toBeGreaterThanOrEqual(2)
+        expect(await video.evaluate((el: HTMLVideoElement) => [el.videoWidth, el.videoHeight])).toEqual([1440, 900])
+        expect(await video.evaluate((el: HTMLVideoElement) => el.duration)).toBeGreaterThan(20)
+        await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.currentTime)).toBeGreaterThan(0.1)
+        await expect(cards.nth(index).locator('.badge')).toHaveText('演示视频')
+        await page.keyboard.press('Escape')
+        await expect(page.locator('#projectDialog video')).toHaveCount(0)
+      }
+    }
+  })
+
   test('the dialog plays the demo video when the project has one, with the screenshot as its poster', async ({ page }) => {
     await page.route('https://cms.example.test/media/**', route => route.fulfill({ status: 404 }))
-    await open(page, { width: 1440, height: 900 }, [project('demo', '演示项目', { video: 'https://cms.example.test/media/demo.mp4' }), project('still', '无视频项目')])
+    await open(page, { width: 1440, height: 900 }, [project('todo-memo', '演示项目', { video: 'https://cms.example.test/media/demo.mp4' }), project('still', '无视频项目')])
     await page.locator('#works .project').first().getByRole('button').click()
     const video = page.getByRole('dialog').locator('.media video')
     await expect(video).toHaveAttribute('src', 'https://cms.example.test/media/demo.mp4')
-    await expect(video).toHaveAttribute('poster', './optimized/todo-memo-cover-900.765d77142054.webp')
+    await expect(video).toHaveAttribute('poster', './optimized/todo-memo-cover-900.be1bb6107063.webp')
     expect(await video.evaluate((el: HTMLVideoElement) => [el.controls, el.muted, el.playsInline, el.loop])).toEqual([true, true, true, true])
     await expect(page.locator('#works .project').first().locator('.badge')).toHaveText('演示视频')
     await page.keyboard.press('Escape')
