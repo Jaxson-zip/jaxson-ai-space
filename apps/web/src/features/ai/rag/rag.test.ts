@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { cosineSimilarity, groundedRetrieve, hybridRetrieve } from './retriever'
+import { buildRetrievalQuery, cosineSimilarity, groundedRetrieve, hybridRetrieve } from './retriever'
 import { generateLocalEmbedding, fetchSemanticEmbedding } from './embedder'
 import { buildSystemPrompt } from './prompt-builder'
 import { buildLocalRAGAnswer, createRAGStream } from './llm-stream'
@@ -37,7 +37,60 @@ it('does not turn a factual internship role question into local JD matching', ()
   expect(buildLocalRAGAnswer('你的实习岗位是什么？', results)).not.toContain('对照岗位要求')
 })
 
+describe('follow-up retrieval context', () => {
+  const projectQuestion = { role: 'user' as const, content: 'Jaxson AI Space 的项目详情如何取舍？' }
+  it('carries a user topic through consecutive short follow-ups without searching assistant claims', () => {
+    const query = buildRetrievalQuery([
+      projectQuestion,
+      { role: 'assistant', content: '未经证实的点击率提升 100%。' },
+      { role: 'user', content: '那为什么不把详细介绍折叠起来？' },
+      { role: 'assistant', content: '另一条未经证实的说法。' },
+      { role: 'user', content: '那这次保留了什么？' },
+    ])
+    expect(query).toContain(projectQuestion.content)
+    expect(query).toContain('折叠')
+    expect(query).not.toContain('未经证实')
+    expect(query).not.toContain('100%')
+  })
+  it.each(['那你实习做了什么？', 'Todo Memo 使用什么后端？', '换个话题，这次说说学校吧。'])(
+    'does not carry the old project into an independent question: %s', (content) => {
+      expect(buildRetrievalQuery([projectQuestion, { role: 'user', content }])).toBe(content)
+    },
+  )
+  it('does not inherit project-list intent from the earlier question', () => {
+    const chunks = MOCK_CHUNKS.filter((chunk) => chunk.category === 'project')
+    expect(groundedRetrieve('那为什么？', chunks, 5, '你做过哪些项目？\n那为什么？')).toHaveLength(0)
+  })
+  it('keeps context bounded and stops at the latest self-contained user topic', () => {
+    const query = buildRetrievalQuery([
+      projectQuestion, { role: 'user', content: 'Todo Memo 离线同步' },
+      ...Array.from({ length: 4 }, () => ({ role: 'user' as const, content: '这个为什么？'.repeat(400) })),
+    ])
+    expect(query).not.toContain('Jaxson')
+    expect(query.length).toBeLessThanOrEqual(3 * 701 + 2400)
+  })
+})
+
 describe('RAG Engine & Hybrid Retriever', () => {
+  const skillChunk: KnowledgeChunk = {
+    id: 'skills-summary', title: '技术栈与能力图谱', category: 'skill',
+    content: 'AI 应用开发：RAG、pgvector；前端：React、TypeScript；工程交付：Docker。',
+    evidenceTag: 'CMS 技术栈与技能记录', keywords: ['技能', '技术栈', 'React', 'Docker'],
+  }
+  const jaxsonChunk: KnowledgeChunk = {
+    id: 'project-jaxson-ai-space', title: '项目：Jaxson AI Space（电子简历与 AI 分身）', category: 'project',
+    content: '使用 Next.js 16、React 19、Payload CMS 和 PostgreSQL。',
+    evidenceTag: '本站项目', keywords: ['Jaxson AI Space'], project: 'jaxson-ai-space',
+  }
+  it.each(['你会什么技术', '你会什么技术技术', '你会哪些技术？', '你掌握哪些编程语言？'])(
+    'finds published skills for a natural personal capability question: %s', (question) => {
+      expect(groundedRetrieve(question, [...MOCK_CHUNKS, skillChunk, jaxsonChunk])[0]?.chunk.id).toBe(skillChunk.id)
+    },
+  )
+  it('keeps a named project technology question scoped to that project', () => {
+    const results = groundedRetrieve('Jaxson AI Space 项目用哪些技术？', [...MOCK_CHUNKS, skillChunk, jaxsonChunk])
+    expect(results.map((result) => result.chunk.id)).toEqual([jaxsonChunk.id])
+  })
   it('accepts a strong validated semantic match while rejecting hash similarity without keyword evidence', () => {
     const chunk: KnowledgeChunk = { id: 'semantic-fact', title: 'Portable tasks', category: 'project', content: 'Offline task application', evidenceTag: 'CMS', keywords: [], vectorScore: 0.95, vectorSource: 'semantic' }
     expect(groundedRetrieve('多设备待办', [chunk])).toHaveLength(1)
