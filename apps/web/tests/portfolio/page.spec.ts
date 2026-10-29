@@ -815,6 +815,32 @@ test.describe('more than two projects', () => {
 })
 
 test.describe('works', () => {
+  test('project essentials are readable immediately without disclosures or truncated sentences', async ({ page }) => {
+    const summary = '面向招聘方展示项目与公开经历，支持查看项目和提问。'
+    const action = '通过产品设计、界面审计和 AI 协作完善项目。'.repeat(12)
+    const note = '代码主要通过 AI 协作完成，负责产品定位与交互方向。'
+    const technologies = ['Next.js', 'React', 'TypeScript', 'Payload', 'PostgreSQL', 'pgvector']
+    await open(page, { width: 1440, height: 900 }, [project('compact', '项目展示', {
+      summary, action, note, technologies, outcome: '已部署上线，支持流式回答与来源引用。',
+    })])
+    await page.locator('#works .project button').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.locator('details, summary')).toHaveCount(0)
+    await expect(dialog.getByText(action, { exact: true })).toHaveCount(0)
+    await expect(dialog.locator('.project-stack li')).toHaveText(technologies)
+    await expect(dialog.locator('p.summary')).toHaveText(summary)
+    await expect(dialog.getByText(note, { exact: true })).toBeVisible()
+    await expect(dialog.locator('.project-highlights li')).toHaveText([
+      '通过产品设计、界面审计和 AI 协作完善项目。',
+      '已部署上线，支持流式回答与来源引用。',
+    ])
+    const stack = await dialog.locator('.project-stack').boundingBox()
+    const links = await dialog.locator('.links').boundingBox()
+    expect(links!.y - stack!.y - stack!.height).toBeLessThanOrEqual(28)
+    expect(await dialog.innerText()).not.toContain('…')
+    await expect(dialog.getByRole('link', { name: '在线体验' })).toBeInViewport()
+  })
+
   test('a project source opens that project directly and returns focus when closed', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     const initialUrl = page.url()
@@ -834,8 +860,8 @@ test.describe('works', () => {
     await page.locator('#works .project').getByRole('button').click()
     const dialog = page.getByRole('dialog')
     await expect(dialog.getByText(note, { exact: true })).toBeVisible()
-    await expect(dialog.getByText('项目使用的技术', { exact: true })).toBeVisible()
-    await expect(dialog.locator('.work-role')).toContainText('我的角色：产品定位、交互设计与 AI 协作开发')
+    await expect(dialog.getByText('主要技术', { exact: true })).toBeVisible()
+    await expect(dialog.locator('.work-role')).toContainText(note)
   })
 
   test('each card shows the screenshot, name, summary and main stack, and opens its details', async ({ page }) => {
@@ -853,12 +879,70 @@ test.describe('works', () => {
     await opener.click()
     const dialog = page.getByRole('dialog', { name: '待办备忘 (Todo Memo)' })
     await expect(dialog).toBeVisible()
-    await expect(dialog.locator('.story dt')).toHaveText(['难题', '做法', '结果'])
+    await expect(dialog.locator('.story, details')).toHaveCount(0)
+    await expect(dialog.locator('.project-highlights')).toContainText('支持 PWA 安装与多设备同步。')
     await expect(dialog.locator('.tags li')).toHaveText(['React', 'TypeScript', 'Supabase'])
     await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('href', 'https://todo.example.test/')
     await expect(dialog.getByRole('link', { name: '在线体验' })).toHaveAttribute('rel', /noopener/)
     await expect(dialog.getByRole('link', { name: '源码' })).toHaveAttribute('href', 'https://github.com/example/todo')
     await expect(dialog.locator('.media img')).toHaveAttribute('alt', '待办备忘 (Todo Memo)界面截图')
+  })
+
+  test('desktop project dialogs keep the same compact frame while longer details scroll independently', async ({ page }, testInfo) => {
+    const note = '参与说明保留完整内容，不因布局收起或删减。'
+    for (const [width, height] of [[1440, 900], [1280, 720], [1100, 520]]) {
+      await open(page, { width, height }, [
+        project('short', '简短项目'),
+        project('long', 'Jaxson AI Space（电子简历与 AI 分身）', {
+          summary: '参与产品定位、信息层级、界面审计与交互验证。'.repeat(12), note,
+        }),
+      ])
+      const dialog = page.getByRole('dialog')
+      const cards = page.locator('#works .project button')
+      const frames: { width: number; height: number; y: number }[] = []
+      for (const card of [cards.nth(0), cards.nth(1)]) {
+        await card.click()
+        await dialog.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)))
+        const box = await dialog.boundingBox()
+        expect(box).not.toBeNull()
+        frames.push(box!)
+        expect(box!.height).toBeLessThanOrEqual(Math.min(640, height - 64) + 1)
+        if (width === 1440) await page.screenshot({ path: testInfo.outputPath(`project-dialog-${frames.length}.png`) })
+        await page.keyboard.press('Escape')
+      }
+      expect(Math.abs(frames[0].height - frames[1].height)).toBeLessThanOrEqual(1)
+      expect(Math.abs(frames[0].y - frames[1].y)).toBeLessThanOrEqual(1)
+      await cards.nth(1).click()
+      await dialog.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)))
+      const info = dialog.locator('.info')
+      const media = dialog.locator('.media')
+      const mediaBefore = await media.boundingBox()
+      expect(await info.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true)
+      await dialog.getByText(note, { exact: true }).scrollIntoViewIfNeeded()
+      await dialog.getByRole('link', { name: '源码' }).scrollIntoViewIfNeeded()
+      expect(await info.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+      expect(await media.boundingBox()).toEqual(mediaBefore)
+      expect(await dialog.locator('.frame').evaluate(el => el.scrollTop)).toBe(0)
+      await page.keyboard.press('Escape')
+      await cards.nth(1).click()
+      expect(await info.evaluate(el => el.scrollTop)).toBe(0)
+      await page.keyboard.press('Escape')
+    }
+  })
+
+  test('long project details remain reachable in the stacked phone dialog', async ({ page }) => {
+    const note = '完整参与说明'
+    await open(page, { width: 375, height: 667 }, [project('phone', '较长的项目介绍', {
+      summary: '产品设计、交互审计与功能验证。'.repeat(16), note,
+    })])
+    await page.locator('#works .project button').click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByText(note, { exact: true }).scrollIntoViewIfNeeded()
+    await dialog.getByRole('link', { name: '源码' }).scrollIntoViewIfNeeded()
+    expect(await dialog.locator('.frame').evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    await dialog.getByRole('button', { name: '关闭' }).click()
+    await expect(dialog).toBeHidden()
   })
 
   test('the dialog plays the demo video when the project has one, with the screenshot as its poster', async ({ page }) => {
