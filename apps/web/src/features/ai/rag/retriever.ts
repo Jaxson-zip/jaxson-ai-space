@@ -8,7 +8,7 @@ const TOPIC_CATEGORIES: [RegExp, ChunkCategory[]][] = [
   [/实习|工作经历|任职/, ['internship']],
   [/学校|学历|专业|毕业|gpa|绩点|成绩|读书|教育/i, ['education']],
   [/竞赛|获奖|奖项|荣誉|拿过.*奖|什么奖/, ['award']],
-  [/技能|技术栈|擅长/, ['skill']],
+  [/技能|技术栈|擅长|(?:会|懂|掌握|熟悉|用过).{0,8}(?:技术|语言|框架)/, ['skill']],
   [/校园|社团|学生会|学信委/, ['campus']],
 ]
 
@@ -161,6 +161,15 @@ function inLoaderOrder(results: RetrievalResult[], chunks: KnowledgeChunk[]): Re
 /** The local hash projection is not semantic evidence by itself. */
 export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK = 5, searchQuery = query): RetrievalResult[] {
   const projectChunks = chunks.filter((chunk) => chunk.category === 'project')
+  // An explicitly named project takes precedence over generic "哪些技术" or project-list intent.
+  const normalizeName = (value: string) => value.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, '')
+  const normalizedQuery = normalizeName(query)
+  const namedProjects = projectChunks.filter((chunk) => {
+    const title = chunk.title.replace(/^项目[:：]\s*/, '')
+    return [chunk.project || '', title, ...title.split(/[()（）]/)]
+      .map(normalizeName).some((name) => name.length >= 4 && normalizedQuery.includes(name))
+  })
+  if (namedProjects.length > 0) return hybridRetrieve(searchQuery, namedProjects, topK)
   // "Best work" questions get the projects the home page leads with.
   const wantsHighlights = /代表|最好|最满意|拿得出手|精选|主推|得意/.test(query) && /项目|作品/.test(query)
   const highlights = projectChunks.filter((chunk) => chunk.featured)

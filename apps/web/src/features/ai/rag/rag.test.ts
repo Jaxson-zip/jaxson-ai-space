@@ -72,6 +72,25 @@ describe('follow-up retrieval context', () => {
 })
 
 describe('RAG Engine & Hybrid Retriever', () => {
+  const skillChunk: KnowledgeChunk = {
+    id: 'skills-summary', title: '技术栈与能力图谱', category: 'skill',
+    content: 'AI 应用开发：RAG、pgvector；前端：React、TypeScript；工程交付：Docker。',
+    evidenceTag: 'CMS 技术栈与技能记录', keywords: ['技能', '技术栈', 'React', 'Docker'],
+  }
+  const jaxsonChunk: KnowledgeChunk = {
+    id: 'project-jaxson-ai-space', title: '项目：Jaxson AI Space（电子简历与 AI 分身）', category: 'project',
+    content: '使用 Next.js 16、React 19、Payload CMS 和 PostgreSQL。',
+    evidenceTag: '本站项目', keywords: ['Jaxson AI Space'], project: 'jaxson-ai-space',
+  }
+  it.each(['你会什么技术', '你会什么技术技术', '你会哪些技术？', '你掌握哪些编程语言？'])(
+    'finds published skills for a natural personal capability question: %s', (question) => {
+      expect(groundedRetrieve(question, [...MOCK_CHUNKS, skillChunk, jaxsonChunk])[0]?.chunk.id).toBe(skillChunk.id)
+    },
+  )
+  it('keeps a named project technology question scoped to that project', () => {
+    const results = groundedRetrieve('Jaxson AI Space 项目用哪些技术？', [...MOCK_CHUNKS, skillChunk, jaxsonChunk])
+    expect(results.map((result) => result.chunk.id)).toEqual([jaxsonChunk.id])
+  })
   it('accepts a strong validated semantic match while rejecting hash similarity without keyword evidence', () => {
     const chunk: KnowledgeChunk = { id: 'semantic-fact', title: 'Portable tasks', category: 'project', content: 'Offline task application', evidenceTag: 'CMS', keywords: [], vectorScore: 0.95, vectorSource: 'semantic' }
     expect(groundedRetrieve('多设备待办', [chunk])).toHaveLength(1)
