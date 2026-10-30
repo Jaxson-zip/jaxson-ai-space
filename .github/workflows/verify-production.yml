@@ -23,10 +23,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Check verifier syntax
+      - name: Validate owner operations checks
         run: |
           python3 -m py_compile docker/verify-vps-existing.py
-          python3 -m unittest discover -s docker/tests -p test_release_postflight.py -v
+          python3 -m pip install -r docker/requirements.pc-ops.txt --quiet
+          python3 -m unittest docker.tests.test_windows_network docker.tests.test_pc_monitor docker.tests.test_owner_backup_transfer docker.tests.test_release_postflight docker.tests.test_private_backup -v
       - name: Inspect existing release without deployment
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}

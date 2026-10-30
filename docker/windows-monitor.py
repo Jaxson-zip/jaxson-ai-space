@@ -7,8 +7,12 @@ import json
 from pathlib import Path
 import smtplib
 import ssl
+import sys
 import time
 import urllib.request
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'lib'))
+from windows_network import DirectSMTP
 
 
 def advance(previous, healthy, now):
@@ -69,7 +73,8 @@ def send_notice(config, notice, checks):
     message.set_content('这是本机运维监测通知。\n时间（UTC）：' + dt.datetime.now(dt.timezone.utc).isoformat() +
                         '\n' + '\n'.join(f'{url}: {"正常" if healthy else "检查失败"}' for url, healthy in checks.items()) +
                         '\n未包含网页正文、服务器日志或密钥。\n电脑关机或休眠时此监测不会执行。')
-    with smtplib.SMTP_SSL('smtp.163.com', 465, timeout=20, context=ssl.create_default_context()) as smtp:
+    transport = DirectSMTP(config['direct_interface'], 'smtp.163.com', 465, timeout=20, context=ssl.create_default_context()) if config.get('direct_interface') else smtplib.SMTP_SSL('smtp.163.com', 465, timeout=20, context=ssl.create_default_context())
+    with transport as smtp:
         smtp.login(env['SMTP_USER'], env['SMTP_PASSWORD'])
         if smtp.send_message(message):
             raise RuntimeError('SMTP recipient rejected')

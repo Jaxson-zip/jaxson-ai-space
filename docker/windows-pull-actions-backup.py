@@ -12,16 +12,24 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'lib'))
 from private_backup import decrypt_file, digest, verify_bundle
 
 REPO = 'Jaxson-zip/jaxson-ai-space'
+STAGE = 'configuration'
 
 
-def command(*args, input=None, timeout=600):
-    return subprocess.check_output(args, input=input, text=True, encoding='utf-8',
-                                   stderr=subprocess.DEVNULL, timeout=timeout)
+def command(*args, input=None, timeout=600, retries=3):
+    for attempt in range(retries):
+        try:
+            return subprocess.check_output(args, input=input, text=True, encoding='utf-8',
+                                           stderr=subprocess.DEVNULL, timeout=timeout)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            if attempt + 1 == retries:
+                raise
+            time.sleep(3)
 
 
 def validate_header(header, data):
@@ -56,7 +64,8 @@ def import_monitor_smtp(clear, config):
     path.write_text(json.dumps(pending), encoding='utf-8')
 
 
-def pull(config_file, initialize=False, import_smtp=False):
+def pull(config_file, initialize=False, import_smtp=False, resume_run=None):
+    global STAGE
     config = json.loads(Path(config_file).read_text(encoding='utf-8'))
     gh = config['gh']
     directory = Path(config['backup_directory'])
@@ -64,25 +73,39 @@ def pull(config_file, initialize=False, import_smtp=False):
     inputs = {'recovery_public_b64': base64.b64encode(Path(config['recovery_public']).read_bytes()).decode(),
               'download_public_b64': base64.b64encode(Path(config['download_public']).read_bytes()).decode(),
               'initialize': 'true' if initialize else 'false'}
-    dispatched = command(gh, 'workflow', 'run', 'owner-backup.yml', '--repo', REPO,
-                         '--ref', 'main', '--json', input=json.dumps(inputs), timeout=45)
-    match = re.search(r'/actions/runs/([0-9]+)', dispatched)
-    if not match:
-        raise ValueError('Cannot identify dispatched backup run')
-    run_id = match[1]
+    STAGE = 'dispatch'
+    if resume_run:
+        if not re.fullmatch('[0-9]+', resume_run):
+            raise ValueError('Invalid resumed workflow id')
+        run_id = resume_run
+    else:
+        dispatched = command(gh, 'workflow', 'run', 'owner-backup.yml', '--repo', REPO,
+                             '--ref', 'main', '--json', input=json.dumps(inputs), timeout=45, retries=1)
+        match = re.search(r'/actions/runs/([0-9]+)', dispatched)
+        if not match:
+            raise ValueError('Cannot identify dispatched backup run')
+        run_id = match[1]
+    STAGE = 'workflow'
+    print(json.dumps({'stage': STAGE, 'run_id': run_id}), flush=True)
     command(gh, 'run', 'watch', run_id, '--repo', REPO, '--exit-status', '--interval', '10')
     with tempfile.TemporaryDirectory(prefix='.verify-actions-', dir=directory) as work:
         work = Path(work)
+        STAGE = 'download'
         command(gh, 'run', 'download', run_id, '--repo', REPO, '--name',
                 'encrypted-owner-backup', '--dir', str(work), timeout=180)
         header = json.loads((work / 'header.json').read_text())
         source = work / 'backup.jxb'
+        STAGE = 'ciphertext_verification'
         validate_header(header, source.read_bytes())
         clear = work / 'private.tar.gz'
+        STAGE = 'local_decryption'
         decrypt_file(source, clear, Path(config['recovery_private']).read_bytes())
+        STAGE = 'bundle_verification'
         result = verify_bundle(clear)
         if import_smtp:
+            STAGE = 'local_smtp_import'
             import_monitor_smtp(clear, config)
+        STAGE = 'local_backup_acceptance'
         target = directory / header['name']
         if target.exists():
             if digest(target) != header['sha256']:
@@ -111,9 +134,10 @@ if __name__ == '__main__':
     parser.add_argument('--config', required=True)
     parser.add_argument('--initialize', action='store_true')
     parser.add_argument('--import-monitor-smtp', action='store_true')
+    parser.add_argument('--resume-run')
     args = parser.parse_args()
     try:
-        print(json.dumps(pull(args.config, args.initialize, args.import_monitor_smtp)))
+        print(json.dumps(pull(args.config, args.initialize, args.import_monitor_smtp, args.resume_run)))
     except Exception:
-        print(json.dumps({'verified': False, 'error': 'ENCRYPTED_RELAY_OR_LOCAL_VERIFICATION_FAILED'}))
+        print(json.dumps({'verified': False, 'error': 'ENCRYPTED_RELAY_OR_LOCAL_VERIFICATION_FAILED', 'stage': STAGE}))
         sys.exit(1)

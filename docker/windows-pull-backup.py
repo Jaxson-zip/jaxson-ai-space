@@ -12,6 +12,7 @@ import paramiko
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'lib'))
 from private_backup import decrypt_file, digest, verify_bundle
+from windows_network import direct_connection
 
 
 def pull(config_file):
@@ -23,8 +24,9 @@ def pull(config_file):
     client.set_missing_host_key_policy(paramiko.RejectPolicy())
     partial = None
     try:
+        connection = direct_connection(config['host'], 22, 20, config['direct_interface']) if config.get('direct_interface') else None
         client.connect(config['host'], port=22, username='root', key_filename=config['download_key'],
-                       look_for_keys=False, allow_agent=False, timeout=20, auth_timeout=20)
+                       look_for_keys=False, allow_agent=False, timeout=20, auth_timeout=20, sock=connection)
         _, stdout, stderr = client.exec_command('encrypted-backup-export', timeout=120)
         raw = stdout.readline(4097)
         if not raw.endswith('\n') or len(raw) > 4096:
@@ -70,7 +72,7 @@ def pull(config_file):
             partial.unlink()
         with tempfile.NamedTemporaryFile(mode='w', encoding='utf8', prefix='.metadata-',
                                          suffix='.partial', dir=directory, delete=False) as metadata:
-            metadata.write(json.dumps({**header, **result}))
+            metadata.write(json.dumps({**header, **result, 'transport': 'restricted-ssh'}))
             metadata.flush()
             os.fsync(metadata.fileno())
         Path(metadata.name).replace(directory / 'last-success.json')
