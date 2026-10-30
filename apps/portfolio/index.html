@@ -178,6 +178,11 @@
     .src img { width: 104px; height: 66px; object-fit: cover; object-position: top left; border-radius: 8px; border: 1px solid var(--line); display: block; }
     .src span { display: block; font: 700 14px/1.4 var(--font-mono); color: var(--accent); }
     .src b { display: block; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+    .source-refs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; padding: 0; margin: 0; }
+    .source-ref { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; max-width: 100%;
+      color: var(--sub); font-size: 14px; line-height: 1.6; }
+    .source-ref-number { flex: none; color: var(--accent); font-family: var(--font-mono); }
+    .source-ref-label { min-width: 0; overflow-wrap: anywhere; }
     .composer { padding: 12px 30px 20px; }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
     .chips button { cursor: pointer; font-family: var(--font-text); }
@@ -601,9 +606,21 @@
       };
     })();
     const nameOf = project => project.shortTitle || project.title;
-    // One source under an answer: the project's screenshot, or the first character of the source's name.
-    const sourceCard = (number, name, project) => {
-      const card = document.createElement(project ? 'a' : 'div');
+    // Projects retain their cover and detail link; other material is a compact text reference.
+    const sourceItem = (number, name, project) => {
+      if (!project) {
+        const reference = document.createElement('li');
+        reference.className = 'source-ref';
+        const mark = document.createElement('span');
+        mark.className = 'source-ref-number';
+        mark.textContent = `[${number}]`;
+        const label = document.createElement('span');
+        label.className = 'source-ref-label';
+        label.textContent = name;
+        reference.append(mark, label);
+        return reference;
+      }
+      const card = document.createElement('a');
       card.className = 'src';
       if (project) {
         card.href = '#works';
@@ -735,16 +752,27 @@
           return paragraph;
         }));
       };
-      // A card for each source the answer cites by number, or for every source when it cites none.
+      // Preserve citation order and numbers, grouping adjacent text references without card chrome.
       const sourceCards = (sources, text) => {
         const cited = [...new Set(citedNumbers(text))].filter(number => number >= 1 && number <= sources.length).sort((a, b) => a - b);
         const numbers = cited.length ? cited : sources.map((_, index) => index + 1);
         const box = make('div', 'srcs');
-        box.append(...numbers.map(number => {
+        numbers.forEach(number => {
           const source = sources[number - 1];
           const project = published.find(item => item.slug === source.project) || published.find(item => source.tag.includes(item.title));
-          return sourceCard(number, project ? nameOf(project) : source.tag.replace(/^[^：:]{1,6}[：:]\s*/, ''), project);
-        }));
+          const item = sourceItem(number, project ? nameOf(project) : source.tag.replace(/^[^：:]{1,6}[：:]\s*/, ''), project);
+          if (project) {
+            box.append(item);
+          } else {
+            let references = box.lastElementChild;
+            if (!references?.classList.contains('source-refs')) {
+              references = make('ul', 'source-refs');
+              references.setAttribute('aria-label', '资料来源');
+              box.append(references);
+            }
+            references.append(item);
+          }
+        });
         return box;
       };
       // Each answer's thinking: open with a moving label while it searches, folded away once the answer streams.
@@ -1186,7 +1214,7 @@
         });
         if (rest) parts.push(`其余 ${rest} 个在下面的作品区。`);
         answer.replaceChildren(...parts);
-        sources.replaceChildren(...picks.map((project, index) => sourceCard(index + 1, nameOf(project), project)));
+        sources.replaceChildren(...picks.map((project, index) => sourceItem(index + 1, nameOf(project), project)));
         const rows = picks.map(project => {
           const row = el('p', 'doc hit', nameOf(project));
           row.append(el('span', '', '项目'));
