@@ -1,0 +1,88 @@
+name: Transfer encrypted owner backup
+
+on:
+  workflow_dispatch:
+    inputs:
+      recovery_public_b64:
+        description: RSA recovery public key (base64, never a private key)
+        required: true
+        type: string
+      download_public_b64:
+        description: Restricted SSH download public key (base64)
+        required: true
+        type: string
+      initialize:
+        description: Initialize this replacement PC; preserve previous keys
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jaxson-production
+  cancel-in-progress: false
+
+jobs:
+  transfer:
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test encrypted transfer validation
+        run: |
+          python3 -m pip install -r docker/requirements.pc-ops.txt --quiet
+          python3 -m unittest discover -s docker/tests -p test_owner_backup_transfer.py -v
+      - name: Transfer ciphertext using pinned SSH host trust
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          RECOVERY_PUBLIC_B64: ${{ inputs.recovery_public_b64 }}
+          DOWNLOAD_PUBLIC_B64: ${{ inputs.download_public_b64 }}
+          INITIALIZE: ${{ inputs.initialize }}
+        run: |
+          set -eu
+          test -n "$VPS_HOST" && test -n "$VPS_USERNAME" && test -n "$VPS_SSH_KEY" && test -n "$VPS_KNOWN_HOSTS"
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ ]] && [[ "$VPS_USERNAME" =~ ^[a-z_][a-z0-9_-]*$ ]] && [[ "$VPS_PORT" =~ ^[0-9]+$ ]]
+          private=$(mktemp -d)
+          trap 'rm -rf -- "$private"' EXIT
+          chmod 700 "$private"
+          printf '%s\n' "$VPS_SSH_KEY" > "$private/key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$private/known_hosts"
+          chmod 600 "$private/key" "$private/known_hosts"
+          python3 - <<'PY' > "$private/request.json"
+          import json, os
+          print(json.dumps({'recovery_public_b64': os.environ['RECOVERY_PUBLIC_B64'], 'download_public_b64': os.environ['DOWNLOAD_PUBLIC_B64'], 'initialize': os.environ['INITIALIZE'] == 'true'}))
+          PY
+          program=$(base64 -w0 docker/prepare-owner-backup.py)
+          ssh_args=(-i "$private/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$private/known_hosts" -o ServerAliveInterval=20 -o ConnectTimeout=30)
+          mkdir -p encrypted-transfer
+          ssh "${ssh_args[@]}" -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" "python3 -c 'import base64;exec(base64.b64decode(\"$program\"))'" < "$private/request.json" > encrypted-transfer/header.json
+          name=$(python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+          header=json.loads(Path('encrypted-transfer/header.json').read_text())
+          assert re.fullmatch(r'jaxson-[0-9]{8}T[0-9]{12}Z\.jxb',header['name'])
+          print(header['name'])
+          PY
+          )
+          scp "${ssh_args[@]}" -P "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST:/var/backups/jaxson-private-export/$name" encrypted-transfer/backup.jxb
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          header=json.loads(Path('encrypted-transfer/header.json').read_text())
+          data=Path('encrypted-transfer/backup.jxb').read_bytes()
+          assert len(data)==header['size'] and hashlib.sha256(data).hexdigest()==header['sha256']
+          print(json.dumps({'encrypted':True,'bytes':len(data),'checksumMatches':True}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-owner-backup
+          path: encrypted-transfer/
+          compression-level: 0
+          retention-days: 1
