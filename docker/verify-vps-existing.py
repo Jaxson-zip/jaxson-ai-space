@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Read-only verification of the approved PR 17 release and its rollback backup.
+"""Read-only verification of the approved PR 18 release and its rollback backup.
 
 Run over stdin via verify-production.yml; never loads environment secrets or
-reads database records. This snapshot is intentionally tied to the media release.
+reads database records. This snapshot is tied to the approved UI release.
 """
 import hashlib
 import ipaddress
@@ -12,8 +12,9 @@ import shutil
 import subprocess
 import sys
 
-EXPECTED = 'e2270b7d5c7d496d3d1d67b485f5fc72476fb766'
-PREVIOUS = 'b9cb7211515d5a4ea2477003dcc4a3256f452675'
+EXPECTED = '72f704f867b6ab96cc73545cb49c4e3f50f3d583'
+PREVIOUS = 'e2270b7d5c7d496d3d1d67b485f5fc72476fb766'
+BACKUP_NAME = 'release-20261030T132725Z-scO1XO'
 CADDY_ID = '5ce9ccf30c0bf734772997f5749b88a302548902ac11a21061ab8265c43a7bc9'
 CADDY_HASH = '2dca59daa3e5b73e7ab4815756a56c62c2ecae5925781e05982899b562eae6f1'
 
@@ -60,7 +61,7 @@ def verify(client_ip=''):
         '{{range .Mounts}}{{if eq .Destination "/etc/caddy/Caddyfile"}}{{.Source}}{{end}}{{end}}', caddy))
     for path in [current / 'Caddyfile', source]:
         require(hashlib.sha256(path.read_bytes()).hexdigest() == CADDY_HASH, 'CADDY_CONFIG_CHANGED')
-    backup = Path('/var/backups/jaxson-ai-space/release-20261029T143128Z-Vdaa6j')
+    backup = Path('/var/backups/jaxson-ai-space') / BACKUP_NAME
     require((backup / 'COMPLETE').is_file(), 'RELEASE_BACKUP_INCOMPLETE')
     run('sha256sum', '--check', '--quiet', 'SHA256SUMS', cwd=backup)
     rollback = Path('/opt/jaxson-releases') / PREVIOUS

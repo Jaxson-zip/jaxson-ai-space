@@ -27,7 +27,7 @@ class PostflightTests(unittest.TestCase):
         self.caddy = self.path('/caddy-mounted')
         self.caddy.write_bytes(b'approved-caddy')
         (release / 'Caddyfile').write_bytes(b'approved-caddy')
-        backup = self.path('/var/backups/jaxson-ai-space/release-20261029T143128Z-Vdaa6j')
+        backup = self.path('/var/backups/jaxson-ai-space') / audit.BACKUP_NAME
         backup.mkdir(parents=True)
         (backup / 'COMPLETE').touch()
         rollback = self.path('/opt/jaxson-releases') / audit.PREVIOUS
