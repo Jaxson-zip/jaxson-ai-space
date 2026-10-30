@@ -5,6 +5,7 @@ Run over stdin via verify-production.yml; never loads environment secrets or
 reads database records. This snapshot is intentionally tied to the media release.
 """
 import hashlib
+import ipaddress
 import json
 from pathlib import Path
 import shutil
@@ -27,7 +28,7 @@ def require(condition, code):
         raise ValueError(code)
 
 
-def verify():
+def verify(client_ip=''):
     current = Path('/opt/jaxson-releases/current').resolve()
     require(current.name == EXPECTED, 'CURRENT_RELEASE_MISMATCH')
     artifact_dir = Path('/opt/jaxson-releases/artifacts') / EXPECTED
@@ -71,16 +72,32 @@ def verify():
             if '=' in line)
     ssh = {line.split(None, 1)[0]: line.split(None, 1)[1] for line in run('sshd', '-T').splitlines()
            if line.split(None, 1)[0] in ['port', 'maxstartups', 'persourcemaxstartups', 'passwordauthentication']}
+    connectivity = {}
+    if client_ip:
+        client_ip = str(ipaddress.ip_address(client_ip))
+        if shutil.which('fail2ban-client'):
+            banned = run('fail2ban-client', 'get', 'sshd', 'banip').split()
+            connectivity['clientBannedByFail2ban'] = client_ip in banned
+        else:
+            connectivity['fail2banInstalled'] = False
+        if shutil.which('iptables'):
+            rules = run('iptables-save')
+            connectivity['clientMentionedByFirewall'] = client_ip in rules
+    ops = Path('/opt/jaxson-ops')
+    backup_setup = {name: (ops / name).is_file() for name in ['recovery-public.pem', 'backup-download.pub']}
+    backup_setup['restrictedSshKeyConfigured'] = Path('/root/.ssh/jaxson-backup-authorized_keys').is_file()
+    backup_setup['privateExportToolPresent'] = (ops / 'current/export-private-backup.sh').is_file()
     return {'ok': True, 'current': str(current), 'containers': containers,
             'worker': {key: worker[key] for key in ['ok', 'pending', 'processing', 'failed']},
             'migrations': 6, 'publicKnowledge': 8, 'caddyUnchanged': True,
             'backup': str(backup), 'backupChecksums': True, 'rollback': str(rollback),
-            'freeDiskBytes': shutil.disk_usage(current).free, 'backupUnits': timers, 'sshSettings': ssh}
+            'freeDiskBytes': shutil.disk_usage(current).free, 'backupUnits': timers, 'sshSettings': ssh,
+            'ownerConnectivity': connectivity, 'backupSetup': backup_setup}
 
 
 if __name__ == '__main__':
     try:
-        print(json.dumps(verify()))
+        print(json.dumps(verify(sys.argv[1] if len(sys.argv) > 1 else '')))
     except ValueError as error:
         # Only our own diagnostic codes are safe to expose; JSON parser errors
         # and command stderr may include details outside this report's scope.

@@ -2,6 +2,11 @@ name: Verify existing production release
 
 on:
   workflow_dispatch:
+    inputs:
+      client_ip:
+        description: Optional owner IP for SSH blocking diagnostics
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -29,6 +34,7 @@ jobs:
           VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          CLIENT_IP: ${{ inputs.client_ip }}
         run: |
           set -eu
           test -n "$VPS_HOST" && test -n "$VPS_USERNAME" && test -n "$VPS_SSH_KEY" && test -n "$VPS_KNOWN_HOSTS"
@@ -39,4 +45,5 @@ jobs:
           printf '%s\n' "$VPS_SSH_KEY" > "$private/key"
           printf '%s\n' "$VPS_KNOWN_HOSTS" > "$private/known_hosts"
           chmod 600 "$private/key" "$private/known_hosts"
-          ssh -i "$private/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$private/known_hosts" -o ServerAliveInterval=20 -o ConnectTimeout=30 -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" 'python3 -' < docker/verify-vps-existing.py
+          [[ -z "$CLIENT_IP" || "$CLIENT_IP" =~ ^[0-9a-fA-F.:]+$ ]]
+          ssh -i "$private/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$private/known_hosts" -o ServerAliveInterval=20 -o ConnectTimeout=30 -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" "python3 - '$CLIENT_IP'" < docker/verify-vps-existing.py
