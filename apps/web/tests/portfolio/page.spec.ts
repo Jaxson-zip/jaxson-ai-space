@@ -385,7 +385,7 @@ test.describe('first screen', () => {
     await expect(field).toHaveValue('')
   })
 
-  test('a live answer cites like the sample: numbered marks, then a card for each cited source', async ({ page }) => {
+  test('a live answer uses project cards and plain references for other cited sources', async ({ page }) => {
     await askable(page, [
       sse('meta', { evidence: ['项目档案：待办备忘 (Todo Memo)', '广东润喵云科技 · 开发实习生', '没被引用的资料'], generator: 'external',
         sources: [{ tag: '项目档案：待办备忘 (Todo Memo)', project: 'todo-memo' }, { tag: '广东润喵云科技 · 开发实习生' }, { tag: '没被引用的资料' }] }),
@@ -397,22 +397,51 @@ test.describe('first screen', () => {
     const live = page.locator('#hero .live')
     await expect(live.locator('.a sup')).toHaveText(['1', '2'])
     await expect(live.locator('.a')).toHaveText('我做过待办备忘1，也在润喵云实习过2。')
-    await expect(live.locator('.src div span')).toHaveText(['来源 1', '来源 2'])
-    await expect(live.locator('.src b')).toHaveText(['待办备忘 (Todo Memo)', '广东润喵云科技 · 开发实习生'])
+    await expect(live.locator('.src div span')).toHaveText(['来源 1'])
+    await expect(live.locator('.src b')).toHaveText(['待办备忘 (Todo Memo)'])
     await expect(live.locator('.src').first().locator('img')).toHaveAttribute('src', /todo-memo-cover/)
     await expect(live.locator('.src').first()).toHaveAttribute('href', '#works')
-    await expect(live.locator('.src').nth(1).locator('.thumb')).toHaveText('广')
+    await expect(live.locator('.source-ref')).toHaveText(['[2]广东润喵云科技 · 开发实习生'])
+    await expect(live.locator('.source-ref img, .source-ref .thumb, .source-ref a')).toHaveCount(0)
   })
 
-  test('without numbered marks every source gets a card; tags alone still find the project', async ({ page }) => {
+  test('without numbered marks all sources remain visible; tags alone still find the project', async ({ page }) => {
     await askable(page, [
       sse('meta', { evidence: ['项目档案：Jaxson AI Space (本站 · 全栈个人门户与 AI 分身)', '张锦鹏个人履历'], generator: 'local' }),
       sse('text', { text: '这是本站。' }), sse('done', {}),
     ])
     await page.locator('.chips button').first().click()
     const live = page.locator('#hero .live')
-    await expect(live.locator('.src b')).toHaveText(['Jaxson AI Space', '张锦鹏个人履历'])
+    await expect(live.locator('.src b')).toHaveText(['Jaxson AI Space'])
+    await expect(live.locator('.source-ref')).toHaveText(['[2]张锦鹏个人履历'])
     await expect(live.locator('.src').first().locator('img')).toHaveAttribute('src', /jaxson-ai-space-home/)
+  })
+
+  test('skills and general knowledge use compact text references at desktop and phone widths', async ({ page }) => {
+    const longName = 'CMS 技术栈与技能记录：' + 'TypeScript / PostgreSQL / React '.repeat(8)
+    await askable(page, [
+      sse('meta', { sources: [{ tag: '技术栈与工程能力图谱' }, { tag: longName }], generator: 'external' }),
+      sse('text', { text: '我使用 TypeScript 和 React[1]，也使用 PostgreSQL[2]。' }), sse('done', {}),
+    ])
+    await page.getByRole('textbox', { name: '问我的 AI 分身' }).fill('你会什么技术？')
+    await page.keyboard.press('Enter')
+    const live = page.locator('#hero .live')
+    await expect(live.locator('.source-ref')).toHaveCount(2)
+    await expect(live.locator('.src, .thumb, .source-ref img')).toHaveCount(0)
+    await expect(live.locator('.source-ref-number')).toHaveText(['[1]', '[2]'])
+    await expect(live.locator('.source-ref-label')).toHaveText(['技术栈与工程能力图谱', longName])
+    for (const viewport of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
+      await page.setViewportSize(viewport)
+      const styles = await live.locator('.source-ref').evaluateAll(refs => refs.map(ref => {
+        const css = getComputedStyle(ref)
+        return { border: css.borderTopWidth, background: css.backgroundColor, overflow: ref.scrollWidth > ref.clientWidth + 1 }
+      }))
+      expect(styles).toEqual([
+        { border: '0px', background: 'rgba(0, 0, 0, 0)', overflow: false },
+        { border: '0px', background: 'rgba(0, 0, 0, 0)', overflow: false },
+      ])
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+    }
   })
 
   test('a long answer scrolls inside the panel; the first screen keeps its size', async ({ page }) => {
