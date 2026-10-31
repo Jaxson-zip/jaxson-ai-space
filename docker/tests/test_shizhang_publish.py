@@ -72,6 +72,26 @@ class ContentOperationTests(unittest.TestCase):
                         module.execute(request)
                     run.assert_not_called()
 
+    def test_cleanup_timeout_preserves_the_original_auth_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            release = Path(directory) / ('a' * 40)
+            release.mkdir()
+            (release / 'production.env').write_text('placeholder')
+            request = {**self.request(), 'mode': 'apply'}
+            def respond(args, **kwargs):
+                if 'psql' in args:
+                    return subprocess.CompletedProcess(args, 0, '\n'.join(request['migrations']), '')
+                if '--import' in args:
+                    return subprocess.CompletedProcess(args, 1,
+                        json.dumps({'ok': False, 'error': 'CMS_AUTHENTICATION_FAILED'}), '')
+                if '-e' in args:
+                    raise subprocess.TimeoutExpired(args, 90)
+                return subprocess.CompletedProcess(args, 0, '/tmp/jaxson-shizhang-Test123', '')
+            with patch.object(module, 'Path', side_effect=lambda value: release), \
+                 patch.object(module.subprocess, 'run', side_effect=respond):
+                with self.assertRaisesRegex(module.SafeFailure, 'CMS_AUTHENTICATION_FAILED'):
+                    module.execute(request)
+
 
 if __name__ == '__main__':
     unittest.main()

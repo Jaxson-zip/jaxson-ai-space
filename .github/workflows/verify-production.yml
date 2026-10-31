@@ -28,6 +28,8 @@ jobs:
           python3 -m py_compile docker/verify-vps-existing.py
           python3 -m pip install -r docker/requirements.pc-ops.txt --quiet
           python3 -m unittest docker.tests.test_windows_network docker.tests.test_pc_monitor docker.tests.test_owner_backup_transfer docker.tests.test_release_postflight docker.tests.test_private_backup -v
+          python3 -m unittest docker.tests.test_deploy_preflight docker.tests.test_release_ops docker.tests.test_backup_resume docker.tests.test_release_rollback docker.tests.test_release_candidate docker.tests.test_release_images docker.tests.test_shizhang_publish -v
+          node --test docker/tests/test_shizhang_content.mjs
       - name: Inspect existing release without deployment
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}

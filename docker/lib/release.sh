@@ -9,6 +9,7 @@ postgres=jaxson-postgres-prod
 admin=jaxson_admin
 owner=release_owner_20261007
 reader=release_reader_20261007
+health_wait=600
 die() { printf '%s\n' "$*" >&2; exit 1; }
 validate_scope() {
   [ "$(id -u)" = 0 ] || die 'Run mutation commands as root'
@@ -43,7 +44,7 @@ ALTER ROLE $reader IN DATABASE $db SET search_path TO public_read, public;
 SQL
 }
 health() {
-  compose up -d --no-deps --wait --wait-timeout 180 web worker portfolio caddy >&2
+  compose up -d --no-deps --wait --wait-timeout "$health_wait" web worker portfolio caddy >&2
   curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/api/showcase-projects >/dev/null
   curl --fail --silent --show-error --max-time 15 http://127.0.0.1:39000/ >/dev/null
   # Supply the checker from this artifact: rollback images predate this file.

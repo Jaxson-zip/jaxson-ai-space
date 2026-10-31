@@ -7,18 +7,18 @@ bundle=${1:-}
 mode=${2:---verify}
 [ -n "$bundle" ] || die 'Usage: deploy-vps-existing.sh ARTIFACT_DIRECTORY [--verify | --apply]'
 [ "$mode" = --verify ] || [ "$mode" = --apply ] || die 'Invalid deploy mode'
-python3 "$validator" artifact "$bundle" >&2
+artifact_info=$(python3 "$validator" artifact "$bundle")
 validate_scope
 operation_lock
-commit=$(python3 "$validator" artifact "$bundle" --field release_id)
-web_image=$(python3 "$validator" artifact "$bundle" --field web_image)
-portfolio_image=$(python3 "$validator" artifact "$bundle" --field portfolio_image)
+commit=$(printf '%s' "$artifact_info" | python3 -c 'import json,sys; print(json.load(sys.stdin)["release_id"])')
+web_image=$(printf '%s' "$artifact_info" | python3 -c 'import json,sys; print(json.load(sys.stdin)["web_image"])')
+portfolio_image=$(printf '%s' "$artifact_info" | python3 -c 'import json,sys; print(json.load(sys.stdin)["portfolio_image"])')
 # Gate schema changes before starting an image that could automatically migrate.
 applied=$(mktemp)
 expected=$(mktemp)
 trap 'rm -f -- "$applied" "$expected"' EXIT
 docker exec "$postgres" psql -X -At -v ON_ERROR_STOP=1 -U "$admin" -d "$db" -c 'SELECT name FROM owner.payload_migrations ORDER BY name' > "$applied"
-python3 "$validator" artifact "$bundle" --field migrations | sort > "$expected"
+printf '%s' "$artifact_info" | python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)["migrations"]))' | sort > "$expected"
 sort -o "$applied" "$applied"
 cmp -s "$applied" "$expected" || die 'Migration history differs: prepare a reviewed database migration and recovery plan before deployment'
 [ "$mode" != --verify ] || { printf '%s\n' 'Artifact, release scope and migration history verified; no images or services changed'; exit 0; }
@@ -26,7 +26,7 @@ cmp -s "$applied" "$expected" || die 'Migration history differs: prepare a revie
 candidate="$release_root/$commit"
 [ ! -e "$candidate" ] && [ ! -L "$candidate" ] || die 'Candidate release already exists; use a new committed artifact'
 backup=$(JAXSON_RELEASE_DIR="$release" sh "$release_tools/backup-vps-existing.sh")
-python3 "$validator" verify "$backup" --database "$db" --release "$release" --max-age 300 >&2
+python3 "$validator" verify "$backup" --database "$db" --release "$release" --max-age "$((health_wait + 300))" >&2
 docker load -i "$bundle/images.tar" >/dev/null
 web_runtime=$(python3 "$release_tools/lib/release_images.py" "jaxson-web:$commit" "$web_image")
 portfolio_runtime=$(python3 "$release_tools/lib/release_images.py" "jaxson-portfolio:$commit" "$portfolio_image")
