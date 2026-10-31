@@ -15,7 +15,10 @@ spec.loader.exec_module(module)
 class ContentOperationTests(unittest.TestCase):
     def request(self):
         return {'mode': 'plan', 'expectedRelease': 'a' * 40, 'archive': {}, 'importerProgram': '',
-                'archiveSha256': module.hashlib.sha256(b'{}').hexdigest()}
+                'archiveSha256': module.hashlib.sha256(b'{}').hexdigest(),
+                'sourceFiles': {name: '{}' for name in ['package.json', 'tsconfig.json',
+                    'src/payload.config.ts', 'src/migrations/index.ts']},
+                'migrations': ['migration-' + str(index) for index in range(6)]}
 
     def test_rejects_invalid_target_before_running_any_command(self):
         for fields in [{'expectedRelease': '../main'}, {'mode': 'delete'}]:
@@ -41,12 +44,20 @@ class ContentOperationTests(unittest.TestCase):
             request = {**self.request(), 'mode': 'apply'}
             response = subprocess.CompletedProcess([], 1,
                 json.dumps({'ok': False, 'error': 'CMS_AUTHENTICATION_FAILED'}), 'sensitive response must stay hidden')
+            def respond(args, **kwargs):
+                if 'psql' in args:
+                    return subprocess.CompletedProcess(args, 0, '\n'.join(request['migrations']), '')
+                if '--import' in args:
+                    return response
+                if '-e' in args:
+                    return subprocess.CompletedProcess(args, 0, '', '')
+                return subprocess.CompletedProcess(args, 0, '/tmp/jaxson-shizhang-Test123', '')
             with patch.object(module, 'Path', side_effect=lambda value: release):
-                with patch.object(module.subprocess, 'run', return_value=response) as run:
+                with patch.object(module.subprocess, 'run', side_effect=respond) as run:
                     with self.assertRaisesRegex(module.SafeFailure, 'CMS_AUTHENTICATION_FAILED'):
                         module.execute(request)
-                    self.assertEqual(run.call_count, 1)
-                    self.assertEqual(run.call_args.args[0][:2], ['docker', 'exec'])
+                    self.assertEqual(run.call_count, 4)
+                    self.assertTrue(all(call.args[0][:2] == ['docker', 'exec'] for call in run.call_args_list))
                     self.assertNotIn('sensitive response', str(run.call_args.args))
 
     def test_bad_checksum_cannot_authenticate_or_write(self):

@@ -29,6 +29,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_release }}
+          path: source-for-cms
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -61,10 +65,17 @@ jobs:
           import hashlib, json, os
           from pathlib import Path
           archive=json.loads(Path('docs/shizhang-content-draft.json').read_text())['archive']
+          source=Path('source-for-cms/apps/web')
+          paths=[source/'package.json',source/'tsconfig.json',source/'src/payload.config.ts',source/'scripts/lib/smtp-config.mjs']
+          for directory in ['src/collections','src/migrations','src/features/cms']:
+            paths.extend(path for path in (source/directory).glob('*.ts') if not path.name.endswith('.test.ts'))
+          source_files={path.relative_to(source).as_posix():path.read_text() for path in paths}
+          import re
+          migrations=re.findall(r"name: '([0-9]{8}_[0-9]{6}_[a-z0-9_]+)'",source_files['src/migrations/index.ts'])
           raw=json.dumps(archive,ensure_ascii=False,separators=(',',':')).encode()
           request=dict(expectedRelease=os.environ['EXPECTED_RELEASE'],mode=os.environ['CONTENT_MODE'],
             archive=archive,archiveSha256=hashlib.sha256(raw).hexdigest(),
-            importerProgram=Path('docker/lib/shizhang_content.mjs').read_text())
+            importerProgram=Path('docker/lib/shizhang_content.mjs').read_text(),sourceFiles=source_files,migrations=migrations)
           print(json.dumps(request,ensure_ascii=False))
           PY
           program=$(base64 -w0 docker/publish-shizhang.py)

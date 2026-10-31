@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Run the approved create-only CMS import on the expected release, without printing credentials."""
+"""Use the authenticated CMS Local API over owner-authorized pinned SSH."""
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import sys
@@ -30,7 +30,6 @@ def execute(request):
         raise SafeFailure('CURRENT_RELEASE_MISMATCH')
     if not (release / 'production.env').is_file():
         raise SafeFailure('RELEASE_CONFIGURATION_MISSING')
-    # The reviewed program and candidate arrive over the pinned administrative SSH connection.
     program = request['importerProgram']
     archive = request['archive']
     if not isinstance(program, str) or len(program) > 30000:
@@ -38,30 +37,84 @@ def execute(request):
     archive_bytes = json.dumps(archive, ensure_ascii=False, separators=(',', ':')).encode()
     if hashlib.sha256(archive_bytes).hexdigest() != request['archiveSha256']:
         raise SafeFailure('CONTENT_CHECKSUM_MISMATCH')
+    source_files = request.get('sourceFiles', {})
+    for name, contents in source_files.items():
+        path = PurePosixPath(name)
+        allowed = (name in ['package.json', 'tsconfig.json', 'src/payload.config.ts',
+                            'scripts/lib/smtp-config.mjs']
+                   or name.startswith(('src/collections/', 'src/migrations/', 'src/features/cms/'))
+                   and path.suffix == '.ts' and not name.endswith('.test.ts'))
+        if path.is_absolute() or '..' in path.parts or not allowed or not isinstance(contents, str):
+            raise SafeFailure('INVALID_CMS_SOURCE')
+    if not all(name in source_files for name in
+               ['package.json', 'tsconfig.json', 'src/payload.config.ts', 'src/migrations/index.ts']):
+        raise SafeFailure('CMS_SOURCE_MISSING')
+    expected_migrations = request.get('migrations', [])
+    actual_migrations = command(['docker', 'exec', 'jaxson-postgres-prod', 'psql', '-X', '-At',
+        '-U', 'jaxson_admin', '-d', 'jaxson_release_20261007',
+        '-c', 'SELECT name FROM owner.payload_migrations ORDER BY name;']).splitlines()
+    if len(expected_migrations) != 6 or sorted(actual_migrations) != sorted(expected_migrations):
+        raise SafeFailure('MIGRATION_HISTORY_MISMATCH')
+    # The exact running release's public config/collections are mounted only in a temporary directory.
+    bootstrap = """
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+const files=FILES
+const directory=await fs.mkdtemp(path.join(os.tmpdir(),'jaxson-shizhang-'))
+for(const [name,body] of Object.entries(files)){
+ const target=path.join(directory,name)
+ await fs.mkdir(path.dirname(target),{recursive:true})
+ await fs.writeFile(target,body,{mode:0o600})
+}
+await fs.symlink('/app/apps/web/node_modules',path.join(directory,'node_modules'))
+console.log(directory)
+"""
+    runtime = command(['docker', 'exec', '-i', 'jaxson-release-web-1', 'node', '--input-type=module', '-'],
+        source=bootstrap.replace('FILES', json.dumps(source_files, ensure_ascii=False)))
+    if not re.fullmatch(r'/tmp/jaxson-shizhang-[a-zA-Z0-9]+', runtime):
+        raise SafeFailure('INVALID_CMS_RUNTIME')
 
     def cms_run(apply):
+        # This verifies the administrator password, then passes the real user and overrideAccess:false.
+        # It does not modify or disable the HTTP/Cloudflare perimeter.
         tail = """
-import { createCmsClient } from '/app/apps/web/scripts/lib/cms-transfer.mjs'
+import { getPayload } from 'payload'
+import config from './src/payload.config.ts'
+let payload, report
 try {
-  const cms = await createCmsClient('http://127.0.0.1:3000',
-    process.env.CMS_EMAIL || process.env.OWNER_EMAIL,
-    process.env.CMS_PASSWORD || process.env.OWNER_INITIAL_PASSWORD)
-  const result = await publishShizhang(cms, ARCHIVE, { apply: APPLY })
-  console.log(JSON.stringify({ok:true,result}))
-} catch (error) {
-  const message = String(error?.message || '')
-  const code = message.startsWith('CMS login failed: HTTP ') ? 'CMS_AUTHENTICATION_FAILED'
-    : ['EXISTING_CONTENT_DIFFERS','AMBIGUOUS_EXISTING_RECORD'].includes(message) ? message : 'CMS_IMPORT_FAILED'
-  console.log(JSON.stringify({ok:false,error:code}))
-  process.exitCode=1
-}
+  payload=await getPayload({config})
+  const login=await payload.login({collection:'users',data:{
+    email:process.env.CMS_EMAIL||process.env.OWNER_EMAIL,
+    password:process.env.CMS_PASSWORD||process.env.OWNER_INITIAL_PASSWORD
+  }})
+  if(!login.user) throw Error('CMS_AUTHENTICATION_FAILED')
+  const user=login.user
+  const cms={
+    list:async collection=>(await payload.find({collection,overrideAccess:false,user,depth:0,pagination:false,
+      where:collection==='projects'
+        ? {or:[{visibility:{equals:'public'}},{slug:{equals:'shizhang'}}]}
+        : {or:[{isPublic:{equals:true}},{title:{equals:ARCHIVE.records['ai-knowledge'][0].title}}]}
+    })).docs,
+    write:async (collection,data)=>payload.create({collection,data,user,overrideAccess:false,depth:0})
+  }
+  report={ok:true,result:await publishShizhang(cms,ARCHIVE,{apply:APPLY})}
+} catch(error) {
+  const message=String(error?.message||'')
+  const code=error?.name==='AuthenticationError'||message==='CMS_AUTHENTICATION_FAILED'
+    ? 'CMS_AUTHENTICATION_FAILED'
+    : ['EXISTING_CONTENT_DIFFERS','AMBIGUOUS_EXISTING_RECORD'].includes(message)?message:'CMS_IMPORT_FAILED'
+  report={ok:false,error:code}
+} finally { if(payload) await payload.destroy() }
+console.log(JSON.stringify(report))
+if(!report.ok) process.exitCode=1
 """
         source = program + '\nconst ARCHIVE=' + json.dumps(archive, ensure_ascii=False) + ';\n'
         source += 'const APPLY=' + ('true' if apply else 'false') + ';\n' + tail
-        # Do not return stderr: login bodies, CMS errors or database diagnostics may contain secrets.
-        result = subprocess.run(['docker', 'exec', '-i', 'jaxson-release-web-1',
-                                 'node', '--input-type=module', '-'],
-                                input=source, text=True, capture_output=True, timeout=180, check=False)
+        result = subprocess.run(['docker', 'exec', '-i', '-w', runtime, '-e',
+            'TSX_TSCONFIG_PATH=' + runtime + '/tsconfig.json', 'jaxson-release-web-1',
+            'node', '--import', '/app/apps/web/node_modules/tsx/dist/loader.mjs', '--input-type=module', '-'],
+            input=source, text=True, capture_output=True, timeout=180, check=False)
         try:
             report = json.loads(result.stdout.strip().splitlines()[-1])
         except Exception:
@@ -70,35 +123,36 @@ try {
             raise SafeFailure(report.get('error', 'CMS_IMPORT_FAILED'))
         return report['result']
 
-    plan = cms_run(False)  # Authenticate and validate every collision before stopping services or writing.
-    report = {'ok': True, 'release': expected, 'mode': mode, 'contentSha256': request['archiveSha256'],
-              'plan': plan, 'backup': None}
-    if mode == 'apply':
-        if plan['plannedCreates']:
-            tools = Path('/opt/jaxson-release-tools/current')
-            output = command(['sh', str(tools / 'backup-vps-existing.sh')], timeout=480)
-            backup_name = output.splitlines()[-1]
-            backup = Path(backup_name)
-            if (backup.parent != Path('/var/backups/jaxson-ai-space')
-                    or not re.fullmatch(r'release-[0-9]{8}T[0-9]{6}Z-[a-zA-Z0-9]+', backup.name)
-                    or not (backup / 'COMPLETE').is_file()):
-                raise SafeFailure('CONTENT_BACKUP_INCOMPLETE')
-            command(['sha256sum', '--check', '--quiet', 'SHA256SUMS'], cwd=backup)
-            report['backup'] = str(backup)
-        if Path('/opt/jaxson-releases/current').resolve().name != expected:
-            raise SafeFailure('CURRENT_RELEASE_CHANGED')
-        report['result'] = cms_run(True)
-    worker = command(['docker', 'exec', 'jaxson-release-worker-1', 'node',
-                      'apps/web/scripts/run-index-worker.mjs', '--health'])
-    state = json.loads(worker)
-    report['worker'] = {key: state[key] for key in ('ok', 'pending', 'processing', 'failed')}
-    return report
+    try:
+        plan = cms_run(False)
+        report = {'ok': True, 'release': expected, 'mode': mode,
+                  'contentSha256': request['archiveSha256'], 'plan': plan, 'backup': None}
+        if mode == 'apply':
+            if plan['plannedCreates']:
+                output = command(['sh', '/opt/jaxson-release-tools/current/backup-vps-existing.sh'], timeout=480)
+                backup = Path(output.splitlines()[-1])
+                if (backup.parent != Path('/var/backups/jaxson-ai-space')
+                        or not re.fullmatch(r'release-[0-9]{8}T[0-9]{6}Z-[a-zA-Z0-9]+', backup.name)
+                        or not (backup / 'COMPLETE').is_file()):
+                    raise SafeFailure('CONTENT_BACKUP_INCOMPLETE')
+                command(['sha256sum', '--check', '--quiet', 'SHA256SUMS'], cwd=backup)
+                report['backup'] = str(backup)
+            if Path('/opt/jaxson-releases/current').resolve().name != expected:
+                raise SafeFailure('CURRENT_RELEASE_CHANGED')
+            report['result'] = cms_run(True)
+        worker = json.loads(command(['docker', 'exec', 'jaxson-release-worker-1', 'node',
+                                   'apps/web/scripts/run-index-worker.mjs', '--health']))
+        report['worker'] = {key: worker[key] for key in ('ok', 'pending', 'processing', 'failed')}
+        return report
+    finally:
+        cleanup = "import fs from 'node:fs/promises';await fs.rm(process.argv[1],{recursive:true,force:true})"
+        # runtime was generated by mkdtemp and validated above, never supplied as an arbitrary path.
+        command(['docker', 'exec', 'jaxson-release-web-1', 'node', '--input-type=module', '-e', cleanup, runtime])
 
 
 if __name__ == '__main__':
     try:
-        request = json.loads(sys.stdin.read(200001))
-        print(json.dumps(execute(request), ensure_ascii=False))
+        print(json.dumps(execute(json.loads(sys.stdin.read(500001))), ensure_ascii=False))
     except SafeFailure as error:
         print(json.dumps({'ok': False, 'error': str(error)}))
         sys.exit(1)
