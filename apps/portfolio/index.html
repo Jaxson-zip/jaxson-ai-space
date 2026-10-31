@@ -284,7 +284,8 @@
     .project h3 { font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
     .project .summary { flex: 1; color: var(--sub); font-size: 15px; line-height: 1.6; overflow-wrap: anywhere;
       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
-    .project .tags { flex-wrap: nowrap; overflow: hidden; }
+    .project .tags { flex-wrap: wrap; }
+    .project .tags li { flex-shrink: 0; max-width: 100%; overflow-wrap: anywhere; }
     .project .more { font-size: 14px; font-weight: 700; color: var(--accent); }
     /* Screenshots run edge to edge from their top-left corner; no frame inside the card. */
     .cover { aspect-ratio: 16 / 10; background: var(--card); border-bottom: 1px solid var(--line); overflow: hidden; }

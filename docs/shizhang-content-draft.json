@@ -1,8 +1,11 @@
 {
-  "status": "local-draft-not-imported",
+  "status": "published-verified",
   "reviewedAt": "2026-10-31",
   "applicationRelease": "1cb793c8e4f951f8c38068d78b6c491d94b00f63",
-  "importState": "not-started: production plan timed out at migration_history; awaiting spare VPS inspection",
+  "importState": "created and reread through authenticated Payload Local API over pinned SSH; public UI, citations and index verified",
+  "publishedAt": "2026-11-01T00:29:48.848+08:00",
+  "productionRecords": { "projectId": 5, "knowledgeId": 15 },
+  "productionVerification": { "publicProjects": 3, "publicKnowledge": 9, "migrations": 6, "indexPending": 0, "indexProcessing": 0, "indexFailed": 0, "desktopAndPhone": true },
   "source": {
     "repository": "https://github.com/Jaxson-zip/shizhang",
     "commit": "d36a15bccd3d9d78863ae963b42f2e73c5b8a2f7",
@@ -76,8 +79,7 @@
     ]
   },
   "pending": [
-    "通过已登录的 CMS 录入候选并验收公开页面与索引；本次用户要求已授权补充该公开项目。",
-    "短中文项目名检索修复已发布；主机 CPU 争用下三个应用容器不健康，站长已表示有备用 VPS，须先恢复稳定服务再录入和验收。",
+    "手机技术标签与本地回退长文修复已在本地验证，尚未提交或发布。",
     "没有公开体验地址、封面或视频；不链接私人账本，不使用真实账单素材。"
   ],
   "archive": {

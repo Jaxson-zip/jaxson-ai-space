@@ -917,6 +917,27 @@ test.describe('works', () => {
     await expect(dialog.locator('.media video')).toHaveAttribute('aria-label', '待办备忘 (Todo Memo)演示视频')
   })
 
+  test('mobile project tags keep technology names intact without clipping the last tag', async ({ page }) => {
+    const technologies = ['Next.js 16', 'React 19', 'TypeScript']
+    for (const width of [320, 375]) {
+      await open(page, { width, height: 812 }, [project('jaxson-ai-space', 'Jaxson AI Space', { technologies })])
+      const tags = page.locator('#works .project .tags li')
+      await expect(tags).toHaveText(technologies)
+      const layout = await tags.evaluateAll(items => items.map(item => {
+        const range = document.createRange()
+        range.selectNodeContents(item)
+        const rects = [...range.getClientRects()].filter(rect => rect.width > 0)
+        const bounds = item.getBoundingClientRect()
+        const list = item.parentElement!.getBoundingClientRect()
+        return {
+          lines: new Set(rects.map(rect => Math.round(rect.top))).size,
+          clipped: item.scrollWidth > item.clientWidth + 1 || bounds.right > list.right + 1,
+        }
+      }))
+      expect(layout).toEqual(technologies.map(() => ({ lines: 1, clipped: false })))
+    }
+  })
+
   test('desktop project dialogs keep the same compact frame while longer details scroll independently', async ({ page }, testInfo) => {
     const note = '参与说明保留完整内容，不因布局收起或删减。'
     for (const [width, height] of [[1440, 900], [1280, 720], [1100, 520]]) {

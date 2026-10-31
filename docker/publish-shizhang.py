@@ -2,6 +2,7 @@
 """Use the authenticated CMS Local API over owner-authorized pinned SSH."""
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -22,6 +23,35 @@ def command(args, *, source=None, timeout=90, cwd=None):
     if result.returncode:
         raise SafeFailure('COMMAND_FAILED')
     return result.stdout.strip()
+
+
+def cms_timeout_code(output):
+    if isinstance(output, bytes):
+        output = output.decode('utf8', errors='replace')
+    phases = []
+    for line in (output or '').splitlines():
+        try:
+            value = json.loads(line)
+            if value.get('event') == 'cms-phase' and value.get('stage') in [
+                    'importing', 'initializing', 'authenticating', 'planning', 'applying', 'closing']:
+                phases.append(value['stage'])
+        except (ValueError, AttributeError):
+            pass
+    return 'CMS_TIMEOUT_' + (phases[-1].upper() if phases else 'LOADER')
+
+
+def cms_credentials_available(supplied=None):
+    # Captured in memory only: never return environment values, passwords or login tokens.
+    items = json.loads(command(['docker', 'inspect', '--format', '{{json .Config.Env}}', 'jaxson-release-web-1']))
+    keys = {'CMS_EMAIL', 'OWNER_EMAIL', 'CMS_PASSWORD', 'OWNER_INITIAL_PASSWORD'}
+    values = {item.split('=', 1)[0]: item.split('=', 1)[1].strip()
+              for item in items if isinstance(item, str) and '=' in item and item.split('=', 1)[0] in keys}
+    if supplied:
+        values['CMS_PASSWORD'] = supplied['password']
+        if supplied.get('email'):
+            values['CMS_EMAIL'] = supplied['email']
+    return bool((values.get('CMS_EMAIL') or values.get('OWNER_EMAIL'))
+                and (values.get('CMS_PASSWORD') or values.get('OWNER_INITIAL_PASSWORD')))
 
 
 def content_snapshot(inventory, archive, release, root=None):
@@ -100,6 +130,15 @@ def execute(request):
     if not all(name in source_files for name in
                ['package.json', 'tsconfig.json', 'src/payload.config.ts', 'src/migrations/index.ts']):
         raise SafeFailure('CMS_SOURCE_MISSING')
+    CURRENT_STAGE = 'cms_credentials'
+    supplied = request.get('cmsCredentials')
+    if supplied is not None and (not isinstance(supplied, dict)
+            or set(supplied) - {'email', 'password'}
+            or not isinstance(supplied.get('password'), str) or not 1 <= len(supplied['password']) <= 4096
+            or not isinstance(supplied.get('email', ''), str) or len(supplied.get('email', '')) > 320):
+        raise SafeFailure('INVALID_CMS_CREDENTIALS')
+    if not cms_credentials_available(supplied):
+        raise SafeFailure('CMS_CREDENTIALS_MISSING')
     expected_migrations = request.get('migrations', [])
     CURRENT_STAGE = 'migration_history'
     actual_migrations = command(['docker', 'exec', 'jaxson-postgres-prod', 'psql', '-X', '-At',
@@ -186,21 +225,28 @@ process.stdout.write(JSON.stringify(report)+'\\n',()=>process.exit(report.ok?0:1
         source += 'const APPLY=' + ('true' if apply else 'false') + ';\n' + tail
         operation = runtime + '/operation.mjs'
         writer = "import fs from 'node:fs/promises';await fs.writeFile(" + json.dumps(operation) + ',' + json.dumps(source) + ',{mode:0o600})'
+        CURRENT_STAGE = 'cms_source_setup'
         command(['docker', 'exec', '-i', 'jaxson-release-web-1', 'node', '--input-type=module', '-'], source=writer)
-        result = subprocess.run(['docker', 'exec', '-w', runtime, '-e',
-            'TSX_TSCONFIG_PATH=' + runtime + '/tsconfig.json', 'jaxson-release-web-1',
-            'timeout', '-k', '15', '300', 'node', '--import', '/app/apps/web/node_modules/tsx/dist/loader.mjs', operation],
-            text=True, capture_output=True, timeout=330, check=False)
+        CURRENT_STAGE = 'cms_apply' if apply else 'cms_plan'
+        execution_env = None
+        credential_flags = []
+        if supplied:
+            execution_env = os.environ.copy()
+            execution_env['CMS_PASSWORD'] = supplied['password']
+            credential_flags += ['-e', 'CMS_PASSWORD']
+            if supplied.get('email'):
+                execution_env['CMS_EMAIL'] = supplied['email']
+                credential_flags += ['-e', 'CMS_EMAIL']
+        try:
+            result = subprocess.run(['docker', 'exec', '-w', runtime, '-e',
+                'TSX_TSCONFIG_PATH=' + runtime + '/tsconfig.json', *credential_flags, 'jaxson-release-web-1',
+                'timeout', '-k', '15', '300', 'node', '--import', '/app/apps/web/node_modules/tsx/dist/loader.mjs', operation],
+                text=True, capture_output=True, timeout=330, check=False,
+                **({'env': execution_env} if execution_env is not None else {}))
+        except subprocess.TimeoutExpired as error:
+            raise SafeFailure(cms_timeout_code(error.stdout)) from None
         if result.returncode in (124, 137, 143):
-            phases = []
-            for line in result.stdout.splitlines():
-                try:
-                    value = json.loads(line)
-                    if value.get('event') == 'cms-phase' and value.get('stage') in ['importing', 'initializing', 'authenticating', 'planning', 'applying', 'closing']:
-                        phases.append(value['stage'])
-                except (ValueError, AttributeError):
-                    pass
-            raise SafeFailure('CMS_TIMEOUT_' + (phases[-1].upper() if phases else 'LOADER'))
+            raise SafeFailure(cms_timeout_code(result.stdout))
         try:
             report = json.loads(result.stdout.strip().splitlines()[-1])
         except Exception:

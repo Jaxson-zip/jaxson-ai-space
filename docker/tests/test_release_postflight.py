@@ -54,7 +54,7 @@ class PostflightTests(unittest.TestCase):
             return f'{image}|{self.health}|0'
         if 'psql' in args:
             self.assertTrue(args[-1].startswith('SELECT count(*) FROM owner.'))
-            return '6' if 'payload_migrations' in args[-1] else '8'
+            return '6' if 'payload_migrations' in args[-1] else str(audit.PUBLIC_KNOWLEDGE)
         if args[:2] == ('docker', 'exec'):
             return json.dumps({'ok': True, 'pending': 0, 'processing': 0, 'failed': 0})
         if args[0] == 'sha256sum':

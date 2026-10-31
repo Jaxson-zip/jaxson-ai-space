@@ -227,6 +227,31 @@ export function buildLocalRAGAnswer(
     : wantsProjectList
       ? '目前检索到的相关公开项目：'
       : '根据目前公开的资料：'
+  const field = (result: RetrievalResult, name: string) => {
+    const prefix = `【${name}】`
+    return result.chunk.content.split('\n').find((line) => line.startsWith(prefix))?.slice(prefix.length).trim()
+  }
+  if (wantsProjectList && !wantsJdMatch && /哪些|几个|所有|都|做过|列出|名称|名字/.test(userMessage)) {
+    return `${intro}\n\n${selected.map((result) => {
+      const status = field(result, '状态')
+      return `- **${result.chunk.title}**${status ? `：${status}` : ''} [${retrievalResults.indexOf(result) + 1}]`
+    }).join('\n')}`
+  }
+  const first = selected[0]
+  if (!wantsJdMatch && first.chunk.category === 'project') {
+    const wantsStack = /技术栈|什么技术|哪些技术|什么框架|什么语言/.test(userMessage)
+    const wantsBrief = /简短|简洁|简要|一句话|[0-9一二三四五六七八九十]+字(?:内|以内)/.test(userMessage)
+    const participation = /负责|参与|贡献|做了|取舍|决定|从零|原创|二次开发|基于|上游/.test(userMessage)
+    const names = wantsStack ? ['技术栈'] : wantsBrief
+      ? participation ? ['项目角色', '参与说明'] : ['技术方案', '交付结果'] : []
+    const brief = names.flatMap((name) => {
+      const value = field(first, name)
+      return value ? [`**${name}：**${value}`] : []
+    })
+    if (brief.length) {
+      return `${intro}\n\n**${first.chunk.title}** [${retrievalResults.indexOf(first) + 1}]\n${brief.join('\n')}`
+    }
+  }
   const facts = selected.map((result) => {
     const content = result.chunk.content.replace(/^【([^】\r\n]+)】[ \t]*/gm, '**$1：**')
     return `**${result.chunk.title}** [${retrievalResults.indexOf(result) + 1}]\n${content}`

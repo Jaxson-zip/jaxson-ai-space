@@ -17,6 +17,7 @@ PREVIOUS = '72f704f867b6ab96cc73545cb49c4e3f50f3d583'
 BACKUP_NAME = 'release-20261031T104440Z-6KtjNP'
 CADDY_ID = '5ce9ccf30c0bf734772997f5749b88a302548902ac11a21061ab8265c43a7bc9'
 CADDY_HASH = '44b078b06e6bcdbda567050a8f3f3bc527f9cb2f8b998d27bd846c64143e47c8'
+PUBLIC_KNOWLEDGE = 9
 
 
 def run(*args, cwd=None):
@@ -49,7 +50,7 @@ def verify(client_ip=''):
         return run('docker', 'exec', 'jaxson-postgres-prod', 'psql', '-X', '-At', '-U',
                    'jaxson_admin', '-d', 'jaxson_release_20261007', '-c', query)
     require(int(sql('SELECT count(*) FROM owner.payload_migrations;')) == 6, 'MIGRATION_COUNT_CHANGED')
-    require(int(sql('SELECT count(*) FROM owner.ai_knowledge WHERE is_public=true;')) == 8,
+    require(int(sql('SELECT count(*) FROM owner.ai_knowledge WHERE is_public=true;')) == PUBLIC_KNOWLEDGE,
             'PUBLIC_KNOWLEDGE_COUNT_CHANGED')
     worker = json.loads(run('docker', 'exec', 'jaxson-release-worker-1', 'node',
                             'apps/web/scripts/run-index-worker.mjs', '--health'))
@@ -90,7 +91,7 @@ def verify(client_ip=''):
     backup_setup['privateExportToolPresent'] = (ops / 'current/export-private-backup.sh').is_file()
     return {'ok': True, 'current': str(current), 'containers': containers,
             'worker': {key: worker[key] for key in ['ok', 'pending', 'processing', 'failed']},
-            'migrations': 6, 'publicKnowledge': 8, 'caddyUnchanged': True,
+            'migrations': 6, 'publicKnowledge': PUBLIC_KNOWLEDGE, 'caddyUnchanged': True,
             'backup': str(backup), 'backupChecksums': True, 'rollback': str(rollback),
             'freeDiskBytes': shutil.disk_usage(current).free, 'backupUnits': timers, 'sshSettings': ssh,
             'ownerConnectivity': connectivity, 'backupSetup': backup_setup}

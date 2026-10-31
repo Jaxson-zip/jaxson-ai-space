@@ -37,6 +37,54 @@ it('does not turn a factual internship role question into local JD matching', ()
   expect(buildLocalRAGAnswer('你的实习岗位是什么？', results)).not.toContain('对照岗位要求')
 })
 
+describe('concise project answers when the model is unavailable', () => {
+  const chunk: KnowledgeChunk = {
+    ...MOCK_CHUNKS[1], title: '项目：拾账', project: 'shizhang',
+    content: [
+      '【项目角色】需求取舍与 AI 协作二次开发',
+      '【参与说明】基于 BeeCount Cloud 二次开发，推动旧记录重读、48 小时截图留存与充值记账口径调整。',
+      '【技术方案】确定性规则可直接入账，视觉结果须经规则或人工核对后计入统计。',
+      '【技术栈】React、TypeScript、Python / FastAPI、SQLAlchemy、PWA',
+      '【状态】已开源 · 持续迭代',
+      '【补充资料】' + '详细提交归档。'.repeat(300),
+    ].join('\n'),
+  }
+  const result = (value: KnowledgeChunk) => ({ chunk: value, score: 1, vectorScore: 1, bm25Score: 1 })
+
+  it('answers a technical-stack question from that field without dumping the archive', () => {
+    const answer = buildLocalRAGAnswer('拾账用了什么技术？请简短回答。', [result(chunk)])
+    expect(answer).toContain('React、TypeScript、Python / FastAPI、SQLAlchemy、PWA')
+    expect(answer).toContain('[1]')
+    expect(answer.length).toBeLessThan(250)
+    expect(answer).not.toContain('详细提交归档')
+  })
+
+  it('keeps actual participation and upstream attribution in a short contribution answer', () => {
+    const answer = buildLocalRAGAnswer('拾账里我做了哪些需求取舍？请简短回答。', [result(chunk)])
+    expect(answer).toContain('基于 BeeCount Cloud 二次开发')
+    expect(answer).toContain('48 小时截图留存')
+    expect(answer.length).toBeLessThan(250)
+    expect(answer).not.toContain('详细提交归档')
+  })
+
+  it('retains the verification requirement when asked about screenshot booking', () => {
+    const answer = buildLocalRAGAnswer('拾账会把所有截图直接入账吗？请简短回答。', [result(chunk)])
+    expect(answer).toContain('视觉结果须经规则或人工核对后计入统计')
+    expect(answer.length).toBeLessThan(250)
+    expect(answer).not.toContain('详细提交归档')
+  })
+
+  it('lists project names with their original citation numbers instead of the full dossiers', () => {
+    const answer = buildLocalRAGAnswer('你做过哪些项目？请列出项目名称。', [result(MOCK_CHUNKS[0]), result(chunk), result(MOCK_CHUNKS[1])])
+    expect(answer).toContain('拾账')
+    expect(answer).toContain('待办备忘')
+    expect(answer).toContain('[2]')
+    expect(answer).toContain('[3]')
+    expect(answer.length).toBeLessThan(250)
+    expect(answer).not.toContain('详细提交归档')
+  })
+})
+
 describe('follow-up retrieval context', () => {
   const projectQuestion = { role: 'user' as const, content: 'Jaxson AI Space 的项目详情如何取舍？' }
   it('carries a user topic through consecutive short follow-ups without searching assistant claims', () => {
