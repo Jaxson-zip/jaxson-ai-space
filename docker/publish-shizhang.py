@@ -6,6 +6,8 @@ from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import sys
+import tempfile
+from datetime import datetime, timezone
 
 CURRENT_STAGE = 'request_validation'
 
@@ -20,6 +22,52 @@ def command(args, *, source=None, timeout=90, cwd=None):
     if result.returncode:
         raise SafeFailure('COMMAND_FAILED')
     return result.stdout.strip()
+
+
+def content_snapshot(inventory, archive, release, root=None):
+    """Protect a create-only public content change without restarting production."""
+    if not re.fullmatch(r'[a-f0-9]{40}', release):
+        raise SafeFailure('INVALID_SNAPSHOT_RELEASE')
+    allowed = {
+        'projects': set('id title shortTitle projectDate slug role category featured sortOrder visibility status summary coverImage demoVideo tags problem approach outcome editorialNote highlights demoUrl repoUrl createdAt updatedAt'.split()),
+        'ai-knowledge': set('id title category content isPublic evidenceTag createdAt updatedAt'.split()),
+    }
+    def clean(records):
+        if set(records) != set(allowed):
+            raise SafeFailure('INVALID_SNAPSHOT_COLLECTIONS')
+        result = {}
+        for collection, docs in records.items():
+            if not isinstance(docs, list):
+                raise SafeFailure('INVALID_SNAPSHOT_RECORDS')
+            result[collection] = []
+            for doc in docs:
+                if (collection == 'projects' and doc.get('visibility') != 'public'
+                        or collection == 'ai-knowledge' and doc.get('isPublic') is not True):
+                    raise SafeFailure('SNAPSHOT_MUST_BE_PUBLIC')
+                result[collection].append({key: value for key, value in doc.items() if key in allowed[collection]})
+        return result
+    before = {'format': 'jaxson-public-content-snapshot', 'version': 1,
+              'release': release, 'records': clean(inventory)}
+    intended = {'format': 'jaxson-cms-content', 'version': 1,
+                'records': clean(archive['records']), 'media': []}
+    root = root or Path('/var/backups/jaxson-ai-space')
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    directory = Path(tempfile.mkdtemp(prefix='content-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-', dir=root))
+    checksums = []
+    import os
+    for name, value in [('before.json', before), ('approved.json', intended)]:
+        body = (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode()
+        fd = os.open(directory / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, 'wb') as output:
+            output.write(body)
+        checksum = hashlib.sha256(body).hexdigest()
+        if hashlib.sha256((directory / name).read_bytes()).hexdigest() != checksum:
+            raise SafeFailure('CONTENT_SNAPSHOT_CHECKSUM_FAILED')
+        checksums.append(f'{checksum}  {name}\n')
+    (directory / 'SHA256SUMS').write_text(''.join(checksums))
+    (directory / 'SHA256SUMS').chmod(0o600)
+    (directory / 'CONTENT_SNAPSHOT_COMPLETE').touch(mode=0o600)
+    return directory
 
 
 def execute(request):
@@ -87,6 +135,7 @@ console.log(directory)
         # It does not modify or disable the HTTP/Cloudflare perimeter.
         tail = """
 import { getPayload } from 'payload'
+import { CONTENT_FIELDS } from '/app/apps/web/scripts/lib/cms-transfer.mjs'
 import config from './src/payload.config.ts'
 let payload, report
 try {
@@ -97,15 +146,23 @@ try {
   }})
   if(!login.user) throw Error('CMS_AUTHENTICATION_FAILED')
   const user=login.user
+  const inventory={}
   const cms={
-    list:async collection=>(await payload.find({collection,overrideAccess:false,user,depth:0,pagination:false,
+    list:async collection=>{const docs=(await payload.find({collection,overrideAccess:false,user,depth:0,pagination:false,
       where:collection==='projects'
         ? {or:[{visibility:{equals:'public'}},{slug:{equals:'shizhang'}}]}
         : {or:[{isPublic:{equals:true}},{title:{equals:ARCHIVE.records['ai-knowledge'][0].title}}]}
-    })).docs,
+    })).docs
+      const keys=[...CONTENT_FIELDS[collection],'id','featured','sortOrder','coverImage','demoVideo','createdAt','updatedAt']
+      inventory[collection]=docs.filter(doc=>collection==='projects'?doc.visibility==='public':doc.isPublic===true)
+        .map(doc=>Object.fromEntries(keys.filter(key=>doc[key]!==undefined).map(key=>[key,doc[key]])))
+      return docs
+    },
     write:async (collection,data)=>payload.create({collection,data,user,overrideAccess:false,depth:0})
   }
-  report={ok:true,result:await publishShizhang(cms,ARCHIVE,{apply:APPLY})}
+  const result=await publishShizhang(cms,ARCHIVE,{apply:APPLY})
+  if(!APPLY) result._publicInventory=inventory
+  report={ok:true,result}
 } catch(error) {
   const message=String(error?.message||'')
   const code=error?.name==='AuthenticationError'||message==='CMS_AUTHENTICATION_FAILED'
@@ -132,19 +189,21 @@ if(!report.ok) process.exitCode=1
 
     try:
         plan = cms_run(False)
+        inventory = plan.pop('_publicInventory')
         report = {'ok': True, 'release': expected, 'mode': mode,
                   'contentSha256': request['archiveSha256'], 'plan': plan, 'backup': None}
         if mode == 'apply':
             if plan['plannedCreates']:
                 CURRENT_STAGE = 'content_backup'
-                output = command(['sh', '/opt/jaxson-release-tools/current/backup-vps-existing.sh'], timeout=900)
-                backup = Path(output.splitlines()[-1])
+                backup = Path(Path('/var/backups/jaxson-ai-space/latest-release.path').read_text().strip())
                 if (backup.parent != Path('/var/backups/jaxson-ai-space')
                         or not re.fullmatch(r'release-[0-9]{8}T[0-9]{6}Z-[a-zA-Z0-9]+', backup.name)
                         or not (backup / 'COMPLETE').is_file()):
                     raise SafeFailure('CONTENT_BACKUP_INCOMPLETE')
                 command(['sha256sum', '--check', '--quiet', 'SHA256SUMS'], cwd=backup)
-                report['backup'] = str(backup)
+                report['releaseBackupReference'] = str(backup)
+                report['backup'] = str(content_snapshot(inventory, archive, expected))
+                report['backupType'] = 'public-content-snapshot'
             if Path('/opt/jaxson-releases/current').resolve().name != expected:
                 raise SafeFailure('CURRENT_RELEASE_CHANGED')
             report['result'] = cms_run(True)

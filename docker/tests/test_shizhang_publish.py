@@ -92,6 +92,29 @@ class ContentOperationTests(unittest.TestCase):
                 with self.assertRaisesRegex(module.SafeFailure, 'CMS_AUTHENTICATION_FAILED'):
                     module.execute(request)
 
+    def test_content_snapshot_preserves_public_records_and_removes_private_fields(self):
+        inventory = {'projects': [{'id': 1, 'visibility': 'public', 'title': 'Existing'}],
+            'ai-knowledge': [{'id': 2, 'isPublic': True, 'title': 'Public',
+                'content': 'approved facts', 'privateMemoryKey': 'private-link-must-not-be-backed-up'}]}
+        archive = {'records': {'projects': [{'slug': 'shizhang', 'visibility': 'public'}], 'ai-knowledge': []}}
+        with tempfile.TemporaryDirectory() as directory:
+            target = module.content_snapshot(inventory, archive, 'a' * 40, Path(directory))
+            self.assertTrue((target / 'CONTENT_SNAPSHOT_COMPLETE').is_file())
+            before = (target / 'before.json').read_text(encoding='utf8')
+            self.assertIn('approved facts', before)
+            self.assertNotIn('private-link', before)
+            self.assertNotIn('privateMemoryKey', before)
+            for line in (target / 'SHA256SUMS').read_text().splitlines():
+                digest, name = line.split('  ')
+                self.assertEqual(module.hashlib.sha256((target / name).read_bytes()).hexdigest(), digest)
+
+    def test_content_snapshot_refuses_private_records_before_creating_files(self):
+        inventory = {'projects': [{'visibility': 'private'}], 'ai-knowledge': []}
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(module.SafeFailure, 'SNAPSHOT_MUST_BE_PUBLIC'):
+                module.content_snapshot(inventory, {'records': inventory}, 'a' * 40, Path(directory))
+            self.assertEqual(list(Path(directory).iterdir()), [])
+
 
 if __name__ == '__main__':
     unittest.main()
