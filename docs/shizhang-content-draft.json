@@ -1,6 +1,8 @@
 {
   "status": "local-draft-not-imported",
   "reviewedAt": "2026-10-31",
+  "applicationRelease": "1cb793c8e4f951f8c38068d78b6c491d94b00f63",
+  "importState": "not-started: production plan timed out at migration_history; awaiting spare VPS inspection",
   "source": {
     "repository": "https://github.com/Jaxson-zip/shizhang",
     "commit": "d36a15bccd3d9d78863ae963b42f2e73c5b8a2f7",
@@ -75,7 +77,7 @@
   },
   "pending": [
     "通过已登录的 CMS 录入候选并验收公开页面与索引；本次用户要求已授权补充该公开项目。",
-    "短中文项目名检索修复尚未发布；本地 250 项 Web 单元已通过。",
+    "短中文项目名检索修复已发布；主机 CPU 争用下三个应用容器不健康，站长已表示有备用 VPS，须先恢复稳定服务再录入和验收。",
     "没有公开体验地址、封面或视频；不链接私人账本，不使用真实账单素材。"
   ],
   "archive": {

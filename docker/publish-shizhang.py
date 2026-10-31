@@ -134,18 +134,23 @@ console.log(directory)
         # This verifies the administrator password, then passes the real user and overrideAccess:false.
         # It does not modify or disable the HTTP/Cloudflare perimeter.
         tail = """
-import { getPayload } from 'payload'
-import { CONTENT_FIELDS } from '/app/apps/web/scripts/lib/cms-transfer.mjs'
-import config from './src/payload.config.ts'
 let payload, report
+const phase=stage=>console.log(JSON.stringify({event:'cms-phase',stage}))
 try {
+  phase('importing')
+  const { getPayload }=await import('payload')
+  const { CONTENT_FIELDS }=await import('/app/apps/web/scripts/lib/cms-transfer.mjs')
+  const { default:config }=await import('./src/payload.config.ts')
+  phase('initializing')
   payload=await getPayload({config})
+  phase('authenticating')
   const login=await payload.login({collection:'users',data:{
     email:process.env.CMS_EMAIL||process.env.OWNER_EMAIL,
     password:process.env.CMS_PASSWORD||process.env.OWNER_INITIAL_PASSWORD
   }})
   if(!login.user) throw Error('CMS_AUTHENTICATION_FAILED')
   const user=login.user
+  phase(APPLY?'applying':'planning')
   const inventory={}
   const cms={
     list:async collection=>{const docs=(await payload.find({collection,overrideAccess:false,user,depth:0,pagination:false,
@@ -169,16 +174,33 @@ try {
     ? 'CMS_AUTHENTICATION_FAILED'
     : ['EXISTING_CONTENT_DIFFERS','AMBIGUOUS_EXISTING_RECORD'].includes(message)?message:'CMS_IMPORT_FAILED'
   report={ok:false,error:code}
-} finally { if(payload) await payload.destroy() }
-console.log(JSON.stringify(report))
-if(!report.ok) process.exitCode=1
+} finally {
+  phase('closing')
+  if(payload) {
+    try { await Promise.race([payload.destroy(),new Promise(resolve=>setTimeout(resolve,10000))]) } catch {}
+  }
+}
+process.stdout.write(JSON.stringify(report)+'\\n',()=>process.exit(report.ok?0:1))
 """
         source = program + '\nconst ARCHIVE=' + json.dumps(archive, ensure_ascii=False) + ';\n'
         source += 'const APPLY=' + ('true' if apply else 'false') + ';\n' + tail
-        result = subprocess.run(['docker', 'exec', '-i', '-w', runtime, '-e',
+        operation = runtime + '/operation.mjs'
+        writer = "import fs from 'node:fs/promises';await fs.writeFile(" + json.dumps(operation) + ',' + json.dumps(source) + ',{mode:0o600})'
+        command(['docker', 'exec', '-i', 'jaxson-release-web-1', 'node', '--input-type=module', '-'], source=writer)
+        result = subprocess.run(['docker', 'exec', '-w', runtime, '-e',
             'TSX_TSCONFIG_PATH=' + runtime + '/tsconfig.json', 'jaxson-release-web-1',
-            'node', '--import', '/app/apps/web/node_modules/tsx/dist/loader.mjs', '--input-type=module', '-'],
-            input=source, text=True, capture_output=True, timeout=300, check=False)
+            'timeout', '-k', '15', '300', 'node', '--import', '/app/apps/web/node_modules/tsx/dist/loader.mjs', operation],
+            text=True, capture_output=True, timeout=330, check=False)
+        if result.returncode in (124, 137, 143):
+            phases = []
+            for line in result.stdout.splitlines():
+                try:
+                    value = json.loads(line)
+                    if value.get('event') == 'cms-phase' and value.get('stage') in ['importing', 'initializing', 'authenticating', 'planning', 'applying', 'closing']:
+                        phases.append(value['stage'])
+                except (ValueError, AttributeError):
+                    pass
+            raise SafeFailure('CMS_TIMEOUT_' + (phases[-1].upper() if phases else 'LOADER'))
         try:
             report = json.loads(result.stdout.strip().splitlines()[-1])
         except Exception:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only verification of the approved PR 18 release and its rollback backup.
+"""Read-only verification of the approved PR 19 release and its rollback backup.
 
 Run over stdin via verify-production.yml; never loads environment secrets or
 reads database records. This snapshot is tied to the approved UI release.
@@ -12,11 +12,11 @@ import shutil
 import subprocess
 import sys
 
-EXPECTED = '72f704f867b6ab96cc73545cb49c4e3f50f3d583'
-PREVIOUS = 'e2270b7d5c7d496d3d1d67b485f5fc72476fb766'
-BACKUP_NAME = 'release-20261030T132725Z-scO1XO'
+EXPECTED = '1cb793c8e4f951f8c38068d78b6c491d94b00f63'
+PREVIOUS = '72f704f867b6ab96cc73545cb49c4e3f50f3d583'
+BACKUP_NAME = 'release-20261031T104440Z-6KtjNP'
 CADDY_ID = '5ce9ccf30c0bf734772997f5749b88a302548902ac11a21061ab8265c43a7bc9'
-CADDY_HASH = '2dca59daa3e5b73e7ab4815756a56c62c2ecae5925781e05982899b562eae6f1'
+CADDY_HASH = '44b078b06e6bcdbda567050a8f3f3bc527f9cb2f8b998d27bd846c64143e47c8'
 
 
 def run(*args, cwd=None):

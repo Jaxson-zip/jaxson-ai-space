@@ -56,7 +56,7 @@ class ContentOperationTests(unittest.TestCase):
                 with patch.object(module.subprocess, 'run', side_effect=respond) as run:
                     with self.assertRaisesRegex(module.SafeFailure, 'CMS_AUTHENTICATION_FAILED'):
                         module.execute(request)
-                    self.assertEqual(run.call_count, 4)
+                    self.assertEqual(run.call_count, 5)
                     self.assertTrue(all(call.args[0][:2] == ['docker', 'exec'] for call in run.call_args_list))
                     self.assertNotIn('sensitive response', str(run.call_args.args))
 
@@ -71,6 +71,30 @@ class ContentOperationTests(unittest.TestCase):
                     with self.assertRaisesRegex(module.SafeFailure, 'CONTENT_CHECKSUM_MISMATCH'):
                         module.execute(request)
                     run.assert_not_called()
+
+    def test_cms_timeout_reports_only_the_last_safe_phase_and_uses_a_file_entrypoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            release = Path(directory) / ('a' * 40)
+            release.mkdir()
+            (release / 'production.env').write_text('placeholder')
+            request = self.request()
+            def respond(args, **kwargs):
+                if 'psql' in args:
+                    return subprocess.CompletedProcess(args, 0, '\n'.join(request['migrations']), '')
+                if '--import' in args:
+                    self.assertTrue(args[-1].endswith('/operation.mjs'))
+                    self.assertNotIn('-i', args)
+                    self.assertIn('timeout', args)
+                    return subprocess.CompletedProcess(args, 124,
+                        '\n'.join([json.dumps({'event': 'cms-phase', 'stage': stage})
+                                   for stage in ['importing', 'initializing', 'private-error-must-stay-hidden']]), '')
+                if '-e' in args:
+                    return subprocess.CompletedProcess(args, 0, '', '')
+                return subprocess.CompletedProcess(args, 0, '/tmp/jaxson-shizhang-Test123', '')
+            with patch.object(module, 'Path', side_effect=lambda value: release), \
+                 patch.object(module.subprocess, 'run', side_effect=respond):
+                with self.assertRaisesRegex(module.SafeFailure, '^CMS_TIMEOUT_INITIALIZING$'):
+                    module.execute(request)
 
     def test_cleanup_timeout_preserves_the_original_auth_failure(self):
         with tempfile.TemporaryDirectory() as directory:
