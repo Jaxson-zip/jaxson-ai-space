@@ -1,0 +1,71 @@
+name: Publish approved Shizhang content
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_release:
+        description: Exact running application SHA checked before CMS operations
+        required: true
+        type: string
+      mode:
+        description: Plan is read-only; apply creates only the two approved records
+        required: true
+        type: choice
+        options: [plan, apply]
+        default: plan
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jaxson-production
+  cancel-in-progress: false
+
+jobs:
+  content:
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check create-only import guards
+        run: |
+          node --test docker/tests/test_shizhang_content.mjs
+          python3 -m py_compile docker/publish-shizhang.py
+          python3 -m unittest docker.tests.test_shizhang_publish -v
+      - name: Run normal CMS import over pinned administrative SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          EXPECTED_RELEASE: ${{ inputs.expected_release }}
+          CONTENT_MODE: ${{ inputs.mode }}
+        run: |
+          set -eu
+          test -n "$VPS_HOST" && test -n "$VPS_USERNAME" && test -n "$VPS_SSH_KEY" && test -n "$VPS_KNOWN_HOSTS"
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ ]] && [[ "$VPS_USERNAME" =~ ^[a-z_][a-z0-9_-]*$ ]] && [[ "$VPS_PORT" =~ ^[0-9]+$ ]]
+          [[ "$EXPECTED_RELEASE" =~ ^[a-f0-9]{40}$ ]] && [[ "$CONTENT_MODE" == "plan" || "$CONTENT_MODE" == "apply" ]]
+          private=$(mktemp -d)
+          trap 'rm -rf -- "$private"' EXIT
+          chmod 700 "$private"
+          printf '%s\n' "$VPS_SSH_KEY" > "$private/key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$private/known_hosts"
+          chmod 600 "$private/key" "$private/known_hosts"
+          python3 - <<'PY' > "$private/request.json"
+          import hashlib, json, os
+          from pathlib import Path
+          archive=json.loads(Path('docs/shizhang-content-draft.json').read_text())['archive']
+          raw=json.dumps(archive,ensure_ascii=False,separators=(',',':')).encode()
+          request=dict(expectedRelease=os.environ['EXPECTED_RELEASE'],mode=os.environ['CONTENT_MODE'],
+            archive=archive,archiveSha256=hashlib.sha256(raw).hexdigest(),
+            importerProgram=Path('docker/lib/shizhang_content.mjs').read_text())
+          print(json.dumps(request,ensure_ascii=False))
+          PY
+          program=$(base64 -w0 docker/publish-shizhang.py)
+          ssh -i "$private/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$private/known_hosts" -o ServerAliveInterval=20 -o ConnectTimeout=30 -p "$VPS_PORT" "$VPS_USERNAME@$VPS_HOST" "python3 -c 'import base64;exec(base64.b64decode(\"$program\"))'" < "$private/request.json"
