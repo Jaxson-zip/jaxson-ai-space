@@ -8,13 +8,19 @@ from release_snapshot import artifact, fail
 
 
 def caddyfile_source(live_source, candidate_file):
-    """Keep Caddy's live mount when the file is unchanged, so Compose leaves Caddy running.
+    """Preserve Caddy's live mount and snapshot during an application-only release.
 
     A new mount path alone makes Compose recreate Caddy, and the site is unreachable until it is back.
     """
     if live_source:
         live = Path(live_source)
-        if live.is_file() and live.read_bytes() == candidate_file.read_bytes():
+        if live.is_file():
+            live_bytes = live.read_bytes()
+            if live_bytes != candidate_file.read_bytes():
+                # A different private copy is not authorization to reload another application's routes.
+                # Only the new release snapshot changes; leave both existing copies untouched.
+                candidate_file.write_bytes(live_bytes)
+                candidate_file.chmod(0o600)
             return str(live)
     return str(candidate_file)
 

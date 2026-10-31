@@ -28,9 +28,15 @@ class CaddyfileTests(unittest.TestCase):
     def test_an_unchanged_caddyfile_keeps_the_live_mount_so_compose_leaves_caddy_running(self):
         self.assertEqual(module.caddyfile_source(str(self.live), self.candidate), str(self.live))
 
-    def test_a_changed_caddyfile_mounts_the_candidate_copy(self):
+    def test_a_drifted_private_copy_cannot_change_live_proxy_during_an_application_release(self):
         self.candidate.write_text('jaxson.bond {\n  reverse_proxy portfolio:3001\n}\n')
-        self.assertEqual(module.caddyfile_source(str(self.live), self.candidate), str(self.candidate))
+        original = self.candidate.parent.parent / 'unmounted-private-copy'
+        original.write_bytes(self.candidate.read_bytes())
+        before = self.live.read_bytes()
+        self.assertEqual(module.caddyfile_source(str(self.live), self.candidate), str(self.live))
+        self.assertEqual(self.live.read_bytes(), before)
+        self.assertEqual(self.candidate.read_bytes(), before)
+        self.assertIn(b'3001', original.read_bytes())
 
     def test_a_missing_live_file_mounts_the_candidate_copy(self):
         self.live.unlink()
