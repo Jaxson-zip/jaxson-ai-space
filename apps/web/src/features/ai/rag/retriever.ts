@@ -167,7 +167,8 @@ export function groundedRetrieve(query: string, chunks: KnowledgeChunk[], topK =
   const namedProjects = projectChunks.filter((chunk) => {
     const title = chunk.title.replace(/^项目[:：]\s*/, '')
     return [chunk.project || '', title, ...title.split(/[()（）]/)]
-      .map(normalizeName).some((name) => name.length >= 4 && normalizedQuery.includes(name))
+      .map(normalizeName).some((name) =>
+        (name.length >= 4 || /^[\u4e00-\u9fa5]{2,3}$/.test(name)) && normalizedQuery.includes(name))
   })
   if (namedProjects.length > 0) return hybridRetrieve(searchQuery, namedProjects, topK)
   // "Best work" questions get the projects the home page leads with.

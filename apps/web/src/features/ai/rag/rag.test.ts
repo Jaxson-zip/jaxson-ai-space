@@ -91,6 +91,25 @@ describe('RAG Engine & Hybrid Retriever', () => {
     const results = groundedRetrieve('Jaxson AI Space 项目用哪些技术？', [...MOCK_CHUNKS, skillChunk, jaxsonChunk])
     expect(results.map((result) => result.chunk.id)).toEqual([jaxsonChunk.id])
   })
+  it.each(['拾账用了什么技术？', '介绍一下拾账项目', '拾账识别错了怎么办？'])(
+    'recognizes a published two-character Chinese project name: %s', (question) => {
+      const shizhang: KnowledgeChunk = {
+        id: 'project-shizhang', title: '项目：拾账（个人记账与截图采集）', category: 'project',
+        content: '基于 BeeCount Cloud 二次开发，使用 React、Python 与 OCR 采集，视觉结果待核对。',
+        evidenceTag: '拾账公开源码', keywords: ['拾账', 'shizhang', 'React', 'Python', 'OCR'], project: 'shizhang',
+      }
+      expect(groundedRetrieve(question, [...MOCK_CHUNKS, skillChunk, jaxsonChunk, shizhang])
+        .map((result) => result.chunk.id)).toEqual([shizhang.id])
+    },
+  )
+  it('does not treat a short Latin label as an explicit project name', () => {
+    const shortLabel: KnowledgeChunk = {
+      id: 'project-ai', title: '项目：AI', category: 'project', content: '合成无关项目。',
+      evidenceTag: '合成项目', keywords: [], project: 'ai',
+    }
+    expect(groundedRetrieve('你会什么技术？AI呢？', [shortLabel, skillChunk])
+      .map((result) => result.chunk.id)).toEqual([skillChunk.id])
+  })
   it('accepts a strong validated semantic match while rejecting hash similarity without keyword evidence', () => {
     const chunk: KnowledgeChunk = { id: 'semantic-fact', title: 'Portable tasks', category: 'project', content: 'Offline task application', evidenceTag: 'CMS', keywords: [], vectorScore: 0.95, vectorSource: 'semantic' }
     expect(groundedRetrieve('多设备待办', [chunk])).toHaveLength(1)

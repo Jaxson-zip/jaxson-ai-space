@@ -1,0 +1,122 @@
+{
+  "status": "local-draft-not-imported",
+  "reviewedAt": "2026-10-31",
+  "source": {
+    "repository": "https://github.com/Jaxson-zip/shizhang",
+    "commit": "d36a15bccd3d9d78863ae963b42f2e73c5b8a2f7",
+    "files": [
+      "README.md",
+      "NOTICE.md",
+      "docs/SHIZHANG.md",
+      "frontend/apps/web/package.json",
+      "requirements.txt",
+      "src/services/ai/payment_vision.py"
+    ],
+    "commits": [
+      {
+        "sha": "208349f9daae62d62dc59ba38251016d00d371da",
+        "author": "Jaxson-zip",
+        "fact": "提交明确记载用户要求：待核对采集按最新规则自动重读，确定后直接入账；视觉临时账目只有规则独立读出相同收支方向与金额才自动确认。"
+      },
+      {
+        "sha": "f965f77f5de0fb69ae9d1d8e1f15ece278f41a17",
+        "author": "Jaxson-zip",
+        "fact": "提交明确记载用户决定：自动入账截图保留 48 小时供回看，并提供不调用模型的规则重读。"
+      },
+      {
+        "sha": "1def589b274545a99a4df8ce6a1380228a804ac6",
+        "author": "Jaxson-zip",
+        "fact": "提交明确记载用户决定：商户储值充值按支出处理，自己的钱包充值仍保持转账边界，避免重复记录。"
+      },
+      {
+        "sha": "f2a7265461a2803e9dcd3ceaa17279416ab8b312",
+        "author": "Jaxson-zip",
+        "fact": "本仓库修复自动重读的事务一致性并扫描全部待处理分页。"
+      },
+      {
+        "sha": "d36a15bccd3d9d78863ae963b42f2e73c5b8a2f7",
+        "author": "Jaxson-zip",
+        "fact": "本仓库修复乱码日期和特殊横线负号识别，防止日期修复产生另一个日期。"
+      },
+      {
+        "sha": "517d42c510559a0188492882bfc6503b6c430f42",
+        "author": "Jaxson-zip",
+        "fact": "本仓库前端明确说明规则可能自动入账，结果不明确时引导刷新核实，避免重复操作。"
+      }
+    ]
+  },
+  "pending": [
+    "通过已登录的 CMS 录入候选并验收公开页面与索引；本次用户要求已授权补充该公开项目。",
+    "短中文项目名检索修复尚未发布；本地 250 项 Web 单元已通过。",
+    "没有公开体验地址、封面或视频；不链接私人账本，不使用真实账单素材。"
+  ],
+  "archive": {
+    "format": "jaxson-cms-content",
+    "version": 1,
+    "records": {
+      "projects": [
+        {
+          "title": "拾账（个人记账与截图采集）",
+          "shortTitle": "拾账 Shizhang",
+          "slug": "shizhang",
+          "role": "需求取舍与 AI 协作二次开发",
+          "category": "工具应用 · 原型落地",
+          "featured": false,
+          "sortOrder": 30,
+          "visibility": "public",
+          "status": "已开源 · 持续迭代",
+          "summary": "基于 BeeCount Cloud 定制的个人记账系统，支持截图采集与待核对。",
+          "problem": "日常记账需要兼顾手机采集、账目整理与识别结果核对，避免不确定的截图识别结果直接影响统计。",
+          "approach": "围绕手机截图采集与识别核对定制 Web/PWA 和快捷指令；增加免费规则重读，旧待核对记录也可按新规则处理，视觉结果须经规则或人工核对后计入统计。",
+          "outcome": "修改版源码已公开，包含识别规则的合成回归用例和独立 Docker 源码构建配置；保留 BeeCount 客户端兼容及上游同步契约。",
+          "editorialNote": "基于 BeeCount Cloud（原作者 sunxiao / TNT-Likely）二次开发。提交记录中的用户决策包括：待核对记录自动重读、已入账截图保留 48 小时供核查，以及商户充值的记账口径；结合 AI 编程工具推进迭代。",
+          "tags": [
+            {
+              "tag": "React"
+            },
+            {
+              "tag": "TypeScript"
+            },
+            {
+              "tag": "Python / FastAPI"
+            },
+            {
+              "tag": "SQLAlchemy"
+            },
+            {
+              "tag": "PWA"
+            },
+            {
+              "tag": "OCR / 视觉补读"
+            },
+            {
+              "tag": "iPhone 快捷指令"
+            },
+            {
+              "tag": "Docker Compose"
+            }
+          ],
+          "highlights": [
+            {
+              "item": "新规则也能处理旧待核对记录，确定结果自动入账，避免重复记账。"
+            },
+            {
+              "item": "已入账截图保留 48 小时供核查，规则重读不调用模型。"
+            }
+          ],
+          "repoUrl": "https://github.com/Jaxson-zip/shizhang"
+        }
+      ],
+      "ai-knowledge": [
+        {
+          "title": "拾账 Shizhang：记账采集、识别核对与开源改造",
+          "category": "project",
+          "isPublic": true,
+          "evidenceTag": "拾账 Shizhang · 公开源码与修改说明",
+          "content": "拾账（Shizhang，仓库别名 shizhang）是基于 BeeCount Cloud 二次开发的个人记账系统，面向日常使用，通过 Web/PWA 查看和整理账目，兼容 BeeCount 手机 App 与 iPhone 快捷指令采集。公开源码：https://github.com/Jaxson-zip/shizhang 。\n修改范围包括拾账品牌、手机 Web/PWA 界面、iPhone 快捷指令 OCR 采集、待核对流程、视觉补读和分类适配；认证、账户、交易、分类和同步设施复用上游。BeeCount 官方 App 是兼容客户端，不是拾账自行开发的原生客户端。\n识别流程：Apple 端侧先提取付款截图文字并提交自己的服务器；OCR 规则明确的结果沿原生接口入账。规则不明确时可调用配置的视觉服务补读，但视觉结果先作为排除统计和预算的临时账目保存，人工核对后才计入。模型负责转录可见内容，不负责猜测金额、时间或分类；代码对金额、时间、支付方式等已有可见事实进行一致性检查。不能概括为任何截图都无须确认、自动正确入账。\n公开提交包含微信与支付宝截图版式适配、歧义金额和时间处理、旧待核对记录按新规则重读、日期误读保护等改进，并提供相应合成测试。本轮只核对实现与测试文件，未运行拾账测试或验证其生产实例，不能据此声称准确率、测试全通过或已对外开放服务。\n项目使用 React、TypeScript、Vite、PWA、Python/FastAPI、SQLAlchemy 和 Docker Compose。\n来源与归属：上游为 TNT-Likely/BeeCount-Cloud，原作者 sunxiao；本仓库保留版权、许可及修改说明。技术栈和上游功能不能直接解释为作者独立原创的个人贡献。个人最初动机、使用人数及量化收益未提供，回答这些问题时应说明当前资料不足，不能推测。当前只提供公开源码入口，不提供私人账本或真实账单。\n参与与取舍依据：站长要求依据 GitHub 提交补充本人参与。本仓库提交由 Jaxson-zip 提交，并有 Claude 协作署名；其中明确记录的用户决定包括：让旧待核对采集自动按新规则重读，规则确定后直接入账（208349f9）；已入账截图保留 48 小时供回看，提供免费规则重读（f965f77f）；商户储值充值按支出处理，自己的钱包充值仍按转账边界处理，避免后续消费重复记录（1def589b）。可据此描述为围绕真实使用需求作产品取舍、结合 AI 工具推进二次开发。提交署名不等同于每行代码均由个人手写。同期提交还修复自动重读事务与分页（f2a72654）、日期误读保护（d36a15bc）及前端结果不明确时的核实提示（517d42c5），这些是项目改造事实。若视觉临时账目经最新确定性规则独立读出相同收支方向与金额，也可自动确认，不能误述为所有临时账目均只能手动确认。"
+        }
+      ]
+    },
+    "media": []
+  }
+}
