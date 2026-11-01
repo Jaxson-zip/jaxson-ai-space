@@ -83,7 +83,13 @@
     .site-nav { display: flex; align-items: center; gap: 2px; }
     .site-nav a:not(.btn) { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: var(--sub); font-size: 15px; white-space: nowrap; }
     .site-nav a:not(.btn):hover, .site-nav a[aria-current="true"] { color: var(--ink); background: rgba(14,21,38,.05); }
-    .site-nav .btn { margin-left: 6px; padding: 0 14px; }
+    .site-nav .btn { margin-left: 6px; padding: 0 14px; white-space: nowrap; flex-shrink: 0; }
+    @media (max-width: 359px) {
+      .site-header .wrap { gap: 6px; }
+      .brand { gap: 6px; font-size: 15px; }
+      .site-nav a:not(.btn) { padding-inline: 6px; font-size: 14px; }
+      .site-nav .btn { margin-left: 2px; padding-inline: 8px; font-size: 14px; }
+    }
     .nav-section { display: none !important; }
     @media (min-width: 800px) { .nav-section { display: inline-flex !important; } }
 

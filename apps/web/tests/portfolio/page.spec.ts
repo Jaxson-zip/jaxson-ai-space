@@ -190,6 +190,25 @@ test.describe('header', () => {
     await expect(nav.getByRole('link', { name: '简历 PDF' })).toBeInViewport({ ratio: 1 })
   })
 
+  test('narrow phones keep the header actions on one line without overlap', async ({ page }) => {
+    for (const width of [320, 360, 375]) {
+      await open(page, { width, height: 812 })
+      const nav = page.getByRole('navigation', { name: '主导航' })
+      const ai = nav.getByRole('link', { name: '问我的 AI', exact: true })
+      await expect(ai).toBeInViewport({ ratio: 1 })
+      await expect(nav.getByRole('link', { name: '简历 PDF' })).toBeInViewport({ ratio: 1 })
+      const layout = await ai.evaluate(link => {
+        const text = document.createRange()
+        text.selectNodeContents(link)
+        const brand = document.querySelector('.brand')!.getBoundingClientRect()
+        const navigation = link.closest('nav')!.getBoundingClientRect()
+        return { lines: text.getClientRects().length, overlapsBrand: navigation.left < brand.right }
+      })
+      expect(layout, `${width}px`).toEqual({ lines: 1, overlapsBrand: false })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `${width}px`).toBeLessThanOrEqual(0)
+    }
+  })
+
   test('the full-screen AI page link carries the page to return to', async ({ page }) => {
     await open(page, { width: 1440, height: 900 })
     const links = page.locator('[data-ai-link]')
