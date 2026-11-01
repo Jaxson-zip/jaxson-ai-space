@@ -632,9 +632,13 @@ test.describe('conversation controls', () => {
     await field.fill('原问题')
     await page.keyboard.press('Enter')
     await expect(page.locator('.live .a')).toHaveCount(1)
+    // The answer node exists while the response stream is still being read.
+    // Wait for the composer to accept a new turn before sending the follow-up.
+    await expect(page.getByRole('button', { name: '提问', exact: true })).toBeVisible()
     await field.fill('后续问题')
     await page.keyboard.press('Enter')
     await expect(page.locator('.live .a')).toHaveCount(2)
+    await expect(page.getByRole('button', { name: '提问', exact: true })).toBeVisible()
     const user = page.locator('.live .user-message').first()
     await user.getByRole('button', { name: '编辑问题' }).click()
     await user.getByRole('textbox', { name: '编辑问题' }).fill('修改后的问题')
